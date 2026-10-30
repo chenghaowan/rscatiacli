@@ -388,6 +388,18 @@ fn rglob_file(dir: &Path, name: &str, depth: usize) -> Option<PathBuf> {
     None
 }
 
+/// 组件实例名 → 文档名线索：`"c.1"` → `"c"`（CATIA 实例名 = 文档名.序号）。
+/// 仅当结尾是 `.纯数字` 时剥离，其余原样返回。
+fn strip_instance_suffix(name: &str) -> String {
+    if let Some(dot) = name.rfind('.') {
+        let tail = &name[dot + 1..];
+        if dot > 0 && !tail.is_empty() && tail.chars().all(|c| c.is_ascii_digit()) {
+            return name[..dot].to_string();
+        }
+    }
+    name.to_string()
+}
+
 // ── scan ─────────────────────────────────────────────────────────────
 
 fn scan(search_paths: &[String], dry_run: bool, progress: Progress<'_>) -> Value {
@@ -479,7 +491,11 @@ fn fix(search_paths: &[String], dry_run: bool, progress: Progress<'_>) -> Value 
         let app = attach_with_guard(progress)?;
         if dry_run {
             result["message"] = json!("[DRY RUN] 只扫描, 不做任何修复动作");
-        } else if !search_paths.is_empty() {
+        } else {
+            // 实跑要打开找到的文件做 ReplaceProduct, 先关掉文件弹框
+            let _ = app.set_display_file_alerts(false);
+        }
+        if !dry_run && !search_paths.is_empty() {
             // 与 Python 版一致：先写入用户给的搜索路径
             let mut order = current_search_order(&app);
             for p in search_paths {
@@ -595,7 +611,18 @@ fn fix(search_paths: &[String], dry_run: bool, progress: Progress<'_>) -> Value 
                     } else {
                         link.filename_hint.as_str()
                     };
-                    match find_file_in_search_paths(probe, &order) {
+                    // 引用完全不可读时 hint 为空，组件实例名 "c.1" 是最后的文档名
+                    // 线索（CATIA 实例名 = 文档名.序号）——原样找不到就剥掉序号重试
+                    let probe_stripped = strip_instance_suffix(probe);
+                    let found_file = find_file_in_search_paths(probe, &order)
+                        .or_else(|| {
+                            if probe_stripped == probe {
+                                None
+                            } else {
+                                find_file_in_search_paths(&probe_stripped, &order)
+                            }
+                        });
+                    match found_file {
                         Some(found_file) => {
                             push_search_dir(
                                 &app,
@@ -604,10 +631,51 @@ fn fix(search_paths: &[String], dry_run: bool, progress: Progress<'_>) -> Value 
                                 dry_run,
                                 progress,
                             );
-                            resolved_path += 1;
-                            detail["result"] = "resolved_from_search_path".into();
-                            detail["message"] =
-                                json!(format!("搜索路径找到文件 {}", found_file.display()));
+                            if dry_run {
+                                resolved_path += 1;
+                                detail["result"] = "resolved_from_search_path".into();
+                                detail["message"] = json!(format!(
+                                    "[DRY RUN] 搜索路径找到文件 {}, 将打开并重连",
+                                    found_file.display()
+                                ));
+                            } else {
+                                // Update 不重链已断的引用（实测重扫仍报断链），搜索顺序只对
+                                // "重开文档"生效 —— 直接打开文件 ReplaceProduct 才是可靠路径
+                                let opened = open_docs
+                                    .iter()
+                                    .find(|od| {
+                                        od.path
+                                            .eq_ignore_ascii_case(&found_file.to_string_lossy())
+                                    })
+                                    .map(|od| od.doc.clone())
+                                    .map(Ok)
+                                    .unwrap_or_else(|| {
+                                        docs.open(&found_file.to_string_lossy())
+                                    });
+                                match opened.and_then(|part_doc| {
+                                    let target = part_doc.product_document().product()?;
+                                    parent_coll.replace_product(comp, &target, false)?;
+                                    Ok(part_doc)
+                                }) {
+                                    Ok(_) => {
+                                        resolved_path += 1;
+                                        detail["result"] = "resolved_from_search_path".into();
+                                        detail["message"] = json!(format!(
+                                            "搜索路径找到文件 {}, 已打开并重连",
+                                            found_file.display()
+                                        ));
+                                    }
+                                    Err(e) => {
+                                        resolved_path += 1;
+                                        detail["result"] = "resolved_from_search_path".into();
+                                        detail["message"] = json!(format!(
+                                            "搜索路径找到文件 {}, 但打开/重连失败({e}); \
+                                             已将其目录加入搜索顺序, 请重开装配触发重链",
+                                            found_file.display()
+                                        ));
+                                    }
+                                }
+                            }
                         }
                         None => {
                             failed += 1;
@@ -784,4 +852,21 @@ fn restore_by_reopening(app: &Application, progress: Progress<'_>) -> Value {
         "reopened_documents": reopened,
         "errors": errors,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::strip_instance_suffix;
+
+    #[test]
+    fn strips_instance_suffix_only_for_numeric_tails() {
+        assert_eq!(strip_instance_suffix("c.1"), "c");
+        assert_eq!(strip_instance_suffix("bracket.12"), "bracket");
+        assert_eq!(strip_instance_suffix("v2.10"), "v2");
+        // 非序号尾巴不动
+        assert_eq!(strip_instance_suffix("a.catpart"), "a.catpart");
+        assert_eq!(strip_instance_suffix("Part1.v2"), "Part1.v2");
+        assert_eq!(strip_instance_suffix(".5"), ".5"); // 点前无名字, 不剥
+        assert_eq!(strip_instance_suffix("plain"), "plain");
+    }
 }
