@@ -1,0 +1,18 @@
+[workspace]
+resolver = "2"
+members = ["crates/rscatiacli", "crates/rscatiacli-tools"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+serde_json = "1"
+sysinfo = "0.33"
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_System_Com",
+    "Win32_System_Ole",
+    "Win32_System_Variant",
+] }

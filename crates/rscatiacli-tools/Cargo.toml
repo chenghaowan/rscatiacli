@@ -1,0 +1,10 @@
+[package]
+name = "rscatiacli-tools"
+description = "基于 rscatiacli 的 CATIA 工具业务层（ltl-manage 应用层共用）"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+rscatiacli = { path = "../rscatiacli" }
+serde_json.workspace = true
