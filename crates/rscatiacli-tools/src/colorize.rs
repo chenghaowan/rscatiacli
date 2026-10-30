@@ -56,7 +56,7 @@ pub fn run(progress: Progress<'_>) -> ComResult<String> {
     let doc = app.active_document()?;
 
     // Part 属性只存在于 PartDocument；工程图/装配取不到。
-    let part = doc.part().map_err(|_| {
+    let part = doc.part_document().part().map_err(|_| {
         ComError::runtime("当前活动文档不是零件(.CATPart): 请把要着色的零件设为活动文档后重试")
     })?;
 

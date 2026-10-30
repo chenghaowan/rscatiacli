@@ -489,14 +489,14 @@ fn apply_action(action: Action, sel: &Selection, part: &Part) -> ActionResult {
 /// 强制设计模式（CatWorkModeType: DESIGN_MODE=2）。可视化模式(CGR)下几何未加载，
 /// 显隐/选择会报错；切 DESIGN 后几何自动加载。
 fn ensure_design_mode(doc: &Document) {
-    if let Ok(product) = doc.product() {
+    if let Ok(product) = doc.product_document().product() {
         let _ = product.apply_work_mode(2);
     }
 }
 
 /// 激活终端节点（CATIA 的 Activate Terminal Node）。
 fn activate_terminal_node(doc: &Document) {
-    if let Ok(product) = doc.product() {
+    if let Ok(product) = doc.product_document().product() {
         let _ = product.activate_default_shape();
     }
 }
@@ -506,7 +506,7 @@ fn apply_to_doc(action: Action, doc: &Document) -> (Option<ActionResult>, Option
     ensure_design_mode(doc);
     let attempt = || -> ComResult<ActionResult> {
         let sel = doc.selection()?;
-        let part = doc.part()?;
+        let part = doc.part_document().part()?;
         Ok(apply_action(action, &sel, &part))
     };
 
@@ -529,7 +529,7 @@ fn apply_to_doc(action: Action, doc: &Document) -> (Option<ActionResult>, Option
 }
 
 fn update_part_quiet(doc: &Document) -> Option<String> {
-    let part = doc.part().ok()?;
+    let part = doc.part_document().part().ok()?;
     match part.update() {
         Ok(()) => None,
         Err(e) => Some(format!("Update 失败: {e}")),
@@ -635,7 +635,7 @@ fn run_product_mode(
     progress: Progress<'_>,
 ) -> Value {
     progress("[装配] 检测到 .CATProduct,依次对其下所有 Part 执行 ...");
-    let Ok(root) = doc.product() else {
+    let Ok(root) = doc.product_document().product() else {
         return json!({"success": false, "message": "无法读取装配体根节点"});
     };
     let parts = collect_product_part_docs(&root, progress);
@@ -837,7 +837,7 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
         );
     }
 
-    let part = doc.part()?;
+    let part = doc.part_document().part()?;
 
     if dry_run {
         let (bodies, gs_list, axes, refs) = collect_part_containers(&part);

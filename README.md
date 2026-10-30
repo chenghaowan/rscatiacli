@@ -43,7 +43,7 @@ rscatiacli-tools = { path = "../rscatiacli/crates/rscatiacli-tools" }
 
 Bindings implemented and verified against a live CATIA V5 session:
 
-- `Application`, `Documents`, `Document`
+- `Application`, `Documents`, `Document`, `PartDocument`, `ProductDocument`
 - `Part`, `Bodies` / `Body`, `HybridBodies` / `HybridBody`, `AxisSystems`, `OriginElements`
 - `Selection`, `SelectionItem`, `VisProperties`
 - `Product`, `Products`
@@ -109,7 +109,7 @@ fn main() -> ComResult<()> {
         |msg| eprintln!("{msg}"),
         |app, _log| {
             let doc = app.active_document()?;
-            let part = doc.part()?;
+            let part = doc.part_document().part()?;
 
             let mut names = Vec::new();
             for body in part.bodies()?.items()? {
@@ -140,7 +140,7 @@ raw.call("SomeMethod", &[Arg::I32(1)])?;
 | --- | --- |
 | `Application` | `Application` |
 | `application.documents` / `.item(i)` | `Application::documents()` / `Documents::item(i)` |
-| `PartDocument.part` | `Document::part()` |
+| `PartDocument.part` | `PartDocument::part()` |
 | `part.bodies` / `.item(i)` | `Part::bodies()` / `Bodies::item(i)` |
 | `Body.name` | `Body::name()` / `Body::set_name()` |
 | `part.hybrid_bodies` | `Part::hybrid_bodies()` |
@@ -150,7 +150,7 @@ raw.call("SomeMethod", &[Arg::I32(1)])?;
 | `selection.vis_properties` | `Selection::vis_properties()` |
 | `vis_properties.set_show(n)` | `VisProperties::set_show(i32)` |
 | `vis_properties.set_real_color(r, g, b, 0)` | `VisProperties::set_real_color(r, g, b, 0)` |
-| `ProductDocument.product` | `Document::product()` |
+| `ProductDocument.product` | `ProductDocument::product()` |
 | `product.products` | `Product::products()` |
 | `product.reference_product` | `Product::reference_product()` |
 | `AnyObject.name` / `.parent` | `ComObject::name()` / `.parent()` |
@@ -158,6 +158,15 @@ raw.call("SomeMethod", &[Arg::I32(1)])?;
 Collections implement `ComCollection`: `count()`, `item(i)`, `items()`, `is_empty()`.
 `Item` is dispatched as a method first and falls back to a parameterized property get,
 which covers differences between CATIA versions.
+
+Typed documents keep the pycatia class names. Construct them from a generic `Document`
+the same way pycatia constructs `PartDocument(doc.com_object)`:
+
+```rust
+let doc: Document = app.active_document()?;
+let part_doc: PartDocument = doc.part_document(); // or PartDocument::from(doc)
+let part = part_doc.part()?;
+```
 
 ## Design notes
 

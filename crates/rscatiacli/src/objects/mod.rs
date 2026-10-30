@@ -39,7 +39,7 @@ pub mod product;
 pub mod selection;
 
 pub use application::Application;
-pub use documents::{Document, Documents};
+pub use documents::{Document, Documents, PartDocument, ProductDocument};
 pub use part::{
     AxisSystem, AxisSystems, Bodies, Body, Constraints, Entities, Entity, HybridBodies, HybridBody,
     HybridShapes, OriginElements, Part, Shapes, Sketches,

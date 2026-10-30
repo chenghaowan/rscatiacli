@@ -16,7 +16,7 @@ fn main() -> ComResult<()> {
         |msg| eprintln!("{msg}"),
         |app, _log| {
             let doc = app.active_document()?;
-            let part = doc.part()?;
+            let part = doc.part_document().part()?;
 
             let mut names = Vec::new();
             for body in part.bodies()?.items()? {

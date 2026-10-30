@@ -42,7 +42,7 @@ rscatiacli-tools = { path = "../rscatiacli/crates/rscatiacli-tools" }
 
 以下绑定已实现，并在真实 CATIA V5 会话中验证：
 
-- `Application`、`Documents`、`Document`
+- `Application`、`Documents`、`Document`、`PartDocument`、`ProductDocument`
 - `Part`、`Bodies` / `Body`、`HybridBodies` / `HybridBody`、`AxisSystems`、`OriginElements`
 - `Selection`、`SelectionItem`、`VisProperties`
 - `Product`、`Products`
@@ -106,7 +106,7 @@ fn main() -> ComResult<()> {
         |msg| eprintln!("{msg}"),
         |app, _log| {
             let doc = app.active_document()?;
-            let part = doc.part()?;
+            let part = doc.part_document().part()?;
 
             let mut names = Vec::new();
             for body in part.bodies()?.items()? {
@@ -137,7 +137,7 @@ raw.call("SomeMethod", &[Arg::I32(1)])?;
 | --- | --- |
 | `Application` | `Application` |
 | `application.documents` / `.item(i)` | `Application::documents()` / `Documents::item(i)` |
-| `PartDocument.part` | `Document::part()` |
+| `PartDocument.part` | `PartDocument::part()` |
 | `part.bodies` / `.item(i)` | `Part::bodies()` / `Bodies::item(i)` |
 | `Body.name` | `Body::name()` / `Body::set_name()` |
 | `part.hybrid_bodies` | `Part::hybrid_bodies()` |
@@ -147,13 +147,22 @@ raw.call("SomeMethod", &[Arg::I32(1)])?;
 | `selection.vis_properties` | `Selection::vis_properties()` |
 | `vis_properties.set_show(n)` | `VisProperties::set_show(i32)` |
 | `vis_properties.set_real_color(r, g, b, 0)` | `VisProperties::set_real_color(r, g, b, 0)` |
-| `ProductDocument.product` | `Document::product()` |
+| `ProductDocument.product` | `ProductDocument::product()` |
 | `product.products` | `Product::products()` |
 | `product.reference_product` | `Product::reference_product()` |
 | `AnyObject.name` / `.parent` | `ComObject::name()` / `.parent()` |
 
 集合统一实现 `ComCollection`：`count()`、`item(i)`、`items()`、`is_empty()`。
 `Item` 先按方法派发，失败时回退到带参属性，兼容不同 CATIA 版本。
+
+文档类型保留 pycatia 的类名。从通用 `Document` 构造，与 pycatia 的
+`PartDocument(doc.com_object)` 同义：
+
+```rust
+let doc: Document = app.active_document()?;
+let part_doc: PartDocument = doc.part_document(); // 或 PartDocument::from(doc)
+let part = part_doc.part()?;
+```
 
 ## 设计要点
 

@@ -97,7 +97,7 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
     }
 
     let doc = app.active_document()?;
-    let part = match doc.part() {
+    let part = match doc.part_document().part() {
         Ok(part) => part,
         Err(_) => {
             return Ok(fail(

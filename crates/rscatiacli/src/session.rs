@@ -402,7 +402,7 @@ fn probe_inner() -> ComResult<String> {
     let name = doc.name().unwrap_or_else(|_| "?".to_string());
     let mut out = format!("活动文档: {name}");
 
-    match doc.part() {
+    match doc.part_document().part() {
         Ok(part) => {
             let n = part.bodies().and_then(|b| b.count()).unwrap_or(-1);
             out.push_str(&format!("\n类型: 零件(.CATPart)\nBody 数量: {n}"));
@@ -425,7 +425,7 @@ pub fn put_selftest() -> ComResult<String> {
 fn put_selftest_inner() -> ComResult<String> {
     let app = attach_with_guard(&|msg| eprintln!("{msg}"))?;
     let doc = app.active_document()?;
-    let part = doc.part()?;
+    let part = doc.part_document().part()?;
     let bodies = part.bodies()?;
     let n = bodies.count()?;
 
