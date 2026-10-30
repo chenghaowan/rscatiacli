@@ -1,6 +1,6 @@
 [package]
 name = "rscatiacli"
-description = "CATIA V5 COM 晚绑定绑定库（pycatia 风格的 Rust 版）"
+description = "Late-bound COM bindings for CATIA V5 in Rust (pycatia-style object model)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

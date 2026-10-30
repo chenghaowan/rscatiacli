@@ -178,6 +178,17 @@ let part = part_doc.part()?;
 - **`SetShow` 保留原始语义。** `VisProperties::set_show(i32)` 维持 CATIA 的
   `1 = 隐藏`、`0 = 显示`，不包装成 bool，避免口径反转。
 
+## 命名与许可
+
+类型名（`Application`、`Documents`、`Document`、`PartDocument`、`ProductDocument`、
+`Part`、`Body`、`Selection` ...）沿用 CATIA COM 自动化对象模型与 pycatia 的公开 API。
+**故意保持同名**，这样 Python 与 Rust 两边的代码和文档可以互相对照、迁移。
+
+- 本项目没有复制 pycatia 源码；COM 层是基于 `IDispatch` 的独立实现。
+- pycatia 本身是 MIT 许可。
+- CATIA 是 Dassault Systèmes 的商标。本项目与 Dassault Systèmes 及 pycatia 项目
+  没有隶属或背书关系。
+
 ## Roadmap
 
 完整计划见 [ROADMAP.zh-CN.md](ROADMAP.zh-CN.md)。简版：

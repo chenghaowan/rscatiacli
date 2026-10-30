@@ -1,7 +1,7 @@
 //! 工具业务层：脚本注册表 + 各工具的 CATIA 操作实现。
 //!
 //! 这里只放“做什么”（业务规则、参数解析、结果 JSON），COM 对象模型访问全部来自
-//! `rscatiacli`。新工具迁移时在 [`json_tool`] 注册即可，ltl-manage 无需改注册表。
+//! `rscatiacli`。新工具迁移时在 `json_tool` 注册即可，ltl-manage 无需改注册表。
 
 pub mod body_rename;
 pub mod colorize;

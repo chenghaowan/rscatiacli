@@ -183,6 +183,19 @@ let part = part_doc.part()?;
 - **Raw `SetShow` semantics.** `VisProperties::set_show(i32)` keeps CATIA's native
   `1 = hide`, `0 = show`; it is intentionally not wrapped in a bool.
 
+## Naming and licensing
+
+Type names (`Application`, `Documents`, `Document`, `PartDocument`, `ProductDocument`,
+`Part`, `Body`, `Selection`, ...) follow CATIA's COM automation object model and pycatia's
+public API. They are kept identical on purpose so code and documentation stay portable
+between the Python and Rust worlds.
+
+- No pycatia source code is copied into this project. The COM layer is an independent
+  implementation built on `IDispatch`.
+- pycatia itself is MIT-licensed.
+- CATIA is a trademark of Dassault Systèmes. This project is not affiliated with or
+  endorsed by Dassault Systèmes or the pycatia project.
+
 ## Roadmap
 
 See [ROADMAP.md](ROADMAP.md) for the full plan. Short version:
