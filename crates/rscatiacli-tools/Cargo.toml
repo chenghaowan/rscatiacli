@@ -10,3 +10,4 @@ homepage.workspace = true
 [dependencies]
 rscatiacli = { version = "0.0.1", path = "../rscatiacli" }
 serde_json.workspace = true
+rust_xlsxwriter.workspace = true

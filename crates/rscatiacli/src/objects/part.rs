@@ -1,8 +1,11 @@
 //! `Part` 及其下的 Body / 几何图形集 / 轴系 / 基准元素。
 
 use crate::collections::ComCollection;
-use crate::dispatch::{ComObj, ComObject, FromComObj};
+use crate::dispatch::{Arg, ComObj, ComObject, FromComObj};
 use crate::error::ComResult;
+
+use super::hybrid_shape_factory::HybridShapeFactory;
+use super::reference::Reference;
 
 com_wrapper!(Part);
 com_wrapper!(Bodies);
@@ -27,6 +30,13 @@ impl ComCollection for Bodies {
 
 impl ComCollection for HybridBodies {
     type Item = HybridBody;
+}
+
+impl HybridBodies {
+    /// 新建几何图形集（`Add` 无参，返回新节点）。
+    pub fn add(&self) -> ComResult<HybridBody> {
+        Ok(HybridBody::new(self.com().call("Add", &[])?.as_obj()?))
+    }
 }
 
 impl ComCollection for AxisSystems {
@@ -68,6 +78,28 @@ impl Part {
     pub fn update(&self) -> ComResult<()> {
         self.com().call("Update", &[]).map(|_| ())
     }
+
+    /// 把指定 Body 设为 PartBody（`MainBody`）。
+    pub fn set_main_body(&self, body: &Body) -> ComResult<()> {
+        self.com().put("MainBody", Arg::Obj(body.com().clone()))
+    }
+
+    /// 为对象创建 `Reference`（datum 化 / 测量的入口）。
+    pub fn create_reference_from_object(&self, object: &impl ComObject) -> ComResult<Reference> {
+        Ok(Reference::new(
+            self.com()
+                .call(
+                    "CreateReferenceFromObject",
+                    &[Arg::Obj(object.com().clone())],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 几何 datum 工厂。
+    pub fn hybrid_shape_factory(&self) -> ComResult<HybridShapeFactory> {
+        child(self.com(), "HybridShapeFactory")
+    }
 }
 
 impl Body {
@@ -83,6 +115,13 @@ impl Body {
 impl HybridBody {
     pub fn hybrid_shapes(&self) -> ComResult<Entities> {
         child(self.com(), "HybridShapes")
+    }
+
+    /// 把 datum 追加进本图形集。
+    pub fn append_hybrid_shape(&self, shape: &impl ComObject) -> ComResult<()> {
+        self.com()
+            .call("AppendHybridShape", &[Arg::Obj(shape.com().clone())])
+            .map(|_| ())
     }
 }
 

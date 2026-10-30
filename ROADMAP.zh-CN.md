@@ -14,26 +14,35 @@
 - 会话纪律：专用 STA 线程、ROT attach、多实例守卫、后台空会话恢复、每次操作重新 attach。
 - Typed 对象模型：`Application`、`Documents`、`Document`、`Part`、`Bodies` / `Body`、
   `HybridBodies` / `HybridBody`、`AxisSystems`、`OriginElements`、`Product` / `Products`、
-  `Selection` / `SelectionItem` / `VisProperties`、通用 `ComCollection`。
+  `Publications` / `Publication`、`Reference`、`HybridShapeFactory`、`SPAWorkbench` /
+  `Measurable`、`Selection` / `SelectionItem` / `VisProperties`、通用 `ComCollection`。
 - 诊断 CLI：`status`、`probe`、`put-selftest`、`ps`。
-- 工具：`colorize`、`body_rename`、`hide_show`，以及 JSON 工具注册表。
+- 工具：`colorize`、`body_rename`、`hide_show`、`link_fixer`（status/scan/fix）、
+  `body_to_part`（含 Excel 报表），以及 JSON 工具注册表与按脚本超时。
 - 应用集成：path 依赖、薄适配层、`LTL_CATIA_RUST` A/B 开关。
-- 真实 CATIA V5 会话验证（probe、属性写回、dry-run、应用与独立工具 CLI 输出逐字一致）。
+- 真实 CATIA V5 会话验证（probe、属性写回、dry-run、应用与独立工具 CLI 输出逐字一致；
+  link_fixer / body_to_part 已过只读真机验证，写路径待实跑确认）。
 
 ## 🔜 下一步 —— 结构类工具
 
 优先级跟随应用层的迁移顺序。候选：
 
 1. **材质赋值**（`add_material`）—— 需要 `Part` 材质 / 材质管理器相关 API。
-2. **活动零件抓取**（`capture_active_part`）—— 导出或快照当前零件。
-3. **Body 转零件**（`body_to_part`）—— 从 Body 创建零件文档。
-4. **曲面操作**（`join_surface`、`offset_surface`、`stitch_surface`、`trim_boundary`）
-   —— 需要 `Reference` 与 `HybridShapeFactory` 封装。
-5. **链接修复**（`link_fixer`）—— 检查并修复文档断链。
-6. **产品分析 / 命名**（`product_analysis`、`batch_product_analysis`）——
+2. **曲面操作**（`join_surface`、`offset_surface`、`stitch_surface`、`trim_boundary`）
+   —— `Reference` 与 `HybridShapeFactory` 骨架已随 body_to_part 落地，补 HybridShape
+   具体类型即可。
+3. **产品分析 / 命名**（`product_analysis`、`batch_product_analysis`）——
    Product 树遍历、命名规则、批量处理。
-7. **工程图自动切换** —— 活动文档是工程图时，联动到同名零件 / 装配文档
+4. **工程图自动切换** —— 活动文档是工程图时，联动到同名零件 / 装配文档
    （目前仍只有 Python 版）。
+
+每一项只补它实际需要的对象模型成员；集合与会话的通用能力已经覆盖大部分遍历代码。
+
+## 💭 缓做 / 外部替代
+
+- **活动零件抓取**（`capture_active_part`）—— 截图能力由应用的 pointtofixcraft
+  插件覆盖，此 sidecar 暂不迁移；若日后要迁，需要 `Window` / `Viewer3D` /
+  `Viewpoint3D` 封装 + 图像编码管线。
 
 每一项只补它实际需要的对象模型成员；集合与会话的通用能力已经覆盖大部分遍历代码。
 

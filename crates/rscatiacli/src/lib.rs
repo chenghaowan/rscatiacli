@@ -23,6 +23,7 @@ pub use dispatch::{item_at, Arg, ComObj, ComObject, FromComObj, Ret};
 pub use error::{ComError, ComResult};
 pub use objects::*;
 pub use session::{
-    attach_with_guard, catia_is_running, cnext_count, probe, process_names_containing,
-    put_selftest, run_on_sta, status, with_application, Progress,
+    attach_with_guard, attach_without_guard, catia_is_running, cnext_count, probe,
+    process_names_containing, put_selftest, run_on_sta, status, status_on_sta, with_application,
+    Progress,
 };

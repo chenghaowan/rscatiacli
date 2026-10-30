@@ -4,8 +4,10 @@
 //! `rscatiacli`。新工具迁移时在 `json_tool` 注册即可，ltl-manage 无需改注册表。
 
 pub mod body_rename;
+pub mod body_to_part;
 pub mod colorize;
 pub mod hide_show;
+pub mod link_fixer;
 
 use std::cell::RefCell;
 use std::time::Duration;
@@ -27,7 +29,19 @@ fn json_tool(script: &str) -> Option<JsonToolFn> {
     match script {
         "body_rename/rename_bodies.py" => Some(body_rename::run),
         "hide_show/hide_show.py" => Some(hide_show::run),
+        "link_fixer/catia_link_fixer_bridge.py" => Some(link_fixer::run),
+        "body_to_part/catia_body_to_part_bridge.py" => Some(body_to_part::run),
         _ => None,
+    }
+}
+
+/// 按脚本分配执行时限：body_to_part 逐 Body SaveAs + 建装配，link_fixer
+/// 的兜底重开全量文档都远超默认 120s；未列出的脚本维持默认。
+fn json_tool_timeout(script: &str) -> Duration {
+    match script {
+        "link_fixer/catia_link_fixer_bridge.py" => Duration::from_secs(900),
+        "body_to_part/catia_body_to_part_bridge.py" => Duration::from_secs(3600),
+        _ => Duration::from_secs(120),
     }
 }
 
@@ -38,6 +52,15 @@ pub fn is_rust_json_script(script: &str) -> bool {
 
 /// 执行 JSON 工具。**阻塞调用**，内部投递到 STA 线程。
 pub fn run_json_script(script: &str, params: &str) -> JsonScriptOutcome {
+    run_json_script_with_timeout(script, params, json_tool_timeout(script))
+}
+
+/// 执行 JSON 工具，显式指定执行时限。**阻塞调用**，内部投递到 STA 线程。
+pub fn run_json_script_with_timeout(
+    script: &str,
+    params: &str,
+    timeout: Duration,
+) -> JsonScriptOutcome {
     let Some(tool) = json_tool(script) else {
         return JsonScriptOutcome {
             result: Err(ComError::runtime(format!("脚本未迁移到 Rust: {script}"))),
@@ -48,7 +71,7 @@ pub fn run_json_script(script: &str, params: &str) -> JsonScriptOutcome {
     // 参数解析失败按空对象处理（Python 版会返回参数错误，这里由各工具自行兜底）
     let params: Value = serde_json::from_str(params).unwrap_or(Value::Null);
 
-    match run_on_sta(Duration::from_secs(120), move || {
+    match run_on_sta(timeout, move || {
         let logs = RefCell::new(Vec::<String>::new());
         let result = tool(&params, &|msg| logs.borrow_mut().push(msg.to_string()));
         (result, logs.into_inner())

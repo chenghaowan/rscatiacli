@@ -46,7 +46,8 @@ Bindings implemented and verified against a live CATIA V5 session:
 - `Application`, `Documents`, `Document`, `PartDocument`, `ProductDocument`
 - `Part`, `Bodies` / `Body`, `HybridBodies` / `HybridBody`, `AxisSystems`, `OriginElements`
 - `Selection`, `SelectionItem`, `VisProperties`
-- `Product`, `Products`
+- `Product`, `Products`, `Publications` / `Publication`
+- `Reference`, `HybridShapeFactory` (datum creation / cleanup), `SPAWorkbench` / `Measurable`
 - `ComCollection` (`count` / `item` / `items`) with method → property-get fallback
 - Session diagnostics: `status`, `probe`, `put-selftest`, `ps`
 
@@ -57,8 +58,12 @@ Tools implemented in `rscatiacli-tools`:
 | colorize | `colorize-bodies` | Assigns a distinct palette color to every body of the active part. |
 | body rename | `body_rename/rename_bodies.py` | Cleans body / geometrical-set names: keeps the last `keep_last` `\`-separated segments, replaces illegal characters, de-duplicates with `_2`, `_3`, ... |
 | hide-show | `hide_show/hide_show.py` | Shows/hides bodies, geometrical sets, axis systems, reference planes and constraints; recurses into the part documents of a product. |
+| link-fixer | `link_fixer/catia_link_fixer_bridge.py` | Broken-link check & repair for CATProducts (`status` / `scan` / `fix`): relink to open documents via `ReplaceProduct` first, then add directories to FileSearchOrder, finally save-and-reopen everything as a fallback. |
+| body-to-part | `body_to_part/catia_body_to_part_bridge.py` | Splits every body of a CATPart into its own CATPart (publish → copy → paste → datum-ize related geometry → SaveAs), assembles a Product and writes an Excel report. |
 
-All three support `dry_run` where applicable and were exercised on real CATIA documents.
+All tools support `dry_run` where applicable. link_fixer and body_to_part passed
+read-only verification on a live CATIA session (`status` / `scan` / dry-run);
+their write paths still need an on-machine run.
 
 ## Versioning
 
@@ -93,6 +98,8 @@ cargo run -p rscatiacli -- ps
 # Run a migrated tool outside the UI
 cargo run -p rscatiacli-tools -- json hide_show/hide_show.py '{"action":"show-body","dry_run":true}'
 cargo run -p rscatiacli-tools -- json body_rename/rename_bodies.py '{"dry_run":true}'
+cargo run -p rscatiacli-tools -- json link_fixer/catia_link_fixer_bridge.py '{"action":"scan","dry_run":true}'
+cargo run -p rscatiacli-tools -- json body_to_part/catia_body_to_part_bridge.py '{"action":"run","dry_run":true}'
 cargo run -p rscatiacli-tools -- colorize
 ```
 
@@ -147,9 +154,24 @@ raw.call("SomeMethod", &[Arg::I32(1)])?;
 | `HybridBody.hybrid_shapes` | `HybridBody::hybrid_shapes()` |
 | `part.origin_elements.PlaneXY` | `Part::origin_elements()?.plane_xy()` |
 | `selection.clear()` / `.add(obj)` / `.search(q)` | `Selection::clear()` / `add()` / `search()` |
+| `selection.copy()` / `.paste()` / `.paste_special(f)` / `.delete()` | `Selection::copy()` / `paste()` / `paste_special()` / `delete()` |
 | `selection.vis_properties` | `Selection::vis_properties()` |
 | `vis_properties.set_show(n)` | `VisProperties::set_show(i32)` |
 | `vis_properties.set_real_color(r, g, b, 0)` | `VisProperties::set_real_color(r, g, b, 0)` |
+| `document.save()` / `.close()` / `.save_as(p)` | `Document::save()` / `close()` / `save_as()` |
+| `documents.add("Part")` / `.open(p)` | `Documents::add()` / `open()` |
+| `PartDocument.spa_workbench().get_measurable(ref).volume` | `PartDocument::spa_workbench()?.get_measurable(&r)?.volume()` |
+| `part.create_reference_from_object(obj)` | `Part::create_reference_from_object()` |
+| `part.hybrid_shape_factory` | `Part::hybrid_shape_factory()` |
+| `hybrid_shape_factory.AddNewLineDatum(ref)` | `HybridShapeFactory::add_new_line_datum()` (also Point/Circle/Curve/Surface/Volume) |
+| `hybrid_bodies.add()` | `HybridBodies::add()` |
+| `hybrid_body.AppendHybridShape(datum)` | `HybridBody::append_hybrid_shape()` |
+| `product.part_number` | `Product::part_number()` / `set_part_number()` |
+| `product.publications.Add(name)` / `.SetDirect(name, ref)` | `Publications::add()` / `set_direct()` |
+| `products.add_external_component(doc)` | `Products::add_external_component()` |
+| `products.replace_product(comp, ref, False)` | `Products::replace_product()` |
+| `application.FileSearchOrder` | `Application::file_search_order()` / `set_file_search_order()` |
+| `application.DisplayFileAlerts = False` | `Application::set_display_file_alerts(false)` |
 | `ProductDocument.product` | `ProductDocument::product()` |
 | `product.products` | `Product::products()` |
 | `product.reference_product` | `Product::reference_product()` |

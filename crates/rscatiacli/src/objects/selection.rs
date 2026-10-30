@@ -5,6 +5,7 @@ use crate::dispatch::{Arg, ComObj, ComObject};
 use crate::error::ComResult;
 
 use super::part::Entity;
+use super::reference::Reference;
 
 com_wrapper!(Selection);
 com_wrapper!(SelectionItem);
@@ -37,6 +38,28 @@ impl Selection {
             self.com().get("VisProperties")?.as_obj()?,
         ))
     }
+
+    /// 复制选中对象到 CATIA 剪贴板（跨文档复制前对象需已发布）。
+    pub fn copy(&self) -> ComResult<()> {
+        self.com().call("Copy", &[]).map(|_| ())
+    }
+
+    /// 粘贴到当前选中的容器。
+    pub fn paste(&self) -> ComResult<()> {
+        self.com().call("Paste", &[]).map(|_| ())
+    }
+
+    /// 特殊格式粘贴（如 "CATPrtResult"）。
+    pub fn paste_special(&self, format: &str) -> ComResult<()> {
+        self.com()
+            .call("PasteSpecial", &[Arg::Str(format.to_string())])
+            .map(|_| ())
+    }
+
+    /// 删除选中对象。
+    pub fn delete(&self) -> ComResult<()> {
+        self.com().call("Delete", &[]).map(|_| ())
+    }
 }
 
 impl SelectionItem {
@@ -47,6 +70,11 @@ impl SelectionItem {
 
     pub fn raw_value(&self) -> ComResult<ComObj> {
         self.com().get("Value")?.as_obj()
+    }
+
+    /// 选择项对应的 `Reference`（发布 SetDirect 用）。
+    pub fn reference(&self) -> ComResult<Reference> {
+        Ok(Reference::new(self.com().get("Reference")?.as_obj()?))
     }
 }
 

@@ -45,7 +45,8 @@ rscatiacli-tools = { path = "../rscatiacli/crates/rscatiacli-tools" }
 - `Application`、`Documents`、`Document`、`PartDocument`、`ProductDocument`
 - `Part`、`Bodies` / `Body`、`HybridBodies` / `HybridBody`、`AxisSystems`、`OriginElements`
 - `Selection`、`SelectionItem`、`VisProperties`
-- `Product`、`Products`
+- `Product`、`Products`、`Publications` / `Publication`
+- `Reference`、`HybridShapeFactory`（datum 创建 / 清理）、`SPAWorkbench` / `Measurable`
 - `ComCollection`（`count` / `item` / `items`），`Item` 支持方法 → 带参属性回退
 - 会话诊断：`status`、`probe`、`put-selftest`、`ps`
 
@@ -56,8 +57,11 @@ rscatiacli-tools = { path = "../rscatiacli/crates/rscatiacli-tools" }
 | colorize | `colorize-bodies` | 给活动零件的每个 Body 分配一种调色板颜色。 |
 | body rename | `body_rename/rename_bodies.py` | 清洗 Body / 几何图形集名字：`\` 分层保留最后 `keep_last` 段、非法字符转下划线、重名追加 `_2`、`_3` ... |
 | hide-show | `hide_show/hide_show.py` | 显示/隐藏 Body、几何图形集、轴系、参考面、约束；装配体递归处理其下所有 Part 文档。 |
+| link-fixer | `link_fixer/catia_link_fixer_bridge.py` | 装配断链检查与修复：`status` / `scan` / `fix`；优先重连到已打开文档（`ReplaceProduct`），其次把目录加进 FileSearchOrder，兜底保存并重开全部文档。 |
+| body-to-part | `body_to_part/catia_body_to_part_bridge.py` | 把 CATPart 的每个 Body 拆成独立 CATPart（发布 → 复制 → 粘贴 → datum 化关联几何 → SaveAs），建 Product 装配并生成 Excel 统计。 |
 
-三个工具在适用处都支持 `dry_run`，并已在真实 CATIA 文档上跑过。
+各工具在适用处都支持 `dry_run`；link_fixer 与 body_to_part 已在真实 CATIA 会话上
+完成只读验证（status / scan / dry-run），写路径待真机确认。
 
 ## 版本策略
 
@@ -90,6 +94,8 @@ cargo run -p rscatiacli -- ps
 # 不进 UI 调试工具
 cargo run -p rscatiacli-tools -- json hide_show/hide_show.py '{"action":"show-body","dry_run":true}'
 cargo run -p rscatiacli-tools -- json body_rename/rename_bodies.py '{"dry_run":true}'
+cargo run -p rscatiacli-tools -- json link_fixer/catia_link_fixer_bridge.py '{"action":"scan","dry_run":true}'
+cargo run -p rscatiacli-tools -- json body_to_part/catia_body_to_part_bridge.py '{"action":"run","dry_run":true}'
 cargo run -p rscatiacli-tools -- colorize
 ```
 
@@ -144,9 +150,24 @@ raw.call("SomeMethod", &[Arg::I32(1)])?;
 | `HybridBody.hybrid_shapes` | `HybridBody::hybrid_shapes()` |
 | `part.origin_elements.PlaneXY` | `Part::origin_elements()?.plane_xy()` |
 | `selection.clear()` / `.add(obj)` / `.search(q)` | `Selection::clear()` / `add()` / `search()` |
+| `selection.copy()` / `.paste()` / `.paste_special(f)` / `.delete()` | `Selection::copy()` / `paste()` / `paste_special()` / `delete()` |
 | `selection.vis_properties` | `Selection::vis_properties()` |
 | `vis_properties.set_show(n)` | `VisProperties::set_show(i32)` |
 | `vis_properties.set_real_color(r, g, b, 0)` | `VisProperties::set_real_color(r, g, b, 0)` |
+| `document.save()` / `.close()` / `.save_as(p)` | `Document::save()` / `close()` / `save_as()` |
+| `documents.add("Part")` / `.open(p)` | `Documents::add()` / `open()` |
+| `PartDocument.spa_workbench().get_measurable(ref).volume` | `PartDocument::spa_workbench()?.get_measurable(&r)?.volume()` |
+| `part.create_reference_from_object(obj)` | `Part::create_reference_from_object()` |
+| `part.hybrid_shape_factory` | `Part::hybrid_shape_factory()` |
+| `hybrid_shape_factory.AddNewLineDatum(ref)` | `HybridShapeFactory::add_new_line_datum()`（另有 Point/Circle/Curve/Surface/Volume） |
+| `hybrid_bodies.add()` | `HybridBodies::add()` |
+| `hybrid_body.AppendHybridShape(datum)` | `HybridBody::append_hybrid_shape()` |
+| `product.part_number` | `Product::part_number()` / `set_part_number()` |
+| `product.publications.Add(name)` / `.SetDirect(name, ref)` | `Publications::add()` / `set_direct()` |
+| `products.add_external_component(doc)` | `Products::add_external_component()` |
+| `products.replace_product(comp, ref, False)` | `Products::replace_product()` |
+| `application.FileSearchOrder` | `Application::file_search_order()` / `set_file_search_order()` |
+| `application.DisplayFileAlerts = False` | `Application::set_display_file_alerts(false)` |
 | `ProductDocument.product` | `ProductDocument::product()` |
 | `product.products` | `Product::products()` |
 | `product.reference_product` | `Product::reference_product()` |

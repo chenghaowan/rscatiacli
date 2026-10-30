@@ -138,6 +138,15 @@ where
     }
 }
 
+/// 只读探测用连接：不加多实例守卫、不清理后台空会话。
+/// 仅供 `status` 这类纯读取入口使用；**写操作一律走 [`attach_with_guard`]**。
+pub fn attach_without_guard(wait: Duration) -> ComResult<Application> {
+    if !catia_is_running() {
+        return Err(ComError::runtime("CATIA 未运行: 请先启动 CATIA 再使用工具"));
+    }
+    Ok(Application::new(attach_rot(wait)?))
+}
+
 // ── 连接与守卫 ───────────────────────────────────────────────────────
 
 /// 当前运行的 CATIA 主进程（CNEXT.exe）数量。
@@ -382,6 +391,13 @@ pub fn status() -> serde_json::Value {
             "error": e.to_string(),
         }),
     }
+}
+
+/// 状态探测的 STA 内联版本：**调用时必须已经在 STA 线程上**（工具层注册表
+/// 正是这种场景）。绝不能再走 [`run_on_sta`] —— 会在 worker 里给自己发任务，
+/// 等到超时为止。
+pub fn status_on_sta() -> serde_json::Value {
+    status_inner()
 }
 
 /// 连接 CATIA 并返回活动文档信息，**不修改任何东西**。

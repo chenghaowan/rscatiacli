@@ -1,7 +1,7 @@
 //! `Application`：CATIA 根对象。
 
 use crate::collections::ComCollection;
-use crate::dispatch::ComObject;
+use crate::dispatch::{Arg, ComObject};
 use crate::error::ComResult;
 
 use super::documents::{Document, Documents};
@@ -22,5 +22,20 @@ impl Application {
     /// 已打开文档数量。
     pub fn document_count(&self) -> ComResult<i32> {
         self.documents()?.count()
+    }
+
+    /// 开关文件操作弹框（SaveAs / Open 过程中避免确认对话框卡住自动化）。
+    pub fn set_display_file_alerts(&self, enabled: bool) -> ComResult<()> {
+        self.com().put("DisplayFileAlerts", Arg::Bool(enabled))
+    }
+
+    /// 文件搜索顺序（分号分隔的目录列表，断链重链按此顺序找文件）。
+    pub fn file_search_order(&self) -> ComResult<String> {
+        self.com().get("FileSearchOrder")?.as_string()
+    }
+
+    pub fn set_file_search_order(&self, value: &str) -> ComResult<()> {
+        self.com()
+            .put("FileSearchOrder", Arg::Str(value.to_string()))
     }
 }

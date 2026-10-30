@@ -34,15 +34,23 @@ macro_rules! com_wrapper {
 
 pub mod application;
 pub mod documents;
+pub mod hybrid_shape_factory;
 pub mod part;
 pub mod product;
+pub mod publication;
+pub mod reference;
 pub mod selection;
+pub mod spa_workbench;
 
 pub use application::Application;
 pub use documents::{Document, Documents, PartDocument, ProductDocument};
+pub use hybrid_shape_factory::HybridShapeFactory;
 pub use part::{
     AxisSystem, AxisSystems, Bodies, Body, Constraints, Entities, Entity, HybridBodies, HybridBody,
     HybridShapes, OriginElements, Part, Shapes, Sketches,
 };
 pub use product::{Product, Products};
+pub use publication::{Publication, Publications};
+pub use reference::Reference;
 pub use selection::{Selection, SelectionItem, VisProperties};
+pub use spa_workbench::{Measurable, SPAWorkbench};

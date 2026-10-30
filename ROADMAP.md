@@ -15,30 +15,38 @@ Status legend: ✅ done · 🔜 next · 💭 later / exploring · ⛔ non-goal
   empty-background-session recovery, per-operation attach.
 - Typed object model: `Application`, `Documents`, `Document`, `Part`, `Bodies` / `Body`,
   `HybridBodies` / `HybridBody`, `AxisSystems`, `OriginElements`, `Product` / `Products`,
-  `Selection` / `SelectionItem` / `VisProperties`, generic `ComCollection`.
+  `Publications` / `Publication`, `Reference`, `HybridShapeFactory`, `SPAWorkbench` /
+  `Measurable`, `Selection` / `SelectionItem` / `VisProperties`, generic `ComCollection`.
 - Diagnostics CLI: `status`, `probe`, `put-selftest`, `ps`.
-- Tools: `colorize`, `body_rename`, `hide_show`, plus the JSON tool registry.
+- Tools: `colorize`, `body_rename`, `hide_show`, `link_fixer` (status/scan/fix),
+  `body_to_part` (incl. Excel report), plus the JSON tool registry with per-script timeouts.
 - Application integration: path dependency, thin adapter, `LTL_CATIA_RUST` A/B switch.
 - Live verification on a real CATIA V5 session (probe, property write, dry runs,
-  byte-identical output between the app and the standalone tools CLI).
+  byte-identical output between the app and the standalone tools CLI; link_fixer and
+  body_to_part passed read-only live verification, write paths pending a real run).
 
 ## 🔜 Next — structural tools
 
 Priority is driven by the application layer's migration order. Candidates:
 
 1. **Material assignment** (`add_material`) — needs `Part` material / material-manager APIs.
-2. **Active part capture** (`capture_active_part`) — export or snapshot the active part.
-3. **Body to part** (`body_to_part`) — create a part document from a body.
-4. **Surface operations** (`join_surface`, `offset_surface`, `stitch_surface`, `trim_boundary`)
-   — needs `Reference` and `HybridShapeFactory` wrappers.
-5. **Link fixing** (`link_fixer`) — inspect and repair broken document links.
-6. **Product analysis / naming** (`product_analysis`, `batch_product_analysis`) —
+2. **Surface operations** (`join_surface`, `offset_surface`, `stitch_surface`, `trim_boundary`)
+   — the `Reference` / `HybridShapeFactory` skeleton landed with body_to_part; only the
+   concrete HybridShape wrappers remain.
+3. **Product analysis / naming** (`product_analysis`, `batch_product_analysis`) —
    product-tree traversal, naming rules, batch processing.
-7. **Drawing auto-switch** — when the active document is a drawing, resolve the same-name
+4. **Drawing auto-switch** — when the active document is a drawing, resolve the same-name
    part / product document (still Python-only today).
 
 Each item adds only the object-model members it needs. Shared collection and session
 helpers already cover most traversal code.
+
+## 💭 Deferred / covered elsewhere
+
+- **Active part capture** (`capture_active_part`) — screenshot capability is covered by
+  the application's pointtofixcraft plugin, so this sidecar is not being migrated for now;
+  if it ever is, it needs `Window` / `Viewer3D` / `Viewpoint3D` wrappers plus an
+  image-encoding pipeline.
 
 ## 💭 Later — geometry and measurement
 
