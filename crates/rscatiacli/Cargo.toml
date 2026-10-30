@@ -4,6 +4,10 @@ description = "CATIA V5 COM 晚绑定绑定库（pycatia 风格的 Rust 版）"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords = ["catia", "com", "automation", "cad"]
+categories = ["api-bindings", "os::windows-apis"]
 
 [dependencies]
 serde_json.workspace = true
