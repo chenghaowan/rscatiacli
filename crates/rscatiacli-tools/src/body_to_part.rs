@@ -103,6 +103,30 @@ fn safe_file_name(name: &str) -> String {
         .collect()
 }
 
+/// 落盘文件名转 ASCII。
+///
+/// CATIA COM 的 `SaveAs` / `Open` 拒绝文件名里的非 ASCII 字符（目录名不受限；
+/// 中文文件名在 pywin32 与本库下同样报 "The method SaveAs failed"，实测限制）。
+/// 保留字母数字与 `- . ( )`，其余字符（含中文、空格、管道分隔）折叠成单个 `_`。
+/// 文档内部的零件号 / Body 名保留原文 —— 字符串属性通道不受影响。
+fn ascii_file_name(name: &str) -> String {
+    let mut out = String::new();
+    for c in name.chars() {
+        let keep = c.is_ascii_alphanumeric() || matches!(c, '-' | '.' | '(' | ')');
+        if keep {
+            out.push(c);
+        } else if !out.is_empty() && !out.ends_with('_') {
+            out.push('_');
+        }
+    }
+    let trimmed = out.trim_matches(|c| c == '_' || c == '.');
+    if trimmed.is_empty() {
+        "part".to_string()
+    } else {
+        trimmed.to_string()
+    }
+}
+
 // ── 几何辅助 ─────────────────────────────────────────────────────────
 
 /// 递归扫描源 Part 的所有几何图文集，收集名字以 part_number 开头的元素
@@ -663,9 +687,21 @@ fn run_inner(params: &Value, progress: Progress<'_>) -> Value {
 
         // 5. 第一轮：逐 Body 生成 CATPart 文件
         let mut records: Vec<Record> = Vec::new();
+        let mut used_file_names: std::collections::HashSet<String> = std::collections::HashSet::new();
         for (idx, (body, body_name)) in bodies_list.iter().zip(&body_names).enumerate() {
             let idx = idx + 1;
             let safe_name = safe_file_name(body_name);
+            // 落盘文件名转 ASCII（CATIA SaveAs/Open 拒绝非 ASCII 文件名）；
+            // 零件号 / Body 名保留原文。同名 Body 追加 _2 / _3 去重。
+            let mut file_stem = ascii_file_name(body_name);
+            let mut dedup = 1usize;
+            while !used_file_names.insert(file_stem.to_lowercase()) {
+                dedup += 1;
+                file_stem = format!("{}_{dedup}", ascii_file_name(body_name));
+            }
+            if file_stem != *body_name {
+                progress(&format!("  - 文件名转 ASCII(CATIA 无法保存中文文件名): {file_stem}.CATPart; 零件号/Body 名保留原文"));
+            }
             let name_tag = if safe_name != *body_name {
                 format!("{body_name} -> {safe_name}")
             } else {
@@ -754,10 +790,18 @@ fn run_inner(params: &Value, progress: Progress<'_>) -> Value {
             }
 
             // 5.5 设置 Part Number 与文件名一致
+            // 零件号保留原文；被去重的 Body 追加 _N —— CATIA 拒绝向同一 Product
+            // 添加零件号重复的组件（实测 AddExternalComponent E_FAIL，唯一化后恢复）
+            let part_number_for_doc = if dedup > 1 {
+                progress(&format!("  - 零件号同步去重: {}_{dedup}", safe_name));
+                format!("{safe_name}_{dedup}")
+            } else {
+                safe_name.clone()
+            };
             if let Err(e) = new_doc
                 .product_document()
                 .product()
-                .and_then(|p| p.set_part_number(&safe_name))
+                .and_then(|p| p.set_part_number(&part_number_for_doc))
             {
                 progress(&format!("  - 设置Part Number失败: {e}"));
             }
@@ -797,8 +841,8 @@ fn run_inner(params: &Value, progress: Progress<'_>) -> Value {
                 Ok(())
             })();
 
-            // 5.8 保存并关闭
-            let part_path = output_dir.join(format!("{safe_name}.CATPart"));
+            // 5.8 保存并关闭（文件名用 ASCII 版；零件号已是原文 safe_name）
+            let part_path = output_dir.join(format!("{file_stem}.CATPart"));
             match new_doc.save_as(&part_path.to_string_lossy()) {
                 Ok(_) => progress(&format!("  - 已保存: {}", part_path.display())),
                 Err(e) => {
@@ -887,7 +931,7 @@ fn run_inner(params: &Value, progress: Progress<'_>) -> Value {
 
 #[cfg(test)]
 mod tests {
-    use super::{extract_part_number, safe_file_name};
+    use super::{ascii_file_name, extract_part_number, safe_file_name};
 
     #[test]
     fn extracts_leading_digits() {
@@ -904,6 +948,23 @@ mod tests {
             "a_b_c_d_e_f_g_h_i_j"
         );
         assert_eq!(safe_file_name("plain"), "plain");
+    }
+
+    #[test]
+    fn ascii_file_names_strip_non_ascii() {
+        // 真实 Body 名: 管道分隔 + 中文段 → 保留 ASCII 语义段
+        assert_eq!(
+            ascii_file_name("PSH-28159684 |  C.1 |  螺钉台 |  工作中|Upper Outer Housing"),
+            "PSH-28159684_C.1_Upper_Outer_Housing"
+        );
+        assert_eq!(
+            ascii_file_name("Connect Bar --Right"),
+            "Connect_Bar_--Right"
+        );
+        assert_eq!(ascii_file_name("bracket-2.CATPart"), "bracket-2.CATPart");
+        // 全中文 → 兜底名
+        assert_eq!(ascii_file_name("螺钉台"), "part");
+        assert_eq!(ascii_file_name(""), "part");
     }
 
     #[test]
