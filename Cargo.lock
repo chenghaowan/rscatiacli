@@ -106,7 +106,7 @@ dependencies = [
 
 [[package]]
 name = "rscatiacli"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "serde_json",
  "sysinfo",
@@ -115,7 +115,7 @@ dependencies = [
 
 [[package]]
 name = "rscatiacli-tools"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "rscatiacli",
  "serde_json",

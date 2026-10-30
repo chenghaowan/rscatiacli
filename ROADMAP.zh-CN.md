@@ -7,7 +7,7 @@
 
 状态：✅ 已完成 · 🔜 下一步 · 💭 以后 / 探索中 · ⛔ 非目标
 
-## ✅ 已完成 —— v0.1 基础
+## ✅ 已完成 —— v0.0.1 基础
 
 - IDispatch 晚绑定：`get` / `call` / `get_with` / `put`、VARIANT 转换、`EXCEPINFO`
   错误文案、所有路径上的 `VariantClear`。
@@ -63,7 +63,7 @@
 - 迁完剩余工具后，从安装包里移除 Python 运行时。
 - 高风险工具可选独立进程运行（`rscatiacli-tools` 作为 sidecar），避免卡死的 COM 调用
   拖垮 UI 进程。
-- 工具面稳定后发布 1.0 版本化 API。
+- 工具面稳定后，按版本策略发布版本化 API。
 
 ## 💭 API 加固
 
@@ -71,6 +71,12 @@
 - `ComCollection::item_by_name`。
 - Parameters / Knowledge、AxisSystem、Drawing 接口。
 - 更多示例与手工 CATIA 测试清单。
+
+## 版本策略
+
+- **0.0.x（当前）：** 绑定和工具仍在演进，允许破坏性变更。
+- **0.1.0：** 需要 pycatia 的功能面至少覆盖 **50%**（以 typed 绑定计），且已迁移工具稳定。
+- **1.0.0：** pycatia 自己都还没到 1.0，本项目又只按需封装，暂不考虑。
 
 ## ⛔ 非目标
 

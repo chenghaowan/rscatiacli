@@ -7,7 +7,7 @@ This roadmap follows the project's extraction rule:
 
 Status legend: ✅ done · 🔜 next · 💭 later / exploring · ⛔ non-goal
 
-## ✅ Done — v0.1 foundation
+## ✅ Done — v0.0.1 foundation
 
 - IDispatch late binding: `get` / `call` / `get_with` / `put`, VARIANT conversion,
   `EXCEPINFO` messages, `VariantClear` on every path.
@@ -66,7 +66,7 @@ Prerequisites:
 - Port the remaining tools, then remove the Python runtime from the installer.
 - Optional out-of-process runner (`rscatiacli-tools` as a sidecar) for high-risk tools
   that may hang inside CATIA, so a stuck COM call cannot take down the UI process.
-- Publish a stable versioned API once the tool surface stops moving.
+- Publish a versioned API once the tool surface stops moving (see Versioning).
 
 ## 💭 API hardening
 
@@ -75,6 +75,14 @@ Prerequisites:
 - `ComCollection::item_by_name` for named collections.
 - Parameters / Knowledge, AxisSystem, Drawing interfaces.
 - More examples and a manual CATIA test checklist.
+
+## Versioning
+
+- **0.0.x (current):** bindings and tools are still moving; breaking changes are allowed.
+- **0.1.0:** requires at least **50% of pycatia's functional surface** covered by typed
+  bindings, plus stable migrated tools.
+- **1.0.0:** not planned while pycatia itself is pre-1.0 and this project intentionally
+  wraps only what the application needs.
 
 ## ⛔ Non-goals
 

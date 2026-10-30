@@ -59,6 +59,16 @@ rscatiacli-tools = { path = "../rscatiacli/crates/rscatiacli-tools" }
 
 三个工具在适用处都支持 `dry_run`，并已在真实 CATIA 文档上跑过。
 
+## 版本策略
+
+当前版本线故意停留在 **0.0.x**：
+
+- **0.0.x** —— 绑定和工具都还在演进，允许破坏性变更。
+- **0.1.0** —— 只有在 **pycatia 的功能面至少覆盖 50%**、且已迁移工具稳定之后才升。
+- **1.0.0** —— pycatia 自己都还没到 1.0，本项目又只按需封装，暂不考虑。
+
+这不是对 pycatia 全量对齐的承诺，而是防止高估成熟度。
+
 ## 环境要求
 
 - Windows（通过 `windows` crate 访问 COM / OLE）。

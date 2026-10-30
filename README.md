@@ -60,6 +60,18 @@ Tools implemented in `rscatiacli-tools`:
 
 All three support `dry_run` where applicable and were exercised on real CATIA documents.
 
+## Versioning
+
+The current line is **0.0.x** on purpose:
+
+- **0.0.x** — bindings and tools are still moving; breaking changes are allowed.
+- **0.1.0** — only after at least **50% of pycatia's functional surface** is covered by
+  typed bindings and the migrated tools are stable.
+- **1.0.0** — not planned while pycatia itself is pre-1.0 and this project intentionally
+  wraps only what the application needs.
+
+This is not a promise of pycatia parity; it is a guard against overstating maturity.
+
 ## Requirements
 
 - Windows (COM / OLE through the `windows` crate).
