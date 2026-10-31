@@ -5,6 +5,7 @@
 
 pub mod add_material;
 pub mod apply_naming;
+pub mod batch_bbox;
 pub mod body_rename;
 pub mod body_to_part;
 pub mod colorize;
@@ -15,6 +16,9 @@ pub mod join_surface;
 pub mod link_fixer;
 pub mod naming_rules;
 pub mod offset_surface;
+pub mod product_measure;
+pub mod rule_axis;
+pub mod rule_projected_surface;
 pub mod save_product_without_history;
 pub mod stitch_surface;
 pub mod surface_common;
@@ -57,6 +61,10 @@ fn json_tool(script: &str) -> Option<JsonToolFn> {
         }
         "dump_solid/dump_solid.py" => Some(dump_solid::run),
         "product_analysis/vba_bbox_generate.py" => Some(vba_bbox_generate::run),
+        // 测量三件套（rule_projected_surface 依赖 rule_axis 的轴系建立）
+        "product_analysis/rule_projected_surface.py" => Some(rule_projected_surface::run),
+        "product_analysis/batch_bbox.py" => Some(batch_bbox::run),
+        "product_analysis/product_measure.py" => Some(product_measure::run),
         _ => None,
     }
 }
@@ -78,6 +86,10 @@ fn json_tool_timeout(script: &str) -> Duration {
         "product_analysis/save_product_without_history.py" => Duration::from_secs(1200),
         "dump_solid/dump_solid.py" => Duration::from_secs(600),
         "product_analysis/vba_bbox_generate.py" => Duration::from_secs(900),
+        // 投影面积: 无轴系时先做角度扫描建系(几十次极值量测)再压扁/模板实例化
+        "product_analysis/rule_projected_surface.py" => Duration::from_secs(900),
+        "product_analysis/batch_bbox.py" => Duration::from_secs(3600),
+        "product_analysis/product_measure.py" => Duration::from_secs(3600),
         _ => Duration::from_secs(120),
     }
 }

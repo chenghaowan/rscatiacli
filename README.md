@@ -70,6 +70,9 @@ Tools implemented in `rscatiacli-tools`:
 | save-without-history | `product_analysis/save_product_without_history.py` | FPRM010: converts each first-level CATPart of a product into a history-free part (visible non-empty bodies + wireframe pasted `CATPrtResultWithOutLink`), saves them under `<out>/<part>/<part>.CATPart` and reassembles a new product. |
 | dump-solid | `dump_solid/dump_solid.py` | Same body-dump conversion for the active part only (`<src dir>/Result/<part>.CATPart`), optional single `body_name`, wireframe optional. |
 | vba-bbox-generate | `product_analysis/vba_bbox_generate.py` | Generates the full bounding-box geometry (extremum points → constrained sketches → sweep) along the shared `tooling axis`, reads exact L/W/H, real volume, material/density/weight, writes `Bbox_dx/dy/dz` parameters and the `x…y…z…` description. |
+| rule-projected-surface | `product_analysis/rule_projected_surface.py` | Tooling-axis XY projected area excluding through-holes: `PROJECTED_AREA.CATPart` template via `InstanceFactory` (silhouette), `Affinity` flatten (area / 2) fallback; the no-link result surface is kept in `ProjSurf_XY`, axis systems are read or established via the rule-bounding-box machinery (`rule_axis`). |
+| batch-bbox | `product_analysis/batch_bbox.py` | Thin wrapper: walks a directory for `.CATPart` files and runs vba-bbox-generate per file (`keep_geometry=false`), one row per part with filename-rule fallback for part number/name. |
+| product-measure | `product_analysis/product_measure.py` | Thin wrapper: measures every loaded CATPart of the active CATProduct (`bbox` / `area` / `both`), opens-measures-closes each part, merges bbox + projected-area rows; same-name `.CATProduct` lookup when a part/drawing is active. |
 
 
 All tools support `dry_run` where applicable. link_fixer, body_to_part, add_material
@@ -238,9 +241,10 @@ See [ROADMAP.md](ROADMAP.md) for the full plan. Short version:
 - **Done:** bindings foundation, session discipline, structural tools, materials,
   surface tools (join / offset / stitch / trim), SAFEARRAY in- and out-parameters
   (`as_f64_array` / `as_obj_array`), COM type-name reads (`GetTypeInfo`).
-- **Next:** rule_projected_surface (908) then the batch_bbox / product_measure
-  wrappers on top of vba_bbox_generate; measure harness (screenshot + FTA
-  annotation, partially non-COM); text-to-sketch.
+- **Done:** rule_projected_surface (+ rule_axis establishment core), batch_bbox and
+  product_measure wrappers, InstanceFactory template instantiation, `Measurable.Area`.
+- **Next:** measure harness (screenshot + FTA annotation, partially non-COM);
+  rule_bounding_box standalone port; text-to-sketch.
 - **Later:** honeycomb ribs (UDF-based, not automatable — generate directly instead),
   capture/screenshot tooling.
 - **Consolidation:** make Rust the default path, retire the Python sidecar, optional process

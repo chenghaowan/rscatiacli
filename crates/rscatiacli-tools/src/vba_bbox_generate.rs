@@ -27,7 +27,7 @@ use rscatiacli::{attach_with_guard, ComCollection, ComObject, ComResult, Progres
 use crate::naming_rules::refine_part_number;
 use crate::surface_common::com_type_name;
 
-type Vec3 = [f64; 3];
+pub(crate) type Vec3 = [f64; 3];
 
 /// 临时几何名关键字（清理与跳过的依据）。
 const TEMP_NAMES: [&str; 2] = ["boundingbox", "rulebbox"];
@@ -48,11 +48,11 @@ fn is_temp_name(name: &str) -> bool {
     TEMP_NAMES.iter().any(|k| lower.contains(k))
 }
 
-fn dot(a: Vec3, b: Vec3) -> f64 {
+pub(crate) fn dot(a: Vec3, b: Vec3) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
-fn cross(a: Vec3, b: Vec3) -> Vec3 {
+pub(crate) fn cross(a: Vec3, b: Vec3) -> Vec3 {
     [
         a[1] * b[2] - a[2] * b[1],
         a[2] * b[0] - a[0] * b[2],
@@ -60,7 +60,7 @@ fn cross(a: Vec3, b: Vec3) -> Vec3 {
     ]
 }
 
-fn norm(v: Vec3) -> Vec3 {
+pub(crate) fn norm(v: Vec3) -> Vec3 {
     let n = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
     if n < 1e-12 {
         return [0.0; 3];
@@ -281,7 +281,7 @@ fn product_contains_part(
 }
 
 /// 命令类操作(Sel.Delete/Sel.Search)真正落地的选中集。返回 (选中集, 是否借用)。
-fn command_selection(
+pub(crate) fn command_selection(
     app: &rscatiacli::objects::Application,
     part_doc: &PartDocument,
 ) -> ComResult<(Selection, bool)> {
@@ -298,7 +298,7 @@ fn command_selection(
 }
 
 /// 记下选中集当前内容（借用前保存）。
-fn snapshot_selection(sel: &Selection) -> Vec<ComObj> {
+pub(crate) fn snapshot_selection(sel: &Selection) -> Vec<ComObj> {
     let mut items = Vec::new();
     if let Ok(n) = sel.count() {
         for i in 1..=n {
@@ -311,7 +311,7 @@ fn snapshot_selection(sel: &Selection) -> Vec<ComObj> {
 }
 
 /// 把选中集还原为快照内容（元素已删等异常静默忽略）。
-fn restore_selection(sel: &Selection, items: &[ComObj]) {
+pub(crate) fn restore_selection(sel: &Selection, items: &[ComObj]) {
     let _ = sel.clear();
     for it in items {
         let _ = sel.add(it);
@@ -320,13 +320,13 @@ fn restore_selection(sel: &Selection, items: &[ComObj]) {
 
 // ── 直线查找（draftline / halfline） ─────────────────────────────────
 
-struct LineInfo {
-    name: String,
+pub(crate) struct LineInfo {
+    pub name: String,
     #[allow(dead_code)]
-    start_mm: Option<Vec3>,
+    pub start_mm: Option<Vec3>,
     #[allow(dead_code)]
-    end_mm: Option<Vec3>,
-    direction: Vec3,
+    pub end_mm: Option<Vec3>,
+    pub direction: Vec3,
 }
 
 /// 直线方向（GetDirection 是出参数组，VBA 中转；非直线会失败）。
@@ -483,7 +483,7 @@ fn find_line_by_name_walk(
 }
 
 /// 找名字含 keyword 的第一条直线：先 Selection.Search，未命中回退按名遍历。
-fn find_line_by_keyword(
+pub(crate) fn find_line_by_keyword(
     prt_doc: &PartDocument,
     keyword: &str,
     skip_search: bool,
@@ -553,7 +553,7 @@ fn find_line_by_keyword(
 
 // ── tooling axis ─────────────────────────────────────────────────────
 
-pub struct AxisInfo {
+pub(crate) struct AxisInfo {
     pub origin_mm: Vec3,
     pub x_axis: Vec3,
     pub y_axis: Vec3,
@@ -562,7 +562,7 @@ pub struct AxisInfo {
 }
 
 /// 查找已有 'tooling axis' 基准坐标系（与投影面积工具共用）。
-fn find_tooling_axis(
+pub(crate) fn find_tooling_axis(
     part: &rscatiacli::objects::Part,
     ss: &SystemService,
     progress: Progress<'_>,
@@ -591,7 +591,7 @@ fn find_tooling_axis(
 }
 
 /// 创建 'tooling axis' 共享基准坐标系（按坐标去参，固定基准）。
-fn build_axis_system(
+pub(crate) fn build_axis_system(
     part: &rscatiacli::objects::Part,
     x_axis: Vec3,
     y_axis: Vec3,
@@ -620,7 +620,7 @@ fn build_axis_system(
 // ── 清理 ─────────────────────────────────────────────────────────────
 
 /// 删除名字含 keywords 的 Bodies / HybridBodies（幂等清理）。
-fn cleanup_old(part: &rscatiacli::objects::Part, sel: &Selection, names: &[&str]) {
+pub(crate) fn cleanup_old(part: &rscatiacli::objects::Part, sel: &Selection, names: &[&str]) {
     let _ = sel.clear();
     if let Ok(bodies) = part.bodies() {
         if let Ok(items) = bodies.items() {

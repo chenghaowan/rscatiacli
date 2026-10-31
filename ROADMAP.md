@@ -25,18 +25,32 @@ Status legend: ✅ done · 🔜 next · 💭 later / exploring · ⛔ non-goal
   byte-identical output between the app and the standalone tools CLI; link_fixer and
   body_to_part passed read-only live verification, write paths pending a real run).
 
+## ✅ Done — application batches (r123–r128)
+
+- Materials: `add_material` (`CATMatManagerVBExt` via `SystemService.Evaluate`,
+  SAFEARRAY in/out).
+- Surface tools: `join_surface`, `offset_surface`, `stitch_surface`, `trim_boundary`
+  (Evaluate out-parameter arrays, COM type-name reads, tolerance ladders).
+- Product analysis: `apply_naming`, `find_near_parts`, `save_product_without_history`,
+  `dump_solid`.
+- Measurement: `vba_bbox_generate` (constrained sketches + sweep + `Bbox_*` parameters),
+  `rule_projected_surface` with the `rule_axis` establishment core (extremum → plane
+  → SPA min-distance spans, angle scan), `InstanceFactory` template instantiation,
+  `Measurable.Area`, and the `batch_bbox` / `product_measure` thin wrappers.
+
 ## 🔜 Next — structural tools
 
 Priority is driven by the application layer's migration order. Candidates:
 
-1. **Material assignment** (`add_material`) — needs `Part` material / material-manager APIs.
-2. **Surface operations** (`join_surface`, `offset_surface`, `stitch_surface`, `trim_boundary`)
-   — the `Reference` / `HybridShapeFactory` skeleton landed with body_to_part; only the
-   concrete HybridShape wrappers remain.
-3. **Product analysis / naming** (`product_analysis`, `batch_product_analysis`) —
-   product-tree traversal, naming rules, batch processing.
+1. **Measure harness** (`measure_harness`) — screenshot + FTA/annotation, partially
+   non-COM (Win32 capture), a separate batch.
+2. **Rule bounding box standalone** (`rule_bounding_box`) — the axis core already
+   landed in `rule_axis`; remaining: JSON export + screenshot post-processing.
+3. **Text/QR to sketch** (`text_to_sketch`, `text_outline`, `qr_outline`) —
+   large Factory2D batches.
 4. **Drawing auto-switch** — when the active document is a drawing, resolve the same-name
-   part / product document (still Python-only today).
+   part / product document (still Python-only today; the product-measure wrapper carries
+   a compact same-name lookup already).
 
 Each item adds only the object-model members it needs. Shared collection and session
 helpers already cover most traversal code.

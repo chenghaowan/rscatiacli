@@ -228,6 +228,94 @@ impl HybridShapeFactory {
         ))
     }
 
+    /// 点 + 方向建直线（投影方向参考线；start/end 为起止参数，orientation 控制朝向）。
+    pub fn add_new_line_pt_dir(
+        &self,
+        pt: &Reference,
+        direction: &Reference,
+        start: f64,
+        end: f64,
+        orientation: bool,
+    ) -> ComResult<Entity> {
+        Ok(Entity::new(
+            self.com()
+                .call(
+                    "AddNewLinePtDir",
+                    &[
+                        Arg::Obj(pt.com().clone()),
+                        Arg::Obj(direction.com().clone()),
+                        Arg::F64(start),
+                        Arg::F64(end),
+                        Arg::Bool(orientation),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 按坐标建点（投影方向参考线起点/压扁法 COG 参考点等）。
+    pub fn add_new_point_coord(&self, x: f64, y: f64, z: f64) -> ComResult<Entity> {
+        Ok(Entity::new(
+            self.com()
+                .call("AddNewPointCoord", &[Arg::F64(x), Arg::F64(y), Arg::F64(z)])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 方程建平面（Ax+By+Cz+D=0，tooling axis XY 投影面）。
+    pub fn add_new_plane_equation(&self, a: f64, b: f64, c: f64, d: f64) -> ComResult<Entity> {
+        Ok(Entity::new(
+            self.com()
+                .call(
+                    "AddNewPlaneEquation",
+                    &[Arg::F64(a), Arg::F64(b), Arg::F64(c), Arg::F64(d)],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 过曲线、过点的法平面（压扁法量尺寸的基准平面）。
+    pub fn add_new_plane_normal(&self, line: &Reference, point: &Reference) -> ComResult<Entity> {
+        Ok(Entity::new(
+            self.com()
+                .call(
+                    "AddNewPlaneNormal",
+                    &[Arg::Obj(line.com().clone()), Arg::Obj(point.com().clone())],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 空平移（把模板输出平移回 tooling axis XY 平面）。
+    pub fn add_new_empty_translate(&self) -> ComResult<super::hybrid_shapes::HybridShapeTranslate> {
+        Ok(super::hybrid_shapes::HybridShapeTranslate::new(
+            self.com().call("AddNewEmptyTranslate", &[])?.as_obj()?,
+        ))
+    }
+
+    /// 仿射变形（压扁法：xy 比例 1，z 比例 = scale，把封闭表面压到平面上）。
+    pub fn add_new_affinity(
+        &self,
+        reference: &Reference,
+        ratio_x: f64,
+        ratio_y: f64,
+        ratio_z: f64,
+    ) -> ComResult<super::hybrid_shapes::HybridShapeAffinity> {
+        Ok(super::hybrid_shapes::HybridShapeAffinity::new(
+            self.com()
+                .call(
+                    "AddNewAffinity",
+                    &[
+                        Arg::Obj(reference.com().clone()),
+                        Arg::F64(ratio_x),
+                        Arg::F64(ratio_y),
+                        Arg::F64(ratio_z),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
     /// 显式扫掠（草图沿引导线 → 包围盒实体）。
     pub fn add_new_sweep_explicit(
         &self,

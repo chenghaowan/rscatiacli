@@ -148,6 +148,18 @@ impl Part {
         child(self.com(), "HybridShapeFactory")
     }
 
+    /// 用户特征模板工厂（InstanceFactory，rule_projected_surface 模板实例化用）。
+    pub fn get_customer_factory(
+        &self,
+        name: &str,
+    ) -> ComResult<crate::objects::instance_factory::InstanceFactory> {
+        Ok(crate::objects::instance_factory::InstanceFactory::new(
+            self.com()
+                .call("GetCustomerFactory", &[Arg::Str(name.to_string())])?
+                .as_obj()?,
+        ))
+    }
+
     /// Part Design 实体特征工厂（AddNewSplit 等）。
     pub fn shape_factory(&self) -> ComResult<ShapeFactory> {
         child(self.com(), "ShapeFactory")

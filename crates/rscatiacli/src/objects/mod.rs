@@ -38,6 +38,7 @@ pub mod documents;
 pub mod groups;
 pub mod hybrid_shape_factory;
 pub mod hybrid_shapes;
+pub mod instance_factory;
 pub mod material;
 pub mod parameter;
 pub mod part;
@@ -56,7 +57,11 @@ pub use distances::{Distance, Distances, CAT_DISTANCE_BETWEEN_TWO, CAT_DISTANCE_
 pub use documents::{Document, Documents, PartDocument, ProductDocument};
 pub use groups::{Group, Groups};
 pub use hybrid_shape_factory::HybridShapeFactory;
-pub use hybrid_shapes::{Extract, HybridShapeJoin, HybridShapeLinePtPt, HybridShapeOffset};
+pub use hybrid_shapes::{
+    Extract, HybridShapeAffinity, HybridShapeJoin, HybridShapeLinePtPt, HybridShapeOffset,
+    HybridShapeTranslate,
+};
+pub use instance_factory::InstanceFactory;
 pub use material::{
     Material, MaterialDocument, MaterialFamilies, MaterialFamily, MaterialManager, Materials,
 };

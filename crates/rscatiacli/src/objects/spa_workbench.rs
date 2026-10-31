@@ -30,6 +30,11 @@ impl Measurable {
         self.com().get("Volume")?.as_f64()
     }
 
+    /// 面积（单位 m²；×1e6 转 mm²，测非面特征时 CATIA 可能报错）。
+    pub fn area(&self) -> ComResult<f64> {
+        self.com().get("Area")?.as_f64()
+    }
+
     /// 两测量对象最小距离（mm；Func 直接返回 double，无需 VBA 中转）。
     pub fn get_minimum_distance(&self, other: &Reference) -> ComResult<f64> {
         self.com()

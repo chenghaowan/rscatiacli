@@ -14,6 +14,8 @@ com_wrapper!(HybridShapeJoin);
 com_wrapper!(HybridShapeOffset);
 com_wrapper!(Extract);
 com_wrapper!(HybridShapeLinePtPt);
+com_wrapper!(HybridShapeTranslate);
+com_wrapper!(HybridShapeAffinity);
 
 impl HybridShapeJoin {
     /// 只缝合有公共边的曲面（1 = 开启）。集合内存在不相连曲面时必须用 0。
@@ -94,5 +96,53 @@ impl HybridShapeLinePtPt {
 
     pub fn end_offset(&self) -> ComResult<Parameter> {
         Ok(Parameter::new(self.com().get("EndOffset")?.as_obj()?))
+    }
+}
+
+impl HybridShapeTranslate {
+    /// 平移目标（Reference）。
+    pub fn set_elem_to_translate(&self, reference: &Reference) -> ComResult<()> {
+        self.com()
+            .put("ElemToTranslate", Arg::Obj(reference.com().clone()))
+    }
+
+    /// 平移类型（0 = 沿方向按距离平移）。
+    pub fn set_vector_type(&self, value: i32) -> ComResult<()> {
+        self.com().put("VectorType", Arg::I32(value))
+    }
+
+    /// 平移方向（方向特征，late-bound 直传）。
+    pub fn set_direction(&self, direction: &impl ComObject) -> ComResult<()> {
+        self.com()
+            .put("Direction", Arg::Obj(direction.com().clone()))
+    }
+
+    /// 平移距离（mm，带符号）。
+    pub fn set_distance_value(&self, value: f64) -> ComResult<()> {
+        self.com().put("DistanceValue", Arg::F64(value))
+    }
+
+    /// 是否生成体（投影曲面平移固定 false）。
+    pub fn set_volume_result(&self, value: bool) -> ComResult<()> {
+        self.com().put("VolumeResult", Arg::Bool(value))
+    }
+}
+
+impl HybridShapeAffinity {
+    /// 仿射轴平面（Reference）。
+    pub fn set_axis_plane(&self, reference: &Reference) -> ComResult<()> {
+        self.com()
+            .put("AxisPlane", Arg::Obj(reference.com().clone()))
+    }
+
+    /// 仿射轴原点（Reference）。
+    pub fn set_axis_origin(&self, reference: &Reference) -> ComResult<()> {
+        self.com()
+            .put("AxisOrigin", Arg::Obj(reference.com().clone()))
+    }
+
+    /// 是否生成体（压扁测面积固定 false）。
+    pub fn set_volume_result(&self, value: bool) -> ComResult<()> {
+        self.com().put("VolumeResult", Arg::Bool(value))
     }
 }
