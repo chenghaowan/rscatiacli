@@ -69,6 +69,8 @@ Tools implemented in `rscatiacli-tools`:
 | find-near-parts | `product_analysis/find_near_parts.py` | Leaf instances of the active product; minimum distance to a seed part via SPA `Distance` (temp groups, BetweenTwo + Minimum, removed after each read). `action=list` lists leaves. |
 | save-without-history | `product_analysis/save_product_without_history.py` | FPRM010: converts each first-level CATPart of a product into a history-free part (visible non-empty bodies + wireframe pasted `CATPrtResultWithOutLink`), saves them under `<out>/<part>/<part>.CATPart` and reassembles a new product. |
 | dump-solid | `dump_solid/dump_solid.py` | Same body-dump conversion for the active part only (`<src dir>/Result/<part>.CATPart`), optional single `body_name`, wireframe optional. |
+| vba-bbox-generate | `product_analysis/vba_bbox_generate.py` | Generates the full bounding-box geometry (extremum points → constrained sketches → sweep) along the shared `tooling axis`, reads exact L/W/H, real volume, material/density/weight, writes `Bbox_dx/dy/dz` parameters and the `x…y…z…` description. |
+
 
 All tools support `dry_run` where applicable. link_fixer, body_to_part, add_material
 and the surface tools passed live verification on a real CATIA session
@@ -236,10 +238,9 @@ See [ROADMAP.md](ROADMAP.md) for the full plan. Short version:
 - **Done:** bindings foundation, session discipline, structural tools, materials,
   surface tools (join / offset / stitch / trim), SAFEARRAY in- and out-parameters
   (`as_f64_array` / `as_obj_array`), COM type-name reads (`GetTypeInfo`).
-- **Next:** product-analysis measurement cores (vba_bbox_generate 1692 lines,
-  rule_projected_surface 908 — both now unblocked by the SAFEARRAY out-param
-  channels), then batch_bbox / product_measure wrappers on top, measure harness,
-  dump-solid, text-to-sketch.
+- **Next:** rule_projected_surface (908) then the batch_bbox / product_measure
+  wrappers on top of vba_bbox_generate; measure harness (screenshot + FTA
+  annotation, partially non-COM); text-to-sketch.
 - **Later:** honeycomb ribs (UDF-based, not automatable — generate directly instead),
   capture/screenshot tooling.
 - **Consolidation:** make Rust the default path, retire the Python sidecar, optional process
