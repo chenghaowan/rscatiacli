@@ -16,6 +16,8 @@ pub mod hide_show;
 pub mod image_post;
 pub mod join_surface;
 pub mod link_fixer;
+pub mod measure_capture;
+pub mod measure_harness;
 pub mod naming_rules;
 pub mod offset_surface;
 pub mod product_measure;
@@ -71,6 +73,7 @@ fn json_tool(script: &str) -> Option<JsonToolFn> {
         "product_analysis/rule_projected_surface.py" => Some(rule_projected_surface::run),
         "product_analysis/rule_bounding_box.py" => Some(rule_bounding_box::run),
         "text_to_sketch/text_to_sketch.py" => Some(text_to_sketch::run),
+        "measure_harness/measure_harness.py" => Some(measure_harness::run),
         "product_analysis/batch_bbox.py" => Some(batch_bbox::run),
         "product_analysis/product_measure.py" => Some(product_measure::run),
         _ => None,
@@ -99,6 +102,8 @@ fn json_tool_timeout(script: &str) -> Duration {
         "product_analysis/rule_bounding_box.py" => Duration::from_secs(900),
         // 文字/二维码转草图: 轮廓量大时草图逐线 CreateLine + 拉伸 + 变换都很耗时
         "text_to_sketch/text_to_sketch.py" => Duration::from_secs(900),
+        // 截图标注: 色标/两轮截图/WebP 编码 + FTA 注解逐个创建
+        "measure_harness/measure_harness.py" => Duration::from_secs(1200),
         "product_analysis/batch_bbox.py" => Duration::from_secs(3600),
         "product_analysis/product_measure.py" => Duration::from_secs(3600),
         _ => Duration::from_secs(120),

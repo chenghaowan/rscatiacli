@@ -16,3 +16,6 @@ png.workspace = true
 color_quant.workspace = true
 qrcode.workspace = true
 windows.workspace = true
+imageproc.workspace = true
+ab_glyph.workspace = true
+base64.workspace = true

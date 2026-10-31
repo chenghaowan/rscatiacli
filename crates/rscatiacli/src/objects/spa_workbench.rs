@@ -35,6 +35,16 @@ impl Measurable {
         self.com().get("Area")?.as_f64()
     }
 
+    /// 边界周长（单位 mm；闭合曲面报错）。
+    pub fn perimeter(&self) -> ComResult<f64> {
+        self.com().get("Perimeter")?.as_f64()
+    }
+
+    /// 长度（单位 mm；测边界环/曲线用）。
+    pub fn length(&self) -> ComResult<f64> {
+        self.com().get("Length")?.as_f64()
+    }
+
     /// 两测量对象最小距离（mm；Func 直接返回 double，无需 VBA 中转）。
     pub fn get_minimum_distance(&self, other: &Reference) -> ComResult<f64> {
         self.com()

@@ -76,11 +76,7 @@ fn rot90(d: u8) -> (i64, i64) {
 /// 黑块集合 → (闭合轮廓, 掐点格点集合)。
 /// 轮廓元素 = (格点, 入方向, 出方向); 顶点分叉(掐点)时优先沿同一个黑块继续,
 /// 每条轮廓严格停在自己的四连通块内。
-fn trace_loops(
-    black: &HashSet<Cell>,
-    rows: i64,
-    cols: i64,
-) -> (Vec<RawLoop>, HashSet<Vertex>) {
+fn trace_loops(black: &HashSet<Cell>, rows: i64, cols: i64) -> (Vec<RawLoop>, HashSet<Vertex>) {
     // 出边表: 顶点 → [(方向, 下一顶点, 黑块)]
     let mut out_edges: HashMap<Vertex, Vec<(u8, Vertex, Cell)>> = HashMap::new();
     let add_edge =

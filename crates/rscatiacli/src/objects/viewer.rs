@@ -16,6 +16,14 @@ impl Window {
     pub fn active_viewer(&self) -> ComResult<Viewer3D> {
         Ok(Viewer3D::new(self.com().get("ActiveViewer")?.as_obj()?))
     }
+    /// 窗口布局（1 = catWindowGeomOnly, 相当于 F3 只显示几何; 截图前切换）。
+    pub fn layout(&self) -> ComResult<i32> {
+        self.com().get("Layout")?.as_i32()
+    }
+
+    pub fn set_layout(&self, value: i32) -> ComResult<()> {
+        self.com().put("Layout", Arg::I32(value))
+    }
 }
 
 impl Viewer3D {
@@ -46,6 +54,11 @@ impl Viewer3D {
     /// 放大视图（文字转草图后的结果刷新用）。
     pub fn zoom_in(&self) -> ComResult<()> {
         self.com().call("ZoomIn", &[]).map(|_| ())
+    }
+
+    /// 视图更新（截图前确保画面最新）。
+    pub fn update(&self) -> ComResult<()> {
+        self.com().call("Update", &[]).map(|_| ())
     }
 
     /// 截图（4 = catCaptureFormatPNG）。

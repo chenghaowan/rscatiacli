@@ -73,6 +73,7 @@ Tools implemented in `rscatiacli-tools`:
 | rule-projected-surface | `product_analysis/rule_projected_surface.py` | Tooling-axis XY projected area excluding through-holes: `PROJECTED_AREA.CATPart` template via `InstanceFactory` (silhouette), `Affinity` flatten (area / 2) fallback; the no-link result surface is kept in `ProjSurf_XY`, axis systems are read or established via the rule-bounding-box machinery (`rule_axis`). |
 | rule-bounding-box | `product_analysis/rule_bounding_box.py` | Rule-based bounding box (CLI contract; the UI panel uses vba-bbox-generate): draftline/halfline or in-plane angle scan for the long edge, exact L/W/H via extremum + normal-plane + SPA min-distance spans, parametric `tooling axis` system, optional Rough Stock wireframe, `{part}_bbox.json` and a screenshot (tree/axis hidden, white background, cropped/resized/quantized PNG8). |
 | text-to-sketch | `text_to_sketch/text_to_sketch.py` | Turns text / QR content into sketch geometry: GDI glyph outlines (GetGlyphOutlineW, quad/cubic Béziers flattened to the mm tolerance, per-character layout with letter/line spacing) or a QR module-matrix union boundary (pinch-point separation so Pad accepts the contour); straight lines + splines into a sketch on the absolute XY plane, padded and AxisToAxis-transferred to the tooling axis. `action=fonts` lists TrueType fonts, `action=qr-info` pre-computes version/module count. |
+| measure-harness | `measure_harness/measure_harness.py` | Harness length from surface geometry in the `measureharness` geoset: L = 2×area/perimeter per surface (planes skipped), optional boundary-loop analysis (loop count/lengths/section diameters); `action=annotate3d` creates FTA text annotations (`MH_LEN_*`, idempotent, annotation-set-wide delete also clears UserSurfaces), `action=screenshot` drops COG color markers, captures twice (marked/clean), runs the white-threshold/crop/compass-erase/square pipeline and draws a legend with leader lines (WebP), `action=annotate_all` adds random recolor. |
 | batch-bbox | `product_analysis/batch_bbox.py` | Thin wrapper: walks a directory for `.CATPart` files and runs vba-bbox-generate per file (`keep_geometry=false`), one row per part with filename-rule fallback for part number/name. |
 | product-measure | `product_analysis/product_measure.py` | Thin wrapper: measures every loaded CATPart of the active CATProduct (`bbox` / `area` / `both`), opens-measures-closes each part, merges bbox + projected-area rows; same-name `.CATProduct` lookup when a part/drawing is active. |
 
@@ -247,7 +248,8 @@ See [ROADMAP.md](ROADMAP.md) for the full plan. Short version:
   post-processing), rule_projected_surface (+ rule_axis establishment core),
   batch_bbox and product_measure wrappers, text-to-sketch (GDI glyph outlines +
   QR union boundary), InstanceFactory template instantiation, `Measurable.Area`.
-- **Next:** measure harness (screenshot + FTA annotation, partially non-COM).
+- **Next:** consolidation — make Rust the default path (LTL_CATIA_RUST), retire the
+  Python sidecar for the migrated tools; real-machine test pile runs with the user.
 - **Later:** honeycomb ribs (UDF-based, not automatable — generate directly instead),
   capture/screenshot tooling.
 - **Consolidation:** make Rust the default path, retire the Python sidecar, optional process

@@ -14,13 +14,19 @@ serde_json = "1"
 rust_xlsxwriter = "0.79"
 sysinfo = "0.33"
 # 截图后处理（rule_bounding_box / measure_harness）：解码 PNG → 裁剪/缩放 → 256 色 PNG8
-image = { version = "0.25", default-features = false, features = ["png"] }
+image = { version = "0.25", default-features = false, features = ["bmp", "png", "webp"] }
 png = "0.17"
 color_quant = "1.1"
 qrcode = { version = "0.14", default-features = false }
+base64 = "0.22"
+# measure_harness 截图标注: 绘图(线/圆/矩形)+TrueType 文本(ab_glyph, 支持 msyh.ttc)
+imageproc = { version = "0.25", default-features = false }
+ab_glyph = "0.2"
 windows = { version = "0.62", features = [
     "Win32_Foundation",
     "Win32_Graphics_Gdi",
+    "Win32_System_SystemInformation",
+    "Win32_UI_WindowsAndMessaging",
     "Win32_System_Com",
     "Win32_System_Ole",
     "Win32_System_Variant",

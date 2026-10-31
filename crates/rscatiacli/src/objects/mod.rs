@@ -32,6 +32,7 @@ macro_rules! com_wrapper {
     };
 }
 
+pub mod annotation;
 pub mod application;
 pub mod distances;
 pub mod documents;
@@ -53,6 +54,10 @@ pub mod spa_workbench;
 pub mod system_service;
 pub mod viewer;
 
+pub use annotation::{
+    Annotation, AnnotationFactory, AnnotationSets, AnnotationText, Annotations, UserSurface,
+    UserSurfaces,
+};
 pub use application::Application;
 pub use distances::{Distance, Distances, CAT_DISTANCE_BETWEEN_TWO, CAT_DISTANCE_MEASURE_MINIMUM};
 pub use documents::{Document, Documents, PartDocument, ProductDocument};

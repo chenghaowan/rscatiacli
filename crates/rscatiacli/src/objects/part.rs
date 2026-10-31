@@ -148,6 +148,16 @@ impl Part {
         child(self.com(), "HybridShapeFactory")
     }
 
+    /// FTA 注解集集合（measure_harness 长度注解用）。
+    pub fn annotation_sets(&self) -> ComResult<crate::objects::annotation::AnnotationSets> {
+        child(self.com(), "AnnotationSets")
+    }
+
+    /// FTA UserSurface 锚点集合（Generate 造锚, 无删除方法须按名复用）。
+    pub fn user_surfaces(&self) -> ComResult<crate::objects::annotation::UserSurfaces> {
+        child(self.com(), "UserSurfaces")
+    }
+
     /// 用户特征模板工厂（InstanceFactory，rule_projected_surface 模板实例化用）。
     pub fn get_customer_factory(
         &self,
