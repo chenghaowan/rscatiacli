@@ -60,6 +60,11 @@ impl Selection {
     pub fn delete(&self) -> ComResult<()> {
         self.com().call("Delete", &[]).map(|_| ())
     }
+
+    /// 从选择集移除第 index(1-based) 项（不移除对象本身）。
+    pub fn remove(&self, index: i32) -> ComResult<()> {
+        self.com().call("Remove", &[Arg::I32(index)]).map(|_| ())
+    }
 }
 
 impl SelectionItem {

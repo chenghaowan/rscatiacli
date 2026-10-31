@@ -33,7 +33,9 @@ macro_rules! com_wrapper {
 }
 
 pub mod application;
+pub mod distances;
 pub mod documents;
+pub mod groups;
 pub mod hybrid_shape_factory;
 pub mod hybrid_shapes;
 pub mod material;
@@ -48,7 +50,9 @@ pub mod spa_workbench;
 pub mod system_service;
 
 pub use application::Application;
+pub use distances::{Distance, Distances, CAT_DISTANCE_BETWEEN_TWO, CAT_DISTANCE_MEASURE_MINIMUM};
 pub use documents::{Document, Documents, PartDocument, ProductDocument};
+pub use groups::{Group, Groups};
 pub use hybrid_shape_factory::HybridShapeFactory;
 pub use hybrid_shapes::{HybridShapeJoin, HybridShapeOffset};
 pub use material::{

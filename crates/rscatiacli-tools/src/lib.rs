@@ -4,13 +4,17 @@
 //! `rscatiacli`。新工具迁移时在 `json_tool` 注册即可，ltl-manage 无需改注册表。
 
 pub mod add_material;
+pub mod apply_naming;
 pub mod body_rename;
 pub mod body_to_part;
 pub mod colorize;
+pub mod find_near_parts;
 pub mod hide_show;
 pub mod join_surface;
 pub mod link_fixer;
+pub mod naming_rules;
 pub mod offset_surface;
+pub mod save_product_without_history;
 pub mod stitch_surface;
 pub mod surface_common;
 pub mod trim_boundary;
@@ -43,6 +47,12 @@ fn json_tool(script: &str) -> Option<JsonToolFn> {
         "offset_surface/offset_surface.py" => Some(offset_surface::run),
         "stitch_surface/stitch_surface.py" => Some(stitch_surface::run),
         "trim_boundary/trim_boundary.py" => Some(trim_boundary::run),
+        // product_analysis 一批
+        "product_analysis/apply_naming.py" => Some(apply_naming::run),
+        "product_analysis/find_near_parts.py" => Some(find_near_parts::run),
+        "product_analysis/save_product_without_history.py" => {
+            Some(save_product_without_history::run)
+        }
         _ => None,
     }
 }
@@ -59,6 +69,9 @@ fn json_tool_timeout(script: &str) -> Duration {
         "offset_surface/offset_surface.py" => Duration::from_secs(300),
         "stitch_surface/stitch_surface.py" => Duration::from_secs(600),
         "trim_boundary/trim_boundary.py" => Duration::from_secs(600),
+        "product_analysis/apply_naming.py" => Duration::from_secs(900),
+        "product_analysis/find_near_parts.py" => Duration::from_secs(600),
+        "product_analysis/save_product_without_history.py" => Duration::from_secs(1200),
         _ => Duration::from_secs(120),
     }
 }

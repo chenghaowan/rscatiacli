@@ -20,6 +20,29 @@ impl Product {
         Ok(Products::new(self.com().get("Products")?.as_obj()?))
     }
 
+    /// 按类型名取挂载的技术对象（如 `GetTechnologicalObject("Groups")` /
+    /// `"Distances"`，SPA 测距用）。
+    pub fn get_technological_object(
+        &self,
+        application_type: &str,
+    ) -> ComResult<crate::objects::part::Entity> {
+        Ok(crate::objects::part::Entity::new(
+            self.com()
+                .call(
+                    "GetTechnologicalObject",
+                    &[Arg::Str(application_type.to_string())],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 实例参考文档的文件名（`ReferenceProduct.Parent.Name`，如 `xxx.CATPart`；
+    /// pycatia Product.file_name 同口径）。
+    pub fn file_name(&self) -> ComResult<String> {
+        let doc = self.reference_product()?.parent()?;
+        doc.get("Name")?.as_string()
+    }
+
     /// 实例对应的参考装配（`ReferenceProduct`）。
     pub fn reference_product(&self) -> ComResult<Product> {
         Ok(Product::new(self.com().get("ReferenceProduct")?.as_obj()?))
@@ -42,8 +65,22 @@ impl Product {
         self.com().get("PartNumber")?.as_string()
     }
 
+    /// 更新产品树（断链/几何变化后重算，尽力而为）。
+    pub fn update(&self) -> ComResult<()> {
+        self.com().call("Update", &[]).map(|_| ())
+    }
+
     pub fn set_part_number(&self, value: &str) -> ComResult<()> {
         self.com().put("PartNumber", Arg::Str(value.to_string()))
+    }
+
+    /// 零件名（`PartName`，与 PartNumber 不同：这是显示名）。
+    pub fn part_name(&self) -> ComResult<String> {
+        self.com().get("PartName")?.as_string()
+    }
+
+    pub fn set_part_name(&self, value: &str) -> ComResult<()> {
+        self.com().put("PartName", Arg::Str(value.to_string()))
     }
 
     /// 发布集合（跨文档复制前需要先发布）。Part 文档同样暴露 Product。
@@ -60,6 +97,17 @@ impl Products {
                 .call("AddExternalComponent", &[Arg::Obj(document.com().clone())])?
                 .as_obj()?,
         ))
+    }
+
+    /// 按文件路径批量插入组件（`AddComponentsFromFiles(paths, docType)`，
+    /// docType 用 "All"；save_product_without_history 建新装配用）。
+    pub fn add_components_from_files(&self, paths: &[&str], doc_type: &str) -> ComResult<()> {
+        let args: Vec<Arg> = paths
+            .iter()
+            .map(|p| Arg::Str((*p).to_string()))
+            .chain(std::iter::once(Arg::Str(doc_type.to_string())))
+            .collect();
+        self.com().call("AddComponentsFromFiles", &args).map(|_| ())
     }
 
     /// 把组件的引用重指向另一个 Product（断链重连）。

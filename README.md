@@ -65,6 +65,9 @@ Tools implemented in `rscatiacli-tools`:
 | offset-surfaces | `offset_surface/offset_surface.py` | Batch-offsets every offsettable surface (explicit / offset / extract) of the geometrical set that holds the `target_1` marker, in the marker's direction; failed faces are copied to a NON_OFFSET compensation set. |
 | stitch-surface | `stitch_surface/stitch_surface.py` | Joins every geometrical set (`Connex=0`) and counts boundary rings (`AddNewBoundaryOfSurface` + `AddNewDatums`); 2 rings = internal gap → retry down the tolerance ladder 0.001/0.01/0.1, keep at the last rung. `action=isolate/unisolate` shows only the `Stitch_` results. |
 | trim-boundary | `trim_boundary/trim_boundary.py` | Splits solids (`ShapeFactory.AddNewSplit`) and surfaces (`AddNewHybridSplit`) with every plane named `boundary*`, keeping the side between the plane and the tooling-axis origin. |
+| apply-naming | `product_analysis/apply_naming.py` | Walks a directory (or an explicit item list), parses part number/name from each filename (position/delimiter rules) and writes `Product.PartNumber/PartName` + save. |
+| find-near-parts | `product_analysis/find_near_parts.py` | Leaf instances of the active product; minimum distance to a seed part via SPA `Distance` (temp groups, BetweenTwo + Minimum, removed after each read). `action=list` lists leaves. |
+| save-without-history | `product_analysis/save_product_without_history.py` | FPRM010: converts each first-level CATPart of a product into a history-free part (visible non-empty bodies + wireframe pasted `CATPrtResultWithOutLink`), saves them under `<out>/<part>/<part>.CATPart` and reassembles a new product. |
 
 All tools support `dry_run` where applicable. link_fixer, body_to_part, add_material
 and the surface tools passed live verification on a real CATIA session
@@ -232,7 +235,9 @@ See [ROADMAP.md](ROADMAP.md) for the full plan. Short version:
 - **Done:** bindings foundation, session discipline, structural tools, materials,
   surface tools (join / offset / stitch / trim), SAFEARRAY in- and out-parameters
   (`as_f64_array` / `as_obj_array`), COM type-name reads (`GetTypeInfo`).
-- **Next:** product-analysis suite (bounding box, projected area), measure harness,
+- **Next:** product-analysis measurement cores (vba_bbox_generate 1692 lines,
+  rule_projected_surface 908 — both now unblocked by the SAFEARRAY out-param
+  channels), then batch_bbox / product_measure wrappers on top, measure harness,
   dump-solid, text-to-sketch.
 - **Later:** honeycomb ribs (UDF-based, not automatable — generate directly instead),
   capture/screenshot tooling.
