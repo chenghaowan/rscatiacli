@@ -12,13 +12,14 @@
 //! 表格；Rust 进程内执行时随日志一起返回，前端以最终 data.items 兜底覆盖）。
 
 use std::collections::{HashMap, HashSet};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use rscatiacli::dispatch::Arg;
-use rscatiacli::objects::{Application, Document, Documents, Product};
+use rscatiacli::objects::{Application, Product};
 use rscatiacli::{attach_with_guard, ComCollection, ComObject, ComResult, Progress};
 use serde_json::{json, Value};
 
+use crate::doc_link::{ensure_product_doc, open_docs_index};
 use crate::naming_rules::parse_parts;
 use crate::rule_projected_surface::run as area_run;
 use crate::vba_bbox_generate::run as bbox_run;
@@ -37,137 +38,6 @@ fn msg_of(r: &Result<Value, impl std::fmt::Display>) -> String {
             .to_string(),
         Err(e) => e.to_string(),
     }
-}
-
-// ── 同名文档联动（drawing_common 的 ensure_product_doc 子集） ──────────
-
-/// 路径归一（小写 + 反斜杠，Windows 文件系统本就不分大小写）。
-fn norm_path(p: &str) -> String {
-    p.replace('/', "\\").to_lowercase()
-}
-
-/// 在 root 下按 同目录 → 同名子目录 → 递归(≤3 层) 找 <stem><ext>（对应
-/// drawing_common._same_named_in_dir；跳过 . 开头隐藏目录）。
-fn collect_same_named(dir: &Path, depth: usize, target: &str, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        let Some(name) = path.file_name().map(|n| n.to_string_lossy().into_owned()) else {
-            continue;
-        };
-        if path.is_dir() {
-            if !name.starts_with('.') && depth < 3 {
-                collect_same_named(&path, depth + 1, target, out);
-            }
-        } else if name.to_lowercase() == target {
-            out.push(path);
-        }
-    }
-}
-
-/// 同目录 → 同名子目录 → 下级递归(≤3 层) → 上级目录(同套) 查找同名文件。
-fn find_same_named_file(folder: &Path, stem: &str, ext: &str) -> Option<PathBuf> {
-    if stem.is_empty() {
-        return None;
-    }
-    let mut roots = vec![folder.to_path_buf()];
-    if let Some(parent) = folder.parent() {
-        if parent != folder {
-            roots.push(parent.to_path_buf());
-        }
-    }
-    let target = format!("{stem}{ext}").to_lowercase();
-    for root in &roots {
-        let mut candidates = vec![
-            root.join(format!("{stem}{ext}")),
-            root.join(stem).join(format!("{stem}{ext}")),
-        ];
-        collect_same_named(root, 0, &target, &mut candidates);
-        if let Some(hit) = candidates.into_iter().find(|c| c.is_file()) {
-            return Some(hit);
-        }
-    }
-    None
-}
-
-/// 打开文档并返回其 COM 对象；已在会话中则直接切换激活（先按全路径匹配，
-/// 兜底按文件名匹配）。对应 drawing_common._open_document。
-fn open_document(app: &Application, path: &Path) -> Result<Document, String> {
-    let key = norm_path(&path.to_string_lossy());
-    let base = path
-        .file_name()
-        .map(|n| n.to_string_lossy().to_lowercase())
-        .unwrap_or_default();
-    let docs = app.documents().map_err(|e| e.to_string())?;
-    let mut fallback: Option<Document> = None;
-    if let Ok(items) = docs.items() {
-        for d in items.iter() {
-            let full = d.full_name().unwrap_or_default();
-            let name = d.name().unwrap_or_default();
-            if !full.is_empty() && norm_path(&full) == key {
-                let _ = d.activate();
-                return Ok(d.clone());
-            }
-            if fallback.is_none() && !name.is_empty() && name.to_lowercase() == base {
-                fallback = Some(d.clone());
-            }
-        }
-    }
-    if let Some(f) = fallback {
-        let _ = f.activate();
-        return Ok(f);
-    }
-    app.documents()
-        .and_then(|ds| ds.open(path.to_string_lossy().as_ref()))
-        .map_err(|e| e.to_string())
-}
-
-/// 活动文档为 .CATProduct 则直接返回; 为 工程图/Part 时查找并打开同名装配。
-/// 对应 drawing_common.ensure_product_doc。
-fn ensure_product_doc(app: &Application, progress: Progress<'_>) -> Result<Document, String> {
-    let doc = app
-        .active_document()
-        .map_err(|_| "CATIA 中没有打开的文档".to_string())?;
-    let name = doc.name().unwrap_or_default();
-    let lower = name.to_lowercase();
-    if lower.ends_with(".catproduct") {
-        return Ok(doc);
-    }
-    if lower.ends_with(".catpart") || lower.ends_with(".catdrawing") {
-        let stem = name
-            .rsplit_once('.')
-            .map(|(b, _)| b)
-            .unwrap_or("")
-            .to_string();
-        let full = doc.full_name().unwrap_or_default();
-        let folder = Path::new(&full).parent().map(|p| p.to_path_buf());
-        let cand = folder
-            .as_deref()
-            .and_then(|f| find_same_named_file(f, &stem, ".CATProduct"));
-        return match cand {
-            Some(c) => {
-                progress(&format!(
-                    "当前文档为 {name}, 已按同名联动切换: {}",
-                    c.display()
-                ));
-                open_document(app, &c)
-            }
-            None => {
-                let hint = folder
-                    .map(|f| format!("已查 <{}> 及其下级/上级目录", f.display()))
-                    .unwrap_or_else(|| "文档未保存, 无路径可查找".to_string());
-                Err(format!(
-                    "当前打开的是 {name}, 未找到同名 .CATProduct —— {hint}。请先打开对应文档后重试"
-                ))
-            }
-        };
-    }
-    Err(format!(
-        "请先在 CATIA 中打开 装配(.CATProduct)(当前: {})",
-        if name.is_empty() { "无文档" } else { &name }
-    ))
 }
 
 /// 强制产品树进入设计模式并逐节点激活终端节点（对应 drawing_common.force_design_mode；
@@ -204,24 +74,9 @@ fn force_design_mode(product: &Product, progress: Progress<'_>) {
 // ── 产品树遍历 ───────────────────────────────────────────────────────
 
 /// 递归遍历产品树, 收集所有已加载 CATPart 的 (name, path)（对应 _walk_parts）。
-fn walk_parts(product: &Product, all_docs: &Documents) -> Vec<(String, String)> {
+fn walk_parts(product: &Product, app: &Application) -> Vec<(String, String)> {
     // 已打开文档按名匹配(产品打开时其零件文档已加载; 忽略大小写, 去扩展名)
-    let mut docs_index: HashMap<String, String> = HashMap::new();
-    if let Ok(items) = all_docs.items() {
-        for d in items.iter() {
-            let name = d.name().unwrap_or_default();
-            let full = d.full_name().unwrap_or_default();
-            if name.is_empty() || full.is_empty() {
-                continue;
-            }
-            let stem = name
-                .rsplit_once('.')
-                .map(|(b, _)| b)
-                .unwrap_or(&name)
-                .to_lowercase();
-            docs_index.insert(stem, full);
-        }
-    }
+    let docs_index = open_docs_index(app);
     let mut seen: HashSet<String> = HashSet::new();
     let mut out: Vec<(String, String)> = Vec::new();
 
@@ -326,7 +181,7 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
     };
     // 可视化模式(CGR)下零件文档未加载 → 遍历前先切设计模式并激活终端节点
     force_design_mode(&product, progress);
-    let part_paths = walk_parts(&product, &all_docs);
+    let part_paths = walk_parts(&product, &app);
     progress(&format!(
         "[列表] Product 下共收集 {} 个 CATPart",
         part_paths.len()

@@ -14,3 +14,5 @@ rust_xlsxwriter.workspace = true
 image.workspace = true
 png.workspace = true
 color_quant.workspace = true
+qrcode.workspace = true
+windows.workspace = true

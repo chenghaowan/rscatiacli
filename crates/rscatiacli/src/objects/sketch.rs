@@ -13,6 +13,7 @@ use crate::error::ComResult;
 use super::part::Entity;
 use super::reference::Reference;
 
+com_wrapper!(Spline2D);
 com_wrapper!(Sketches);
 com_wrapper!(Sketch);
 com_wrapper!(Factory2D);
@@ -76,6 +77,14 @@ impl Sketch {
 
 impl Factory2D {
     /// 2D 点。
+    /// 样条：极点数组（折线离散点; 极点建议置 Construction 不参与轮廓）。
+    pub fn create_spline(&self, poles: &[Point2D]) -> ComResult<Entity> {
+        let args = Arg::SafeArray(poles.iter().map(|p| Arg::Obj(p.com().clone())).collect());
+        Ok(Entity::new(
+            self.com().call("CreateSpline", &[args])?.as_obj()?,
+        ))
+    }
+
     pub fn create_point(&self, x: f64, y: f64) -> ComResult<Point2D> {
         Ok(Point2D::new(
             self.com()
@@ -110,6 +119,10 @@ impl Point2D {
     /// 控制报告编号（VBA 原宏用 1..10 标注轴/点/线的引用顺序）。
     pub fn set_report_name(&self, value: i32) -> ComResult<()> {
         self.com().put("ReportName", Arg::I32(value))
+    }
+    /// 极点/构造元素开关（样条控制点不参与轮廓）。
+    pub fn set_construction(&self, value: bool) -> ComResult<()> {
+        self.com().put("Construction", Arg::Bool(value))
     }
 }
 

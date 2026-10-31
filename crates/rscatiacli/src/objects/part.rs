@@ -199,7 +199,7 @@ impl Body {
         child(self.com(), "Shapes")
     }
 
-    pub fn sketches(&self) -> ComResult<Entities> {
+    pub fn sketches(&self) -> ComResult<crate::objects::sketch::Sketches> {
         child(self.com(), "Sketches")
     }
 

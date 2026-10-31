@@ -43,6 +43,11 @@ impl Viewer3D {
         self.com().call("Reframe", &[]).map(|_| ())
     }
 
+    /// 放大视图（文字转草图后的结果刷新用）。
+    pub fn zoom_in(&self) -> ComResult<()> {
+        self.com().call("ZoomIn", &[]).map(|_| ())
+    }
+
     /// 截图（4 = catCaptureFormatPNG）。
     pub fn capture_to_file(&self, format: i32, path: &str) -> ComResult<()> {
         self.com()

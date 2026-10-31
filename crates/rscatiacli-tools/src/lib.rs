@@ -9,6 +9,7 @@ pub mod batch_bbox;
 pub mod body_rename;
 pub mod body_to_part;
 pub mod colorize;
+pub mod doc_link;
 pub mod dump_solid;
 pub mod find_near_parts;
 pub mod hide_show;
@@ -18,12 +19,15 @@ pub mod link_fixer;
 pub mod naming_rules;
 pub mod offset_surface;
 pub mod product_measure;
+pub mod qr_outline;
 pub mod rule_axis;
 pub mod rule_bounding_box;
 pub mod rule_projected_surface;
 pub mod save_product_without_history;
 pub mod stitch_surface;
 pub mod surface_common;
+pub mod text_outline;
+pub mod text_to_sketch;
 pub mod trim_boundary;
 pub mod vba_bbox_generate;
 
@@ -66,6 +70,7 @@ fn json_tool(script: &str) -> Option<JsonToolFn> {
         // 测量三件套（rule_projected_surface 依赖 rule_axis 的轴系建立）
         "product_analysis/rule_projected_surface.py" => Some(rule_projected_surface::run),
         "product_analysis/rule_bounding_box.py" => Some(rule_bounding_box::run),
+        "text_to_sketch/text_to_sketch.py" => Some(text_to_sketch::run),
         "product_analysis/batch_bbox.py" => Some(batch_bbox::run),
         "product_analysis/product_measure.py" => Some(product_measure::run),
         _ => None,
@@ -92,6 +97,8 @@ fn json_tool_timeout(script: &str) -> Duration {
         // 投影面积: 无轴系时先做角度扫描建系(几十次极值量测)再压扁/模板实例化
         "product_analysis/rule_projected_surface.py" => Duration::from_secs(900),
         "product_analysis/rule_bounding_box.py" => Duration::from_secs(900),
+        // 文字/二维码转草图: 轮廓量大时草图逐线 CreateLine + 拉伸 + 变换都很耗时
+        "text_to_sketch/text_to_sketch.py" => Duration::from_secs(900),
         "product_analysis/batch_bbox.py" => Duration::from_secs(3600),
         "product_analysis/product_measure.py" => Duration::from_secs(3600),
         _ => Duration::from_secs(120),
