@@ -60,10 +60,16 @@ Tools implemented in `rscatiacli-tools`:
 | hide-show | `hide_show/hide_show.py` | Shows/hides bodies, geometrical sets, axis systems, reference planes and constraints; recurses into the part documents of a product. |
 | link-fixer | `link_fixer/catia_link_fixer_bridge.py` | Broken-link check & repair for CATProducts (`status` / `scan` / `fix`): relink to open documents via `ReplaceProduct` first, then add directories to FileSearchOrder, finally save-and-reopen everything as a fallback. |
 | body-to-part | `body_to_part/catia_body_to_part_bridge.py` | Splits every body of a CATPart into its own CATPart (publish → copy → paste → datum-ize related geometry → SaveAs), assembles a Product and writes an Excel report. |
+| add-material | `add_material/add_material.py` | Applies a material from a catalog to bodies / the main body (`CATMatManagerVBExt` via `SystemService.Evaluate`; SAFEARRAY in/out). |
+| join-surface | `join_surface/join_surface.py` | Groups faces of the densest geometrical set by minimum distance (SPA), joins each group (`AddNewJoin`, Connex=1) and datum-izes the result (`AddNewSurfaceDatum` + `DeleteObjectForDatum`). Not wired into the ltl-manage UI; CLI contract only. |
+| offset-surfaces | `offset_surface/offset_surface.py` | Batch-offsets every offsettable surface (explicit / offset / extract) of the geometrical set that holds the `target_1` marker, in the marker's direction; failed faces are copied to a NON_OFFSET compensation set. |
+| stitch-surface | `stitch_surface/stitch_surface.py` | Joins every geometrical set (`Connex=0`) and counts boundary rings (`AddNewBoundaryOfSurface` + `AddNewDatums`); 2 rings = internal gap → retry down the tolerance ladder 0.001/0.01/0.1, keep at the last rung. `action=isolate/unisolate` shows only the `Stitch_` results. |
+| trim-boundary | `trim_boundary/trim_boundary.py` | Splits solids (`ShapeFactory.AddNewSplit`) and surfaces (`AddNewHybridSplit`) with every plane named `boundary*`, keeping the side between the plane and the tooling-axis origin. |
 
-All tools support `dry_run` where applicable. link_fixer and body_to_part passed
-read-only verification on a live CATIA session (`status` / `scan` / dry-run);
-their write paths still need an on-machine run.
+All tools support `dry_run` where applicable. link_fixer, body_to_part, add_material
+and the surface tools passed live verification on a real CATIA session
+(`status` / `scan` / dry-run / contract runs); write-path runs follow the
+per-batch verification notes in ltl-manage's gitrecord.
 
 ## Versioning
 
@@ -223,10 +229,13 @@ between the Python and Rust worlds.
 See [ROADMAP.md](ROADMAP.md) for the full plan. Short version:
 
 - **Done:** bindings foundation, session discipline, three structural tools, live verification.
-- **Next:** more structural tools (materials, capture, body-to-part, surface join/offset/stitch/trim)
-  and the object-model members they need.
-- **Later:** geometry / measurement tools (bounding box, projected area, honeycomb ribs,
-  text-to-sketch) — these need SAFEARRAY out-parameter handling.
+- **Done:** bindings foundation, session discipline, structural tools, materials,
+  surface tools (join / offset / stitch / trim), SAFEARRAY in- and out-parameters
+  (`as_f64_array` / `as_obj_array`), COM type-name reads (`GetTypeInfo`).
+- **Next:** product-analysis suite (bounding box, projected area), measure harness,
+  dump-solid, text-to-sketch.
+- **Later:** honeycomb ribs (UDF-based, not automatable — generate directly instead),
+  capture/screenshot tooling.
 - **Consolidation:** make Rust the default path, retire the Python sidecar, optional process
   isolation for risky tools.
 

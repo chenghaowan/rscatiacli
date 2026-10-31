@@ -122,9 +122,18 @@ impl PartDocument {
     }
 
     /// 空间分析工作台（体积等测量）。
+    ///
+    /// 实测（本机 V5-6R2022）：文档上没有 `SPAWorkbench` 属性（GetIDsOfNames 报
+    /// 未知名称），可靠通道是 `GetWorkbench("SPAWorkbench")`（与 ltl-manage
+    /// join_surface.py 的 Python 版一致）；属性通道保留为首选，失败自动回退。
     pub fn spa_workbench(&self) -> ComResult<SPAWorkbench> {
+        if let Ok(obj) = self.com().get("SPAWorkbench").and_then(|v| v.as_obj()) {
+            return Ok(SPAWorkbench::new(obj));
+        }
         Ok(SPAWorkbench::new(
-            self.0.com().get("SPAWorkbench")?.as_obj()?,
+            self.com()
+                .call("GetWorkbench", &[Arg::Str("SPAWorkbench".to_string())])?
+                .as_obj()?,
         ))
     }
 }

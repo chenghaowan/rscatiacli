@@ -7,13 +7,16 @@
 
 use std::mem::ManuallyDrop;
 
-use windows::core::{BSTR, GUID, PCWSTR};
+use windows::core::{IUnknown, Interface, BSTR, GUID, PCWSTR};
 use windows::Win32::Foundation::{SysFreeString, VARIANT_FALSE, VARIANT_TRUE};
 use windows::Win32::System::Com::{
     IDispatch, DISPATCH_FLAGS, DISPATCH_METHOD, DISPATCH_PROPERTYGET, DISPATCH_PROPERTYPUT,
-    DISPPARAMS, EXCEPINFO,
+    DISPPARAMS, EXCEPINFO, SAFEARRAY,
 };
-use windows::Win32::System::Ole::{SafeArrayCreateVector, SafeArrayDestroy, SafeArrayPutElement};
+use windows::Win32::System::Ole::{
+    SafeArrayCreateVector, SafeArrayDestroy, SafeArrayGetDim, SafeArrayGetElement,
+    SafeArrayGetLBound, SafeArrayGetUBound, SafeArrayPutElement,
+};
 use windows::Win32::System::Variant::{
     VariantClear, VARENUM, VARIANT, VARIANT_0, VARIANT_0_0, VARIANT_0_0_0, VT_ARRAY, VT_BOOL,
     VT_BSTR, VT_DISPATCH, VT_EMPTY, VT_I2, VT_I4, VT_R8, VT_VARIANT,
@@ -316,6 +319,87 @@ impl Ret {
             .map(ComObj)
             .ok_or_else(|| ComError::runtime("CATIA 返回了空对象(Nothing)"))
     }
+
+    /// 取 SAFEARRAY 元数据（一维；GetPlane / AddNewDatums 等返回的都是一维数组）。
+    fn safearray(&self) -> ComResult<(*mut SAFEARRAY, i32, i32)> {
+        if self.vt() & VT_ARRAY.0 == 0 {
+            return Err(ComError::runtime(format!(
+                "期望 SAFEARRAY，CATIA 返回 VARIANT 类型 {}",
+                self.vt()
+            )));
+        }
+        // SAFETY: vt 含 VT_ARRAY 时 parray 有效。
+        let psa = unsafe { self.0.Anonymous.Anonymous.Anonymous.parray };
+        let dim = unsafe { SafeArrayGetDim(psa) };
+        if dim != 1 {
+            return Err(ComError::runtime(format!(
+                "期望一维 SAFEARRAY，实际 {dim} 维"
+            )));
+        }
+        // SAFETY: psa 有效、维度 1 存在。
+        let lo = unsafe { SafeArrayGetLBound(psa, 1) }
+            .map_err(|e| ComError::runtime(format!("SAFEARRAY 下界读取失败: {}", e.message())))?;
+        let hi = unsafe { SafeArrayGetUBound(psa, 1) }
+            .map_err(|e| ComError::runtime(format!("SAFEARRAY 上界读取失败: {}", e.message())))?;
+        Ok((psa, lo, hi))
+    }
+
+    /// 取出数值数组（GetPlane / AxisSystem.GetOrigin 等 out SAFEARRAY 经 VBA
+    /// 注入返回，元素是 R8 或包在 VARIANT 里的 R8）。
+    pub fn as_f64_array(&self) -> ComResult<Vec<f64>> {
+        let (psa, lo, hi) = self.safearray()?;
+        let elem_is_variant = self.vt() & VT_VARIANT.0 != 0;
+        let mut out = Vec::with_capacity((hi - lo + 1).max(0) as usize);
+        for i in lo..=hi {
+            // SAFETY: psa 有效、i 在界内；GetElement 写入我们提供的缓冲并 AddRef。
+            if elem_is_variant {
+                let mut v = VARIANT::default();
+                unsafe { SafeArrayGetElement(psa, &i, std::ptr::from_mut(&mut v).cast()) }
+                    .map_err(|e| {
+                        ComError::runtime(format!("SAFEARRAY 读取元素失败: {}", e.message()))
+                    })?;
+                let v = Ret(v);
+                out.push(v.as_f64()?);
+            } else {
+                let mut d = 0f64;
+                unsafe { SafeArrayGetElement(psa, &i, std::ptr::from_mut(&mut d).cast()) }
+                    .map_err(|e| {
+                        ComError::runtime(format!("SAFEARRAY 读取元素失败: {}", e.message()))
+                    })?;
+                out.push(d);
+            }
+        }
+        Ok(out)
+    }
+
+    /// 取出对象数组（`AddNewDatums` 等返回对象数组的接口）。
+    pub fn as_obj_array(&self) -> ComResult<Vec<ComObj>> {
+        let (psa, lo, hi) = self.safearray()?;
+        let elem_is_variant = self.vt() & VT_VARIANT.0 != 0;
+        let mut out = Vec::with_capacity((hi - lo + 1).max(0) as usize);
+        for i in lo..=hi {
+            // SAFETY: psa 有效、i 在界内；GetElement 拷贝元素，随后清我们的临时副本。
+            let obj = if elem_is_variant {
+                let mut v = VARIANT::default();
+                unsafe { SafeArrayGetElement(psa, &i, std::ptr::from_mut(&mut v).cast()) }
+                    .map_err(|e| {
+                        ComError::runtime(format!("SAFEARRAY 读取元素失败: {}", e.message()))
+                    })?;
+                let v = Ret(v);
+                v.as_obj()?
+            } else {
+                let mut d: Option<IDispatch> = None;
+                unsafe { SafeArrayGetElement(psa, &i, std::ptr::from_mut(&mut d).cast()) }
+                    .map_err(|e| {
+                        ComError::runtime(format!("SAFEARRAY 读取元素失败: {}", e.message()))
+                    })?;
+                d.map(ComObj)
+                    .ok_or_else(|| ComError::runtime("SAFEARRAY 里有空对象(Nothing)"))?
+            };
+            out.push(obj);
+        }
+        Ok(out)
+    }
 }
 
 /// 从 EXCEPINFO 取可读描述，并按 COM 规则释放被调用方分配的字符串。
@@ -436,5 +520,50 @@ impl ComObj {
     pub fn put(&self, name: &str, value: Arg) -> ComResult<()> {
         let id = self.dispid(name)?;
         self.invoke_put(id, value).map(|_| ())
+    }
+
+    /// COM 类型名（GetTypeInfo.GetDocumentation(-1)），如 `HybridShapeOffset`。
+    /// 与 Python 侧 `obj._oleobj_.GetTypeInfo().GetDocumentation(-1)[0]` 同一条
+    /// 实测通道；曲面/平面类型过滤（offset_surface / stitch_surface /
+    /// trim_boundary）都依赖它。
+    pub fn type_name(&self) -> ComResult<String> {
+        // SAFETY: GetTypeInfo 返回的 ITypeInfo 自带引用计数。
+        let info = unsafe { self.0.GetTypeInfo(0, 0) }
+            .map_err(|e| ComError::runtime(format!("GetTypeInfo 失败: {}", e.message())))?;
+        // MEMBERID_NIL = -1：取类型本身的文档（成员 0 是类型名）。
+        // SAFETY: info 与四个出参缓冲都在本栈帧存活。
+        let mut name = BSTR::new();
+        let mut doc_string = BSTR::new();
+        let mut help_context = 0u32;
+        let mut help_file = BSTR::new();
+        unsafe {
+            info.GetDocumentation(
+                -1,
+                Some(&mut name),
+                Some(&mut doc_string),
+                &mut help_context,
+                Some(&mut help_file),
+            )
+        }
+        .map_err(|e| ComError::runtime(format!("GetDocumentation 失败: {}", e.message())))?;
+        Ok(name.to_string())
+    }
+
+    /// 两个 COM 指针是否指向同一对象（按 COM 身份规则比较 IUnknown）。
+    /// trim_boundary 用它反查曲面/平面所属的几何图形集或 Body。
+    pub fn same_object(&self, other: &ComObj) -> bool {
+        match (self.0.cast::<IUnknown>(), other.0.cast::<IUnknown>()) {
+            (Ok(a), Ok(b)) => a.as_raw() == b.as_raw(),
+            _ => false,
+        }
+    }
+
+    /// 对象身份键（IUnknown 原始指针值），供跨集合反查同一对象（构建
+    /// 指针 → 容器映射）。
+    pub fn identity_key(&self) -> usize {
+        self.0
+            .cast::<IUnknown>()
+            .map(|u| u.as_raw() as usize)
+            .unwrap_or(0)
     }
 }

@@ -29,6 +29,11 @@ impl Application {
         self.com().put("DisplayFileAlerts", Arg::Bool(enabled))
     }
 
+    /// 当前弹框开关状态（批量操作前保存、结束后恢复，与 Python 版口径一致）。
+    pub fn display_file_alerts(&self) -> ComResult<bool> {
+        self.com().get("DisplayFileAlerts")?.as_bool()
+    }
+
     /// 文件搜索顺序（分号分隔的目录列表，断链重链按此顺序找文件）。
     pub fn file_search_order(&self) -> ComResult<String> {
         self.com().get("FileSearchOrder")?.as_string()

@@ -8,7 +8,12 @@ pub mod body_rename;
 pub mod body_to_part;
 pub mod colorize;
 pub mod hide_show;
+pub mod join_surface;
 pub mod link_fixer;
+pub mod offset_surface;
+pub mod stitch_surface;
+pub mod surface_common;
+pub mod trim_boundary;
 
 use std::cell::RefCell;
 use std::time::Duration;
@@ -33,18 +38,27 @@ fn json_tool(script: &str) -> Option<JsonToolFn> {
         "link_fixer/catia_link_fixer_bridge.py" => Some(link_fixer::run),
         "body_to_part/catia_body_to_part_bridge.py" => Some(body_to_part::run),
         "add_material/add_material.py" => Some(add_material::run),
+        // 曲面四件套
+        "join_surface/join_surface.py" => Some(join_surface::run),
+        "offset_surface/offset_surface.py" => Some(offset_surface::run),
+        "stitch_surface/stitch_surface.py" => Some(stitch_surface::run),
+        "trim_boundary/trim_boundary.py" => Some(trim_boundary::run),
         _ => None,
     }
 }
 
 /// 按脚本分配执行时限：body_to_part 逐 Body SaveAs + 建装配，link_fixer
 /// 的兜底重开全量文档、add_material 反复开关材料目录都远超默认 120s；
-/// 未列出的脚本维持默认。
+/// 曲面四件套逐面偏置/缝合 + 反复 Update，同样放宽；未列出的脚本维持默认。
 fn json_tool_timeout(script: &str) -> Duration {
     match script {
         "link_fixer/catia_link_fixer_bridge.py" => Duration::from_secs(900),
         "body_to_part/catia_body_to_part_bridge.py" => Duration::from_secs(3600),
         "add_material/add_material.py" => Duration::from_secs(300),
+        "join_surface/join_surface.py" => Duration::from_secs(300),
+        "offset_surface/offset_surface.py" => Duration::from_secs(300),
+        "stitch_surface/stitch_surface.py" => Duration::from_secs(600),
+        "trim_boundary/trim_boundary.py" => Duration::from_secs(600),
         _ => Duration::from_secs(120),
     }
 }

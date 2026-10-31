@@ -6,6 +6,8 @@ use crate::error::ComResult;
 
 use super::hybrid_shape_factory::HybridShapeFactory;
 use super::reference::Reference;
+use super::shape_factory::ShapeFactory;
+use super::system_service::SystemService;
 
 com_wrapper!(Part);
 com_wrapper!(Bodies);
@@ -105,6 +107,34 @@ impl Part {
     pub fn hybrid_shape_factory(&self) -> ComResult<HybridShapeFactory> {
         child(self.com(), "HybridShapeFactory")
     }
+
+    /// Part Design 实体特征工厂（AddNewSplit 等）。
+    pub fn shape_factory(&self) -> ComResult<ShapeFactory> {
+        child(self.com(), "ShapeFactory")
+    }
+
+    /// 设定当前工作对象（新特征插入的位置）。
+    pub fn set_in_work_object(&self, object: &impl ComObject) -> ComResult<()> {
+        self.com()
+            .put("InWorkObject", Arg::Obj(object.com().clone()))
+    }
+
+    /// 只更新单个对象（批量偏置/裁剪时避免整树重算）。
+    pub fn update_object(&self, object: &impl ComObject) -> ComResult<()> {
+        self.com()
+            .call("UpdateObject", &[Arg::Obj(object.com().clone())])
+            .map(|_| ())
+    }
+
+    /// Create Datum（datum 化去参的开关）。
+    pub fn set_create_datum(&self, enabled: bool) -> ComResult<()> {
+        self.com().put("CreateDatum", Arg::Bool(enabled))
+    }
+
+    /// No Keep Mode（datum 化后不保留原特征）。
+    pub fn set_no_keep_mode(&self, enabled: bool) -> ComResult<()> {
+        self.com().put("NoKeepMode", Arg::Bool(enabled))
+    }
 }
 
 impl Body {
@@ -115,6 +145,23 @@ impl Body {
     pub fn sketches(&self) -> ComResult<Entities> {
         child(self.com(), "Sketches")
     }
+
+    /// Body 内的几何图形（曲面可挂在 Body 下）。
+    pub fn hybrid_shapes(&self) -> ComResult<Entities> {
+        child(self.com(), "HybridShapes")
+    }
+
+    /// 是否处于布尔运算中（这类 Body 不可直接 Split）。
+    pub fn in_boolean_operation(&self) -> ComResult<bool> {
+        self.com().get("InBooleanOperation")?.as_bool()
+    }
+
+    /// 把 datum 插入 PartDesign Body（几何图形集用 append_hybrid_shape）。
+    pub fn insert_hybrid_shape(&self, shape: &impl ComObject) -> ComResult<()> {
+        self.com()
+            .call("InsertHybridShape", &[Arg::Obj(shape.com().clone())])
+            .map(|_| ())
+    }
 }
 
 impl HybridBody {
@@ -122,11 +169,51 @@ impl HybridBody {
         child(self.com(), "HybridShapes")
     }
 
+    /// 子几何图形集（嵌套遍历用）。
+    pub fn hybrid_bodies(&self) -> ComResult<HybridBodies> {
+        child(self.com(), "HybridBodies")
+    }
+
     /// 把 datum 追加进本图形集。
     pub fn append_hybrid_shape(&self, shape: &impl ComObject) -> ComResult<()> {
         self.com()
             .call("AppendHybridShape", &[Arg::Obj(shape.com().clone())])
             .map(|_| ())
+    }
+
+    /// 从集合中移除特征。部分 CATIA 版本不支持该成员（join_surface 的 Python
+    /// 版同样 try/except 容忍失败），调用方应按可失败处理。
+    pub fn remove(&self, shape: &impl ComObject) -> ComResult<()> {
+        self.com()
+            .call("Remove", &[Arg::Obj(shape.com().clone())])
+            .map(|_| ())
+    }
+}
+
+impl AxisSystem {
+    /// 轴系原点（模型坐标 mm）。`GetOrigin` 是 SAFEARRAY 出参，经 VBA 中转取回
+    /// （与 pycatia axis_system.get_origin 同一条实测路径）。
+    pub fn get_origin(&self, ss: &SystemService) -> ComResult<[f64; 3]> {
+        let function = "rscatiacli_axis_origin";
+        let code = format!(
+            r#"
+        Public Function {function}(axis_system)
+            Dim oOrigin(2)
+            axis_system.GetOrigin oOrigin
+            {function} = oOrigin
+        End Function
+        "#
+        );
+        let values = ss
+            .evaluate(&code, 0, function, &[Arg::Obj(self.com().clone())])?
+            .as_f64_array()?;
+        if values.len() < 3 {
+            return Err(crate::error::ComError::runtime(format!(
+                "AxisSystem.GetOrigin 返回了 {} 个分量，期望 3",
+                values.len()
+            )));
+        }
+        Ok([values[0], values[1], values[2]])
     }
 }
 

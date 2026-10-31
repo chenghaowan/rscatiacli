@@ -79,6 +79,11 @@ impl SelectionItem {
 }
 
 impl VisProperties {
+    /// 读当前显隐状态：0 = 显示，1 = 隐藏（保留 CATIA 原始语义）。
+    pub fn get_show(&self) -> ComResult<i32> {
+        self.com().call("GetShow", &[])?.as_i32()
+    }
+
     /// 显隐：保留 CATIA 原始语义（1 = 隐藏，0 = 显示），不包装成 bool，避免口径反转。
     pub fn set_show(&self, value: i32) -> ComResult<()> {
         self.com().call("SetShow", &[Arg::I32(value)])?;

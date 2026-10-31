@@ -7,6 +7,7 @@
 use crate::dispatch::{Arg, ComObject};
 use crate::error::ComResult;
 
+use super::hybrid_shapes::{HybridShapeJoin, HybridShapeOffset};
 use super::part::Entity;
 use super::reference::Reference;
 
@@ -21,6 +22,85 @@ impl HybridShapeFactory {
                 &[Arg::Obj(reference.com().clone())],
             )?
             .as_i32()
+    }
+
+    /// 缝合前两个曲面，其余用 `HybridShapeJoin::add_element` 追加。
+    pub fn add_new_join(&self, ref_a: &Reference, ref_b: &Reference) -> ComResult<HybridShapeJoin> {
+        Ok(HybridShapeJoin::new(
+            self.com()
+                .call(
+                    "AddNewJoin",
+                    &[Arg::Obj(ref_a.com().clone()), Arg::Obj(ref_b.com().clone())],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 偏置曲面：`AddNewOffset(Reference, OffsetValue, OffsetDirection, Deviation)`。
+    pub fn add_new_offset(
+        &self,
+        reference: &Reference,
+        offset_value: f64,
+        direction: bool,
+        deviation: f64,
+    ) -> ComResult<HybridShapeOffset> {
+        Ok(HybridShapeOffset::new(
+            self.com()
+                .call(
+                    "AddNewOffset",
+                    &[
+                        Arg::Obj(reference.com().clone()),
+                        Arg::F64(offset_value),
+                        Arg::Bool(direction),
+                        Arg::F64(deviation),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 曲面的整体边界特征（配合 add_new_datums 数边界环数，与 FIS AST 宏同口径）。
+    pub fn add_new_boundary_of_surface(&self, reference: &Reference) -> ComResult<Entity> {
+        Ok(Entity::new(
+            self.com()
+                .call(
+                    "AddNewBoundaryOfSurface",
+                    &[Arg::Obj(reference.com().clone())],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 按域拆分边界特征，返回的 datum 数 = 边界环数。
+    pub fn add_new_datums(&self, reference: &Reference) -> ComResult<Vec<Entity>> {
+        Ok(self
+            .com()
+            .call("AddNewDatums", &[Arg::Obj(reference.com().clone())])?
+            .as_obj_array()?
+            .into_iter()
+            .map(Entity::new)
+            .collect())
+    }
+
+    /// GSD 曲面分割：`AddNewHybridSplit(曲面, 分割元素, Orientation(1/-1))`。
+    pub fn add_new_hybrid_split(
+        &self,
+        to_split: &Reference,
+        splitting: &Reference,
+        orientation: i32,
+    ) -> ComResult<Entity> {
+        Ok(Entity::new(
+            self.com()
+                .call(
+                    "AddNewHybridSplit",
+                    &[
+                        Arg::Obj(to_split.com().clone()),
+                        Arg::Obj(splitting.com().clone()),
+                        Arg::I32(orientation),
+                    ],
+                )?
+                .as_obj()?,
+        ))
     }
 
     pub fn add_new_point_datum(&self, reference: &Reference) -> ComResult<Entity> {
