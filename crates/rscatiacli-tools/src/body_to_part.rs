@@ -687,7 +687,8 @@ fn run_inner(params: &Value, progress: Progress<'_>) -> Value {
 
         // 5. 第一轮：逐 Body 生成 CATPart 文件
         let mut records: Vec<Record> = Vec::new();
-        let mut used_file_names: std::collections::HashSet<String> = std::collections::HashSet::new();
+        let mut used_file_names: std::collections::HashSet<String> =
+            std::collections::HashSet::new();
         for (idx, (body, body_name)) in bodies_list.iter().zip(&body_names).enumerate() {
             let idx = idx + 1;
             let safe_name = safe_file_name(body_name);

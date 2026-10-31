@@ -38,4 +38,11 @@ impl Application {
         self.com()
             .put("FileSearchOrder", Arg::Str(value.to_string()))
     }
+
+    /// 全局服务（环境变量 / VBA 注入）。
+    pub fn system_service(&self) -> ComResult<crate::objects::SystemService> {
+        Ok(crate::objects::SystemService::new(
+            self.com().get("SystemService")?.as_obj()?,
+        ))
+    }
 }

@@ -614,14 +614,13 @@ fn fix(search_paths: &[String], dry_run: bool, progress: Progress<'_>) -> Value 
                     // 引用完全不可读时 hint 为空，组件实例名 "c.1" 是最后的文档名
                     // 线索（CATIA 实例名 = 文档名.序号）——原样找不到就剥掉序号重试
                     let probe_stripped = strip_instance_suffix(probe);
-                    let found_file = find_file_in_search_paths(probe, &order)
-                        .or_else(|| {
-                            if probe_stripped == probe {
-                                None
-                            } else {
-                                find_file_in_search_paths(&probe_stripped, &order)
-                            }
-                        });
+                    let found_file = find_file_in_search_paths(probe, &order).or_else(|| {
+                        if probe_stripped == probe {
+                            None
+                        } else {
+                            find_file_in_search_paths(&probe_stripped, &order)
+                        }
+                    });
                     match found_file {
                         Some(found_file) => {
                             push_search_dir(
@@ -644,14 +643,11 @@ fn fix(search_paths: &[String], dry_run: bool, progress: Progress<'_>) -> Value 
                                 let opened = open_docs
                                     .iter()
                                     .find(|od| {
-                                        od.path
-                                            .eq_ignore_ascii_case(&found_file.to_string_lossy())
+                                        od.path.eq_ignore_ascii_case(&found_file.to_string_lossy())
                                     })
                                     .map(|od| od.doc.clone())
                                     .map(Ok)
-                                    .unwrap_or_else(|| {
-                                        docs.open(&found_file.to_string_lossy())
-                                    });
+                                    .unwrap_or_else(|| docs.open(&found_file.to_string_lossy()));
                                 match opened.and_then(|part_doc| {
                                     let target = part_doc.product_document().product()?;
                                     parent_coll.replace_product(comp, &target, false)?;

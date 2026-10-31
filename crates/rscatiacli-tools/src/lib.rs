@@ -3,6 +3,7 @@
 //! 这里只放“做什么”（业务规则、参数解析、结果 JSON），COM 对象模型访问全部来自
 //! `rscatiacli`。新工具迁移时在 `json_tool` 注册即可，ltl-manage 无需改注册表。
 
+pub mod add_material;
 pub mod body_rename;
 pub mod body_to_part;
 pub mod colorize;
@@ -31,16 +32,19 @@ fn json_tool(script: &str) -> Option<JsonToolFn> {
         "hide_show/hide_show.py" => Some(hide_show::run),
         "link_fixer/catia_link_fixer_bridge.py" => Some(link_fixer::run),
         "body_to_part/catia_body_to_part_bridge.py" => Some(body_to_part::run),
+        "add_material/add_material.py" => Some(add_material::run),
         _ => None,
     }
 }
 
 /// 按脚本分配执行时限：body_to_part 逐 Body SaveAs + 建装配，link_fixer
-/// 的兜底重开全量文档都远超默认 120s；未列出的脚本维持默认。
+/// 的兜底重开全量文档、add_material 反复开关材料目录都远超默认 120s；
+/// 未列出的脚本维持默认。
 fn json_tool_timeout(script: &str) -> Duration {
     match script {
         "link_fixer/catia_link_fixer_bridge.py" => Duration::from_secs(900),
         "body_to_part/catia_body_to_part_bridge.py" => Duration::from_secs(3600),
+        "add_material/add_material.py" => Duration::from_secs(300),
         _ => Duration::from_secs(120),
     }
 }

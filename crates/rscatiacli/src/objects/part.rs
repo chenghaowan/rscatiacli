@@ -84,6 +84,11 @@ impl Part {
         self.com().put("MainBody", Arg::Obj(body.com().clone()))
     }
 
+    /// 主 Body（PartBody）。
+    pub fn main_body(&self) -> ComResult<Body> {
+        Ok(Body::new(self.com().get("MainBody")?.as_obj()?))
+    }
+
     /// 为对象创建 `Reference`（datum 化 / 测量的入口）。
     pub fn create_reference_from_object(&self, object: &impl ComObject) -> ComResult<Reference> {
         Ok(Reference::new(

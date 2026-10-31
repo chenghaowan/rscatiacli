@@ -13,9 +13,10 @@ use windows::Win32::System::Com::{
     IDispatch, DISPATCH_FLAGS, DISPATCH_METHOD, DISPATCH_PROPERTYGET, DISPATCH_PROPERTYPUT,
     DISPPARAMS, EXCEPINFO,
 };
+use windows::Win32::System::Ole::{SafeArrayCreateVector, SafeArrayDestroy, SafeArrayPutElement};
 use windows::Win32::System::Variant::{
-    VariantClear, VARENUM, VARIANT, VARIANT_0, VARIANT_0_0, VARIANT_0_0_0, VT_BOOL, VT_BSTR,
-    VT_DISPATCH, VT_EMPTY, VT_I2, VT_I4, VT_R8,
+    VariantClear, VARENUM, VARIANT, VARIANT_0, VARIANT_0_0, VARIANT_0_0_0, VT_ARRAY, VT_BOOL,
+    VT_BSTR, VT_DISPATCH, VT_EMPTY, VT_I2, VT_I4, VT_R8, VT_VARIANT,
 };
 
 // 兼容旧路径 `dispatch::ComError` / `dispatch::ComResult`（原代码把错误类型定义在这里）。
@@ -30,19 +31,24 @@ pub struct ComObj(pub IDispatch);
 
 /// 调用实参。
 ///
-/// 目前只用到 I32/F64/Bool/Str/Obj；空参用 `&[]` 表达。
+/// 目前只用到 I32/F64/Bool/Str/Obj/SafeArray；空参用 `&[]` 表达。
+/// `Clone` 对 `Obj` 是 AddRef（与 `ComObj::clone` 一致），开销可忽略。
+#[derive(Clone)]
 pub enum Arg {
     I32(i32),
     F64(f64),
     Bool(bool),
     Str(String),
     Obj(ComObj),
+    /// SAFEARRAY of VARIANT（`SystemService.Evaluate` 等需要数组实参的接口）。
+    SafeArray(Vec<Arg>),
 }
 
 /// 绑定库所有类型化对象的公共接口。
 ///
-/// `com()` 是逃生舱：对象模型没封装的成员可以取回原始 [`ComObj`] 继续按名字派发。
-/// `name` / `set_name` / `parent` 与 pycatia 的 `AnyObject` 对齐，所有 CATIA 对象通用。
+/// `com()` 是逃生舱：对象模型没封装的成员可以取回原始 [`ComObj`]
+/// 继续按名字派发。`name` / `set_name` / `parent` / `get_item` 与 pycatia 的
+/// `AnyObject` 对齐，所有 CATIA 对象通用。
 pub trait ComObject {
     fn com(&self) -> &ComObj;
 
@@ -56,6 +62,13 @@ pub trait ComObject {
 
     fn parent(&self) -> ComResult<ComObj> {
         self.com().get("Parent")?.as_obj()
+    }
+
+    /// `AnyObject.GetItem`（按类型名取子对象，如 `Part.GetItem("CATMatManagerVBExt")`）。
+    fn get_item(&self, name: &str) -> ComResult<ComObj> {
+        self.com()
+            .call("GetItem", &[Arg::Str(name.to_string())])?
+            .as_obj()
     }
 }
 
@@ -104,8 +117,8 @@ fn variant(vt: VARENUM, body: VARIANT_0_0_0) -> VARIANT {
     }
 }
 
-fn to_variant(arg: &Arg) -> VARIANT {
-    match arg {
+fn to_variant(arg: &Arg) -> ComResult<VARIANT> {
+    Ok(match arg {
         Arg::I32(v) => variant(VT_I4, VARIANT_0_0_0 { lVal: *v }),
         Arg::F64(v) => variant(VT_R8, VARIANT_0_0_0 { dblVal: *v }),
         Arg::Bool(v) => variant(
@@ -126,7 +139,45 @@ fn to_variant(arg: &Arg) -> VARIANT {
                 pdispVal: ManuallyDrop::new(Some(v.0.clone())),
             },
         ),
+        Arg::SafeArray(items) => to_safe_array(items)?,
+    })
+}
+
+/// 构造 `SAFEARRAY of VARIANT`（`SystemService.Evaluate` 等接口的数组实参）。
+///
+/// 逐元素 `SafeArrayPutElement`（COM 侧拷贝），任何失败销毁数组；外层 VARIANT
+/// Drop 时 `VariantClear` 会自动 `SafeArrayDestroy`。
+fn to_safe_array(args: &[Arg]) -> ComResult<VARIANT> {
+    // SAFETY: psa 创建后逐元素拷入；失败路径统一销毁。
+    let psa = unsafe { SafeArrayCreateVector(VT_VARIANT, 0, args.len() as u32) };
+    if psa.is_null() {
+        return Err(ComError::runtime("SAFEARRAY 创建失败"));
     }
+    let fill = (0..args.len()).try_for_each(|i| -> ComResult<()> {
+        let mut v = to_variant(&args[i])?;
+        let idx = i as i32;
+        // SAFETY: psa 有效、idx 在界内；PutElement 拷贝元素，随后清我们的临时副本。
+        let hr = unsafe { SafeArrayPutElement(psa, &idx, std::ptr::from_ref(&v).cast()) };
+        unsafe {
+            let _ = VariantClear(&mut v);
+        }
+        hr.map_err(|e| {
+            ComError::new(
+                e.code().0,
+                format!("SAFEARRAY 写入元素失败: {}", e.message()),
+            )
+        })
+    });
+    if let Err(e) = fill {
+        unsafe {
+            let _ = SafeArrayDestroy(psa);
+        }
+        return Err(e);
+    }
+    Ok(variant(
+        VARENUM(VT_VARIANT.0 | VT_ARRAY.0),
+        VARIANT_0_0_0 { parray: psa },
+    ))
 }
 
 /// 实参数组。COM 约定 rgvarg 逆序存放；Drop 时统一 VariantClear，
@@ -136,10 +187,12 @@ struct Args {
 }
 
 impl Args {
-    fn new(args: &[Arg]) -> Self {
-        Self {
-            vars: args.iter().rev().map(to_variant).collect(),
+    fn new(args: &[Arg]) -> ComResult<Self> {
+        let mut vars = Vec::with_capacity(args.len());
+        for arg in args.iter().rev() {
+            vars.push(to_variant(arg)?);
         }
+        Ok(Self { vars })
     }
 
     /// `named` 用于属性赋值：COM 要求 cNamedArgs=1 且 rgdispidNamedArgs 指向
@@ -305,13 +358,13 @@ impl ComObj {
     }
 
     fn invoke(&self, id: i32, flags: DISPATCH_FLAGS, args: &[Arg]) -> ComResult<Ret> {
-        let mut packed = Args::new(args);
+        let mut packed = Args::new(args)?;
         let params = packed.dispparams(None);
         self.invoke_with(id, flags, &params)
     }
 
     fn invoke_put(&self, id: i32, value: Arg) -> ComResult<Ret> {
-        let mut packed = Args::new(&[value]);
+        let mut packed = Args::new(&[value])?;
         let mut dispid_named: i32 = DISPID_PROPERTYPUT;
         let params = packed.dispparams(Some(&mut dispid_named));
         self.invoke_with(id, DISPATCH_PROPERTYPUT, &params)
@@ -363,6 +416,13 @@ impl ComObj {
     pub fn call(&self, name: &str, args: &[Arg]) -> ComResult<Ret> {
         let id = self.dispid(name)?;
         self.invoke(id, DISPATCH_METHOD, args)
+    }
+
+    /// win32com.dynamic 同款派发：`METHOD|PROPERTYGET` 组合标志。
+    /// 个别 CATIA 方法（Activate 等无参"动作"）在纯 METHOD 下会静默无效。
+    pub fn call_dynamic(&self, name: &str, args: &[Arg]) -> ComResult<Ret> {
+        let id = self.dispid(name)?;
+        self.invoke(id, DISPATCH_METHOD | DISPATCH_PROPERTYGET, args)
     }
 
     /// 带参属性（如部分集合的 `Item` 在类型库里是 propget）。
