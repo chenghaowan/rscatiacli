@@ -28,12 +28,21 @@ pub(crate) struct AxisFrame {
     pub z_axis: Vec3,
 }
 
-/// 量测输出：长边方向 + 主实体 COG（create_coordinate_system 与建系所需）。
-struct MeasureFrame {
-    length_axis: Vec3,
-    #[allow(dead_code)]
-    width_axis: Vec3,
-    cog: Vec3,
+/// 量测输出：三向尺寸 + 方向 + 主实体 COG（建系 / rule_bounding_box 结果所需）。
+pub(crate) struct AxisMeasure {
+    pub length_mm: f64,
+    pub width_mm: f64,
+    pub height_mm: f64,
+    pub length_axis: Vec3,
+    pub width_axis: Vec3,
+    pub cog: Vec3,
+}
+
+/// 量测阶段事实：draftline/halfline 信息 + 量测结果（rule_bounding_box 导出用）。
+pub(crate) struct AxisFacts {
+    pub dl: LineInfo,
+    pub used_halfline: bool,
+    pub measure: AxisMeasure,
 }
 
 /// a 到 b 沿单位方向 dir 的投影距离（极值点是全球坐标，须投影到自定义轴上）。
@@ -214,8 +223,8 @@ fn measure_axis_frame(
     y: Vec3,
     x_axis_override: Option<Vec3>,
     progress: Progress<'_>,
-) -> Result<MeasureFrame, String> {
-    let attempt = (|| -> Result<MeasureFrame, String> {
+) -> Result<AxisMeasure, String> {
+    let attempt = (|| -> Result<AxisMeasure, String> {
         cm(part.update())?;
         let main_body = cm(part.main_body())?;
         let ref_body = cm(part.create_reference_from_object(&main_body))?;
@@ -330,7 +339,10 @@ fn measure_axis_frame(
             "[bbox] 长 L={length:.3}mm  宽 W={width:.3}mm  高 H={height:.3}mm  体积 V={:.1}mm³",
             length * width * height
         ));
-        Ok(MeasureFrame {
+        Ok(AxisMeasure {
+            length_mm: length,
+            width_mm: width,
+            height_mm: height,
             length_axis: l_axis,
             width_axis: w_axis,
             cog: body_cog,
@@ -349,7 +361,7 @@ fn measure_axis_frame(
 
 /// 创建 'tooling axis' 轴系（rule_bounding_box 原值：origin_type=0 纯坐标方式，
 /// 不依赖几何点/方向线引用；建前删除同名旧轴系）。
-fn create_coordinate_system(
+pub(crate) fn create_coordinate_system(
     part: &Part,
     cmd_sel: &Selection,
     z: Vec3,
@@ -394,17 +406,16 @@ fn create_coordinate_system(
     Ok(Entity::new(axis_sys.com().clone()))
 }
 
-/// 无已有 'tooling axis' 时的建立流程（对应 rule_projected_surface
-/// `_establish_tooling_axis`）：draftline → Z、halfline/扫描 → X、量测 → 建系 → 读回。
-pub(crate) fn establish_tooling_axis(
+/// 量测阶段事实：draftline/halfline 定向 + 三向量测（不建系）。
+/// rule_bounding_box 的 measure_bounding_box 步骤（建系由调用方决定）。
+pub(crate) fn measure_axis_facts(
     prt_doc: &PartDocument,
     ss: &SystemService,
     spa: &SPAWorkbench,
     cmd_sel: &Selection,
     skip_search: bool,
-    suppress_geometry: bool,
     progress: Progress<'_>,
-) -> Result<AxisFrame, String> {
+) -> Result<AxisFacts, String> {
     // Step 1: draftline
     let dl: LineInfo = find_line_by_keyword(prt_doc, "draftline", skip_search, ss, spa, progress)?;
     // Step 1.5: halfline 方向直接作为 X 轴(长边)，否则角度扫描
@@ -430,8 +441,8 @@ pub(crate) fn establish_tooling_axis(
     let x0 = norm(cross(z, ref_vec));
     let y0 = norm(cross(z, x0));
 
-    // Step 3: 量测边界框，得到长边方向(X)与 body COG
-    let measured = measure_axis_frame(
+    // Step 3: 量测边界框，得到长边方向(X)/三向尺寸与 body COG
+    let measure = measure_axis_frame(
         &part,
         &hsf,
         cmd_sel,
@@ -440,22 +451,56 @@ pub(crate) fn establish_tooling_axis(
         z,
         x0,
         y0,
-        hl.map(|l| l.direction),
+        hl.as_ref().map(|l| l.direction),
         progress,
     )?;
-    let length_axis = measured.length_axis;
-    let cog = measured.cog;
+    Ok(AxisFacts {
+        dl,
+        used_halfline: hl.is_some(),
+        measure,
+    })
+}
+
+/// 无已有 'tooling axis' 时的建立流程（对应 rule_projected_surface
+/// `_establish_tooling_axis`）：量测 → 建系 → 读回（读回轴系为权威值）。
+pub(crate) fn establish_tooling_axis(
+    prt_doc: &PartDocument,
+    ss: &SystemService,
+    spa: &SPAWorkbench,
+    cmd_sel: &Selection,
+    skip_search: bool,
+    suppress_geometry: bool,
+    progress: Progress<'_>,
+) -> Result<AxisFrame, String> {
+    let facts = measure_axis_facts(prt_doc, ss, spa, cmd_sel, skip_search, progress)?;
+    let length_axis = facts.measure.length_axis;
+    let cog = facts.measure.cog;
+    let z = norm(facts.dl.direction);
 
     // Step 4: 在零件中创建 'tooling axis' 轴系（suppress_geometry 时跳过）
     if !suppress_geometry {
-        match create_coordinate_system(&part, cmd_sel, z, length_axis, cog) {
+        match create_coordinate_system(
+            &prt_doc
+                .part()
+                .map_err(|e| format!("_establish_tooling_axis failed: {e}"))?,
+            cmd_sel,
+            z,
+            length_axis,
+            cog,
+        ) {
             Ok(_) => progress(&format!("[axis] create_coordinate_system origin={cog:?}")),
             Err(e) => progress(&format!("[axis] WARN create_coordinate_system failed: {e}")),
         }
     }
 
     // 读回实际建立的轴系（更权威）
-    if let Some(ax) = find_tooling_axis(&part, ss, progress) {
+    if let Some(ax) = find_tooling_axis(
+        &prt_doc
+            .part()
+            .map_err(|e| format!("_establish_tooling_axis failed: {e}"))?,
+        ss,
+        progress,
+    ) {
         return Ok(AxisFrame {
             origin_mm: ax.origin_mm,
             x_axis: norm(ax.x_axis),

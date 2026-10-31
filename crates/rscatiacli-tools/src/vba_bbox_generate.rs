@@ -522,7 +522,15 @@ pub(crate) fn find_line_by_keyword(
             let direction = line_direction(value.com(), ss)
                 .map_err(|e| format!("find line '{keyword}' failed: {e}"))?;
             let _ = sel.clear();
-            let (start_mm, end_mm) = (None, None); // Search 路径不读端点（仅日志用）
+            // 端点读回（rule_bounding_box 的 JSON 导出需要；失败仅缺日志信息）
+            let (start_mm, end_mm) = line_endpoints(
+                &prt_doc.part().map_err(|e| e.to_string())?,
+                spa,
+                ss,
+                value.com(),
+            )
+            .map(|(s, e)| (Some(s), Some(e)))
+            .unwrap_or((None, None));
             return Ok(LineInfo {
                 name,
                 start_mm,

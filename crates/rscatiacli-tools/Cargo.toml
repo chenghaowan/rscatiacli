@@ -11,3 +11,6 @@ homepage.workspace = true
 rscatiacli = { version = "0.0.1", path = "../rscatiacli" }
 serde_json.workspace = true
 rust_xlsxwriter.workspace = true
+image.workspace = true
+png.workspace = true
+color_quant.workspace = true

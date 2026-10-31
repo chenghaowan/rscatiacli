@@ -51,6 +51,7 @@ pub mod shape_factory;
 pub mod sketch;
 pub mod spa_workbench;
 pub mod system_service;
+pub mod viewer;
 
 pub use application::Application;
 pub use distances::{Distance, Distances, CAT_DISTANCE_BETWEEN_TWO, CAT_DISTANCE_MEASURE_MINIMUM};
@@ -83,3 +84,4 @@ pub use sketch::{
 };
 pub use spa_workbench::{Measurable, SPAWorkbench};
 pub use system_service::SystemService;
+pub use viewer::{Viewer3D, Window};

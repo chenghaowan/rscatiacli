@@ -45,6 +45,13 @@ impl Application {
     }
 
     /// 全局服务（环境变量 / VBA 注入）。
+    /// 当前活动窗口（截图用：ActiveWindow → ActiveViewer）。
+    pub fn active_window(&self) -> ComResult<crate::objects::viewer::Window> {
+        Ok(crate::objects::viewer::Window::new(
+            self.com().get("ActiveWindow")?.as_obj()?,
+        ))
+    }
+
     pub fn system_service(&self) -> ComResult<crate::objects::SystemService> {
         Ok(crate::objects::SystemService::new(
             self.com().get("SystemService")?.as_obj()?,
