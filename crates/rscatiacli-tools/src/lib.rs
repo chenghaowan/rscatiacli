@@ -8,6 +8,7 @@ pub mod apply_naming;
 pub mod body_rename;
 pub mod body_to_part;
 pub mod colorize;
+pub mod dump_solid;
 pub mod find_near_parts;
 pub mod hide_show;
 pub mod join_surface;
@@ -53,6 +54,7 @@ fn json_tool(script: &str) -> Option<JsonToolFn> {
         "product_analysis/save_product_without_history.py" => {
             Some(save_product_without_history::run)
         }
+        "dump_solid/dump_solid.py" => Some(dump_solid::run),
         _ => None,
     }
 }
@@ -72,6 +74,7 @@ fn json_tool_timeout(script: &str) -> Duration {
         "product_analysis/apply_naming.py" => Duration::from_secs(900),
         "product_analysis/find_near_parts.py" => Duration::from_secs(600),
         "product_analysis/save_product_without_history.py" => Duration::from_secs(1200),
+        "dump_solid/dump_solid.py" => Duration::from_secs(600),
         _ => Duration::from_secs(120),
     }
 }

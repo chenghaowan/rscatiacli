@@ -68,6 +68,7 @@ Tools implemented in `rscatiacli-tools`:
 | apply-naming | `product_analysis/apply_naming.py` | Walks a directory (or an explicit item list), parses part number/name from each filename (position/delimiter rules) and writes `Product.PartNumber/PartName` + save. |
 | find-near-parts | `product_analysis/find_near_parts.py` | Leaf instances of the active product; minimum distance to a seed part via SPA `Distance` (temp groups, BetweenTwo + Minimum, removed after each read). `action=list` lists leaves. |
 | save-without-history | `product_analysis/save_product_without_history.py` | FPRM010: converts each first-level CATPart of a product into a history-free part (visible non-empty bodies + wireframe pasted `CATPrtResultWithOutLink`), saves them under `<out>/<part>/<part>.CATPart` and reassembles a new product. |
+| dump-solid | `dump_solid/dump_solid.py` | Same body-dump conversion for the active part only (`<src dir>/Result/<part>.CATPart`), optional single `body_name`, wireframe optional. |
 
 All tools support `dry_run` where applicable. link_fixer, body_to_part, add_material
 and the surface tools passed live verification on a real CATIA session

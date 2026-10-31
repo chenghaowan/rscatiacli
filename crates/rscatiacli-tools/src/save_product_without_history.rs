@@ -38,7 +38,8 @@ fn strip_product_ext(name: &str) -> &str {
 }
 
 /// 挑出可导出的 Body：不在布尔运算中、当前可见、体积非 0（与宏过滤一致）。
-fn qualify_bodies(
+/// dump_solid 与本工具共用。
+pub(crate) fn qualify_bodies(
     prt_doc: &PartDocument,
     sel: &rscatiacli::objects::Selection,
 ) -> ComResult<Vec<Body>> {
@@ -75,7 +76,11 @@ fn qualify_bodies(
 }
 
 /// 新 Part 里同名 Body 只保留搜索到的第一个，其余删除（与宏清理一致）。
-fn dedupe_bodies(part2_doc: &PartDocument, sel: &rscatiacli::objects::Selection) -> usize {
+/// dump_solid 与本工具共用。
+pub(crate) fn dedupe_bodies(
+    part2_doc: &PartDocument,
+    sel: &rscatiacli::objects::Selection,
+) -> usize {
     let mut removed = 0;
     let Ok(bodies) = part2_doc.part().and_then(|p| p.bodies()) else {
         return 0;
