@@ -70,6 +70,17 @@ impl Product {
         self.com().call("Update", &[]).map(|_| ())
     }
 
+    /// 描述属性（属性页「描述」字段；实例与参考两份，边界框尺寸写入用）。
+    pub fn set_description_inst(&self, value: &str) -> ComResult<()> {
+        self.com()
+            .put("DescriptionInst", Arg::Str(value.to_string()))
+    }
+
+    pub fn set_description_ref(&self, value: &str) -> ComResult<()> {
+        self.com()
+            .put("DescriptionRef", Arg::Str(value.to_string()))
+    }
+
     pub fn set_part_number(&self, value: &str) -> ComResult<()> {
         self.com().put("PartNumber", Arg::Str(value.to_string()))
     }

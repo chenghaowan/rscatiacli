@@ -37,6 +37,63 @@ impl Measurable {
             .as_f64()
     }
 
+    fn measure_triple(&self, ss: &SystemService, member: &str) -> ComResult<[f64; 3]> {
+        let function = "rscatiacli_meas_triple";
+        let code = format!(
+            r#"
+        Public Function {function}(oMeasurable As Measurable)
+            Dim aReturn(2) as Variant
+            oMeasurable.{member} aReturn
+            {function} = aReturn
+        End Function
+        "#
+        );
+        let values = ss
+            .evaluate(&code, 0, function, &[Arg::Obj(self.com().clone())])?
+            .as_f64_array()?;
+        if values.len() < 3 {
+            return Err(ComError::runtime(format!(
+                "{member} 返回了 {} 个分量，期望 3",
+                values.len()
+            )));
+        }
+        Ok([values[0], values[1], values[2]])
+    }
+
+    /// 点坐标（重合 PointCoord 极值读取路径；VBA 中转）。
+    pub fn get_point(&self, ss: &SystemService) -> ComResult<[f64; 3]> {
+        self.measure_triple(ss, "GetPoint")
+    }
+
+    /// 重心（体积加权质心用；VBA 中转）。
+    pub fn get_cog(&self, ss: &SystemService) -> ComResult<[f64; 3]> {
+        self.measure_triple(ss, "GetCOG")
+    }
+
+    /// 曲线上三点（起点/中点/终点，9 分量；直线端点读取用，VBA 中转）。
+    pub fn get_points_on_curve(&self, ss: &SystemService) -> ComResult<Vec<f64>> {
+        let function = "rscatiacli_meas_curve_pts";
+        let code = format!(
+            r#"
+        Public Function {function}(oMeasurable As Measurable)
+            Dim aReturn(8) as Variant
+            oMeasurable.GetPointsOnCurve aReturn
+            {function} = aReturn
+        End Function
+        "#
+        );
+        let values = ss
+            .evaluate(&code, 0, function, &[Arg::Obj(self.com().clone())])?
+            .as_f64_array()?;
+        if values.len() < 9 {
+            return Err(ComError::runtime(format!(
+                "GetPointsOnCurve 返回了 {} 个分量，期望 9",
+                values.len()
+            )));
+        }
+        Ok(values)
+    }
+
     /// 平面九分量：原点 + 第一轴 + 第二轴（`GetPlane` 是 SAFEARRAY 出参，
     /// 经 VBA 中转取回，与 pycatia measurable.get_plane 同一条实测路径）。
     /// 返回 [ox, oy, oz, ux, uy, uz, vx, vy, vz]。

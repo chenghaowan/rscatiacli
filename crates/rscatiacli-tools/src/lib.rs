@@ -19,6 +19,7 @@ pub mod save_product_without_history;
 pub mod stitch_surface;
 pub mod surface_common;
 pub mod trim_boundary;
+pub mod vba_bbox_generate;
 
 use std::cell::RefCell;
 use std::time::Duration;
@@ -55,6 +56,7 @@ fn json_tool(script: &str) -> Option<JsonToolFn> {
             Some(save_product_without_history::run)
         }
         "dump_solid/dump_solid.py" => Some(dump_solid::run),
+        "product_analysis/vba_bbox_generate.py" => Some(vba_bbox_generate::run),
         _ => None,
     }
 }
@@ -75,6 +77,7 @@ fn json_tool_timeout(script: &str) -> Duration {
         "product_analysis/find_near_parts.py" => Duration::from_secs(600),
         "product_analysis/save_product_without_history.py" => Duration::from_secs(1200),
         "dump_solid/dump_solid.py" => Duration::from_secs(600),
+        "product_analysis/vba_bbox_generate.py" => Duration::from_secs(900),
         _ => Duration::from_secs(120),
     }
 }

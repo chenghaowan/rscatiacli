@@ -95,6 +95,20 @@ impl VisProperties {
         Ok(())
     }
 
+    /// 线宽（包围盒 dz 约束加粗用）。
+    pub fn set_real_width(&self, width: i32, inherit: i32) -> ComResult<()> {
+        self.com()
+            .call("SetRealWidth", &[Arg::I32(width), Arg::I32(inherit)])?;
+        Ok(())
+    }
+
+    /// 不透明度（0-255，扫掠体半透明观感）。
+    pub fn set_real_opacity(&self, opacity: i32, inherit: i32) -> ComResult<()> {
+        self.com()
+            .call("SetRealOpacity", &[Arg::I32(opacity), Arg::I32(inherit)])?;
+        Ok(())
+    }
+
     /// 设置对象自身颜色。`inherit` = 0 表示不继承父级颜色。
     pub fn set_real_color(&self, r: i32, g: i32, b: i32, inherit: i32) -> ComResult<()> {
         self.com().call(

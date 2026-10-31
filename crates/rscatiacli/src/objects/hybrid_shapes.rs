@@ -7,10 +7,13 @@
 use crate::dispatch::{Arg, ComObject};
 use crate::error::ComResult;
 
+use super::parameter::Parameter;
 use super::reference::Reference;
 
 com_wrapper!(HybridShapeJoin);
 com_wrapper!(HybridShapeOffset);
+com_wrapper!(Extract);
+com_wrapper!(HybridShapeLinePtPt);
 
 impl HybridShapeJoin {
     /// 只缝合有公共边的曲面（1 = 开启）。集合内存在不相连曲面时必须用 0。
@@ -65,5 +68,31 @@ impl HybridShapeOffset {
     /// 偏置值（mm）。
     pub fn offset_value(&self) -> ComResult<f64> {
         self.com().get("OffsetValue")?.as_f64()
+    }
+}
+
+impl Extract {
+    /// 提取传播类型（1 = 相切连续，VBA 原宏值）。
+    pub fn set_propagation_type(&self, value: i32) -> ComResult<()> {
+        self.com().put("PropagationType", Arg::I32(value))
+    }
+
+    pub fn set_complementary_extract(&self, value: bool) -> ComResult<()> {
+        self.com().put("ComplementaryExtract", Arg::Bool(value))
+    }
+
+    pub fn set_is_federated(&self, value: bool) -> ComResult<()> {
+        self.com().put("IsFederated", Arg::Bool(value))
+    }
+}
+
+impl HybridShapeLinePtPt {
+    /// 起点外延（Length 参数，包围盒引导线两端归零用）。
+    pub fn begin_offset(&self) -> ComResult<Parameter> {
+        Ok(Parameter::new(self.com().get("BeginOffset")?.as_obj()?))
+    }
+
+    pub fn end_offset(&self) -> ComResult<Parameter> {
+        Ok(Parameter::new(self.com().get("EndOffset")?.as_obj()?))
     }
 }

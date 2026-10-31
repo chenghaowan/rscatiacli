@@ -20,14 +20,19 @@ com_wrapper!(OriginElements);
 com_wrapper!(Entities);
 com_wrapper!(Entity);
 
-/// 仅需要名字/父级的元素集合（Shapes / Sketches / HybridShapes / Constraints）。
+/// 仅需要名字/父级的元素集合（Shapes / HybridShapes）。
 pub type Shapes = Entities;
-pub type Sketches = Entities;
 pub type HybridShapes = Entities;
-pub type Constraints = Entities;
 
 impl ComCollection for Bodies {
     type Item = Body;
+}
+
+impl Bodies {
+    /// 新建实体 Body（包围盒集合体）。
+    pub fn add(&self) -> ComResult<Body> {
+        Ok(Body::new(self.com().call("Add", &[])?.as_obj()?))
+    }
 }
 
 impl ComCollection for HybridBodies {
@@ -39,6 +44,15 @@ impl HybridBodies {
     pub fn add(&self) -> ComResult<HybridBody> {
         Ok(HybridBody::new(self.com().call("Add", &[])?.as_obj()?))
     }
+
+    /// 按名字取几何图形集（`Item("definition_points")`，包围盒定点集）。
+    pub fn item_by_name(&self, name: &str) -> ComResult<HybridBody> {
+        Ok(HybridBody::new(
+            self.com()
+                .call("Item", &[Arg::Str(name.to_string())])?
+                .as_obj()?,
+        ))
+    }
 }
 
 impl ComCollection for AxisSystems {
@@ -47,6 +61,17 @@ impl ComCollection for AxisSystems {
 
 impl ComCollection for Entities {
     type Item = Entity;
+}
+
+impl Entities {
+    /// 按名字取元素（`Item("AbsoluteAxis")` 取草图绝对轴）。
+    pub fn item_by_name(&self, name: &str) -> ComResult<Entity> {
+        Ok(Entity::new(
+            self.com()
+                .call("Item", &[Arg::Str(name.to_string())])?
+                .as_obj()?,
+        ))
+    }
 }
 
 /// 取对象的子集合属性，例如 `Part.Bodies`。
@@ -67,9 +92,14 @@ impl Part {
         child(self.com(), "AxisSystems")
     }
 
-    /// 约束集合（`Search` 不可用时的兜底枚举）。
-    pub fn constraints(&self) -> ComResult<Entities> {
+    /// 零件级约束集合（包围盒 dz 长度约束挂这里）。
+    pub fn constraints(&self) -> ComResult<crate::objects::sketch::Constraints> {
         child(self.com(), "Constraints")
+    }
+
+    /// 知识工程参数集合（Bbox_dx/dy/dz）。
+    pub fn parameters(&self) -> ComResult<crate::objects::parameter::Parameters> {
+        child(self.com(), "Parameters")
     }
 
     /// 参考坐标系三平面（CATIA 的 Part 没有 ReferenceElements）。
@@ -89,6 +119,16 @@ impl Part {
     /// 主 Body（PartBody）。
     pub fn main_body(&self) -> ComResult<Body> {
         Ok(Body::new(self.com().get("MainBody")?.as_obj()?))
+    }
+
+    /// 按 BRep 名字创建引用（如轴系 XY 面
+    /// `Selection_RSur:(Face:(Brp:(<名>;1);None:());<名>)`，包围盒 sketch 载体）。
+    pub fn create_reference_from_name(&self, name: &str) -> ComResult<Reference> {
+        Ok(Reference::new(
+            self.com()
+                .call("CreateReferenceFromName", &[Arg::Str(name.to_string())])?
+                .as_obj()?,
+        ))
     }
 
     /// 为对象创建 `Reference`（datum 化 / 测量的入口）。
@@ -138,6 +178,11 @@ impl Part {
 }
 
 impl Body {
+    /// Body 内的几何图形集（直线可能挂在这里）。
+    pub fn hybrid_bodies(&self) -> ComResult<HybridBodies> {
+        child(self.com(), "HybridBodies")
+    }
+
     pub fn shapes(&self) -> ComResult<Entities> {
         child(self.com(), "Shapes")
     }
@@ -174,6 +219,11 @@ impl HybridBody {
         child(self.com(), "HybridBodies")
     }
 
+    /// Body 内的草图集合（包围盒 sketch 建在这里）。
+    pub fn hybrid_sketches(&self) -> ComResult<crate::objects::sketch::Sketches> {
+        child(self.com(), "HybridSketches")
+    }
+
     /// 把 datum 追加进本图形集。
     pub fn append_hybrid_shape(&self, shape: &impl ComObject) -> ComResult<()> {
         self.com()
@@ -190,7 +240,116 @@ impl HybridBody {
     }
 }
 
+impl AxisSystems {
+    /// 新建轴系（工具ing axis 共享基准）。
+    pub fn add(&self) -> ComResult<AxisSystem> {
+        Ok(AxisSystem::new(self.com().call("Add", &[])?.as_obj()?))
+    }
+}
+
 impl AxisSystem {
+    /// 原点定义方式：catAxisSystemOriginByCoordinates = 1（去参基准）。
+    pub fn set_origin_type(&self, value: i32) -> ComResult<()> {
+        self.com().put("OriginType", Arg::I32(value))
+    }
+
+    pub fn origin_type(&self) -> ComResult<i32> {
+        self.com().get("OriginType")?.as_i32()
+    }
+
+    /// 轴定义方式：catAxisSystemAxisByCoordinates = 1（恒定平行）。
+    pub fn set_x_axis_type(&self, value: i32) -> ComResult<()> {
+        self.com().put("XAxisType", Arg::I32(value))
+    }
+
+    pub fn set_y_axis_type(&self, value: i32) -> ComResult<()> {
+        self.com().put("YAxisType", Arg::I32(value))
+    }
+
+    pub fn set_z_axis_type(&self, value: i32) -> ComResult<()> {
+        self.com().put("ZAxisType", Arg::I32(value))
+    }
+
+    /// 设为当前轴系。
+    pub fn set_is_current(&self, value: bool) -> ComResult<()> {
+        self.com().put("IsCurrent", Arg::Bool(value))
+    }
+
+    /// 写原点坐标（PutOrigin，SAFEARRAY 入参）。
+    pub fn put_origin(&self, origin: [f64; 3]) -> ComResult<()> {
+        self.com()
+            .call(
+                "PutOrigin",
+                &[Arg::SafeArray(
+                    origin.iter().map(|v| Arg::F64(*v)).collect(),
+                )],
+            )
+            .map(|_| ())
+    }
+
+    pub fn put_x_axis(&self, axis: [f64; 3]) -> ComResult<()> {
+        self.com()
+            .call(
+                "PutXAxis",
+                &[Arg::SafeArray(axis.iter().map(|v| Arg::F64(*v)).collect())],
+            )
+            .map(|_| ())
+    }
+
+    pub fn put_y_axis(&self, axis: [f64; 3]) -> ComResult<()> {
+        self.com()
+            .call(
+                "PutYAxis",
+                &[Arg::SafeArray(axis.iter().map(|v| Arg::F64(*v)).collect())],
+            )
+            .map(|_| ())
+    }
+
+    pub fn put_z_axis(&self, axis: [f64; 3]) -> ComResult<()> {
+        self.com()
+            .call(
+                "PutZAxis",
+                &[Arg::SafeArray(axis.iter().map(|v| Arg::F64(*v)).collect())],
+            )
+            .map(|_| ())
+    }
+
+    fn axis_triple(&self, ss: &SystemService, member: &str) -> ComResult<[f64; 3]> {
+        let function = "rscatiacli_axis_triple";
+        let code = format!(
+            r#"
+        Public Function {function}(axis_system)
+            Dim aReturn(2) as Variant
+            axis_system.{member} aReturn
+            {function} = aReturn
+        End Function
+        "#
+        );
+        let values = ss
+            .evaluate(&code, 0, function, &[Arg::Obj(self.com().clone())])?
+            .as_f64_array()?;
+        if values.len() < 3 {
+            return Err(crate::error::ComError::runtime(format!(
+                "{member} 返回了 {} 个分量，期望 3",
+                values.len()
+            )));
+        }
+        Ok([values[0], values[1], values[2]])
+    }
+
+    /// X 轴方向（VBA 中转，出参数组）。
+    pub fn get_x_axis(&self, ss: &SystemService) -> ComResult<[f64; 3]> {
+        self.axis_triple(ss, "GetXAxis")
+    }
+
+    pub fn get_y_axis(&self, ss: &SystemService) -> ComResult<[f64; 3]> {
+        self.axis_triple(ss, "GetYAxis")
+    }
+
+    pub fn get_z_axis(&self, ss: &SystemService) -> ComResult<[f64; 3]> {
+        self.axis_triple(ss, "GetZAxis")
+    }
+
     /// 轴系原点（模型坐标 mm）。`GetOrigin` 是 SAFEARRAY 出参，经 VBA 中转取回
     /// （与 pycatia axis_system.get_origin 同一条实测路径）。
     pub fn get_origin(&self, ss: &SystemService) -> ComResult<[f64; 3]> {

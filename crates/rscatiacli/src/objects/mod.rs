@@ -39,6 +39,7 @@ pub mod groups;
 pub mod hybrid_shape_factory;
 pub mod hybrid_shapes;
 pub mod material;
+pub mod parameter;
 pub mod part;
 pub mod plane;
 pub mod product;
@@ -46,6 +47,7 @@ pub mod publication;
 pub mod reference;
 pub mod selection;
 pub mod shape_factory;
+pub mod sketch;
 pub mod spa_workbench;
 pub mod system_service;
 
@@ -54,13 +56,14 @@ pub use distances::{Distance, Distances, CAT_DISTANCE_BETWEEN_TWO, CAT_DISTANCE_
 pub use documents::{Document, Documents, PartDocument, ProductDocument};
 pub use groups::{Group, Groups};
 pub use hybrid_shape_factory::HybridShapeFactory;
-pub use hybrid_shapes::{HybridShapeJoin, HybridShapeOffset};
+pub use hybrid_shapes::{Extract, HybridShapeJoin, HybridShapeLinePtPt, HybridShapeOffset};
 pub use material::{
     Material, MaterialDocument, MaterialFamilies, MaterialFamily, MaterialManager, Materials,
 };
+pub use parameter::{Parameter, Parameters};
 pub use part::{
-    AxisSystem, AxisSystems, Bodies, Body, Constraints, Entities, Entity, HybridBodies, HybridBody,
-    HybridShapes, OriginElements, Part, Shapes, Sketches,
+    AxisSystem, AxisSystems, Bodies, Body, Entities, Entity, HybridBodies, HybridBody,
+    HybridShapes, OriginElements, Part, Shapes,
 };
 pub use plane::Plane;
 pub use product::{Product, Products};
@@ -68,5 +71,10 @@ pub use publication::{Publication, Publications};
 pub use reference::Reference;
 pub use selection::{Selection, SelectionItem, VisProperties};
 pub use shape_factory::ShapeFactory;
+pub use sketch::{
+    Constraint, Constraints, Factory2D, Line2D, Point2D, Sketch, Sketches, CAT_CST_TYPE_DISTANCE,
+    CAT_CST_TYPE_HORONTALITY, CAT_CST_TYPE_LENGTH, CAT_CST_TYPE_PARALLELISM,
+    CAT_CST_TYPE_VERTICALITY,
+};
 pub use spa_workbench::{Measurable, SPAWorkbench};
 pub use system_service::SystemService;

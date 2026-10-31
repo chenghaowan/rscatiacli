@@ -82,6 +82,171 @@ impl HybridShapeFactory {
             .collect())
     }
 
+    /// 按坐标建方向特征（包围盒 6 向极值的迭代方向）。
+    pub fn add_new_direction_by_coord(&self, x: f64, y: f64, z: f64) -> ComResult<Entity> {
+        Ok(Entity::new(
+            self.com()
+                .call(
+                    "AddNewDirectionByCoord",
+                    &[Arg::F64(x), Arg::F64(y), Arg::F64(z)],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 提取（把 Body 转成可测的 GSD 特征；多 body 包围盒每 body 一个）。
+    pub fn add_new_extract(
+        &self,
+        reference: &Reference,
+    ) -> ComResult<super::hybrid_shapes::Extract> {
+        Ok(super::hybrid_shapes::Extract::new(
+            self.com()
+                .call("AddNewExtract", &[Arg::Obj(reference.com().clone())])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 极值点：`AddNewExtremum(元素, 方向, 极性 1=Max/0=Min)`。
+    pub fn add_new_extremum(
+        &self,
+        element: &Reference,
+        direction: &Reference,
+        polarity: i32,
+    ) -> ComResult<Entity> {
+        Ok(Entity::new(
+            self.com()
+                .call(
+                    "AddNewExtremum",
+                    &[
+                        Arg::Obj(element.com().clone()),
+                        Arg::Obj(direction.com().clone()),
+                        Arg::I32(polarity),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 重合 PointCoord（极值坐标的可靠读取路径，Extremum 自身 get_point 常
+    /// 以脚本错误失败 —— ltl-manage 实测）。
+    pub fn add_new_point_coord_with_reference(
+        &self,
+        x: f64,
+        y: f64,
+        z: f64,
+        reference: &impl crate::dispatch::ComObject,
+    ) -> ComResult<Entity> {
+        Ok(Entity::new(
+            self.com()
+                .call(
+                    "AddNewPointCoordWithReference",
+                    &[
+                        Arg::F64(x),
+                        Arg::F64(y),
+                        Arg::F64(z),
+                        Arg::Obj(reference.com().clone()),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 控制 GSD 特征在树/屏幕上的可见性（0 = 不可见）。
+    pub fn gsm_visibility(
+        &self,
+        object: &impl crate::dispatch::ComObject,
+        visibility: i32,
+    ) -> ComResult<()> {
+        self.com()
+            .call(
+                "GSMVisibility",
+                &[Arg::Obj(object.com().clone()), Arg::I32(visibility)],
+            )
+            .map(|_| ())
+    }
+
+    /// 两线建平面（草图绝对轴 H/V → 基准平面）。
+    pub fn add_new_plane2_lines(&self, line1: &Reference, line2: &Reference) -> ComResult<Entity> {
+        Ok(Entity::new(
+            self.com()
+                .call(
+                    "AddNewPlane2Lines",
+                    &[Arg::Obj(line1.com().clone()), Arg::Obj(line2.com().clone())],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 过点偏移平面（贴合极值点的上下平面）。
+    pub fn add_new_plane_offset_pt(
+        &self,
+        plane: &Reference,
+        point: &Reference,
+    ) -> ComResult<Entity> {
+        Ok(Entity::new(
+            self.com()
+                .call(
+                    "AddNewPlaneOffsetPt",
+                    &[Arg::Obj(plane.com().clone()), Arg::Obj(point.com().clone())],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 投影（底点投到顶面；Python 侧混传对象/引用）。
+    pub fn add_new_project(
+        &self,
+        element: &impl crate::dispatch::ComObject,
+        support: &impl crate::dispatch::ComObject,
+    ) -> ComResult<Entity> {
+        Ok(Entity::new(
+            self.com()
+                .call(
+                    "AddNewProject",
+                    &[
+                        Arg::Obj(element.com().clone()),
+                        Arg::Obj(support.com().clone()),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 两点连线（Z 向引导线）。
+    pub fn add_new_line_pt_pt(
+        &self,
+        pt1: &Reference,
+        pt2: &Reference,
+    ) -> ComResult<super::hybrid_shapes::HybridShapeLinePtPt> {
+        Ok(super::hybrid_shapes::HybridShapeLinePtPt::new(
+            self.com()
+                .call(
+                    "AddNewLinePtPt",
+                    &[Arg::Obj(pt1.com().clone()), Arg::Obj(pt2.com().clone())],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 显式扫掠（草图沿引导线 → 包围盒实体）。
+    pub fn add_new_sweep_explicit(
+        &self,
+        profile: &Reference,
+        guide: &Reference,
+    ) -> ComResult<Entity> {
+        Ok(Entity::new(
+            self.com()
+                .call(
+                    "AddNewSweepExplicit",
+                    &[
+                        Arg::Obj(profile.com().clone()),
+                        Arg::Obj(guide.com().clone()),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
     /// GSD 曲面分割：`AddNewHybridSplit(曲面, 分割元素, Orientation(1/-1))`。
     pub fn add_new_hybrid_split(
         &self,
