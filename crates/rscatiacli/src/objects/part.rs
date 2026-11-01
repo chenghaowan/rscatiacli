@@ -131,6 +131,11 @@ impl Part {
         Ok(Body::new(self.com().get("MainBody")?.as_obj()?))
     }
 
+    /// 零件名（Part.Name，蜂窝筋结果 data 用）。
+    pub fn name(&self) -> ComResult<String> {
+        self.com().get("Name")?.as_string()
+    }
+
     /// 按 BRep 名字创建引用（如轴系 XY 面
     /// `Selection_RSur:(Face:(Brp:(<名>;1);None:());<名>)`，包围盒 sketch 载体）。
     pub fn create_reference_from_name(&self, name: &str) -> ComResult<Reference> {
@@ -239,6 +244,11 @@ impl Body {
     }
 
     /// 把 datum 插入 PartDesign Body（几何图形集用 append_hybrid_shape）。
+    /// 几何图形集改名（蜂窝筋放置平面图形集用）。
+    pub fn set_name(&self, value: &str) -> ComResult<()> {
+        self.com().put("Name", Arg::Str(value.to_string()))
+    }
+
     pub fn insert_hybrid_shape(&self, shape: &impl ComObject) -> ComResult<()> {
         self.com()
             .call("InsertHybridShape", &[Arg::Obj(shape.com().clone())])

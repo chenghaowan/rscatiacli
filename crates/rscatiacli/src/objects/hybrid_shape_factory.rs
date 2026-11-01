@@ -193,6 +193,27 @@ impl HybridShapeFactory {
         ))
     }
 
+    /// 按距离偏移平面（蜂窝筋放置平面用；reverse = 反向偏移）。
+    pub fn add_new_plane_offset(
+        &self,
+        plane: &Reference,
+        offset_mm: f64,
+        reverse: bool,
+    ) -> ComResult<Entity> {
+        Ok(Entity::new(
+            self.com()
+                .call(
+                    "AddNewPlaneOffset",
+                    &[
+                        Arg::Obj(plane.com().clone()),
+                        Arg::F64(offset_mm),
+                        Arg::Bool(reverse),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
     /// 投影（底点投到顶面；Python 侧混传对象/引用）。
     pub fn add_new_project(
         &self,
