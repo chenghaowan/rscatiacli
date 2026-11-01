@@ -136,6 +136,22 @@ impl Part {
         self.com().get("Name")?.as_string()
     }
 
+    /// 零件号（PartNumber，ipp 改号用）。
+    pub fn part_number(&self) -> ComResult<String> {
+        self.com().get("PartNumber")?.as_string()
+    }
+
+    pub fn set_part_number(&self, value: &str) -> ComResult<()> {
+        self.com().put("PartNumber", Arg::Str(value.to_string()))
+    }
+
+    /// 隔离外部参考（Part.Isolate；对象不支持时调用失败，调用方按 Python 口径吞错）。
+    pub fn isolate(&self, reference: &crate::objects::reference::Reference) -> ComResult<()> {
+        self.com()
+            .call("Isolate", &[Arg::Obj(reference.com().clone())])
+            .map(|_| ())
+    }
+
     /// 按 BRep 名字创建引用（如轴系 XY 面
     /// `Selection_RSur:(Face:(Brp:(<名>;1);None:());<名>)`，包围盒 sketch 载体）。
     pub fn create_reference_from_name(&self, name: &str) -> ComResult<Reference> {
@@ -211,6 +227,13 @@ impl Part {
     /// No Keep Mode（datum 化后不保留原特征）。
     pub fn set_no_keep_mode(&self, enabled: bool) -> ComResult<()> {
         self.com().put("NoKeepMode", Arg::Bool(enabled))
+    }
+}
+
+impl Entity {
+    /// 元素名（外部参考探测/通用标识用）。
+    pub fn name(&self) -> ComResult<String> {
+        self.com().get("Name")?.as_string()
     }
 }
 

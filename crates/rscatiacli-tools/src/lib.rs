@@ -14,6 +14,7 @@ pub mod dump_solid;
 pub mod find_near_parts;
 pub mod hide_show;
 pub mod honeycomb_rib;
+pub mod ipp;
 pub mod image_post;
 pub mod join_surface;
 pub mod link_fixer;
@@ -67,6 +68,7 @@ fn json_tool(script: &str) -> Option<JsonToolFn> {
         "batch_product_analysis/batch_product_analysis.py" => Some(batch_analysis::run),
         "honeycomb_rib/honeycomb_rib.py" => Some(honeycomb_rib::run),
         "wcc/wcc_cli.py" => Some(wcc::run),
+        "ipp/ipp_cli.py" => Some(ipp::run),
         "trim_boundary/trim_boundary.py" => Some(trim_boundary::run),
         // product_analysis 一批
         "product_analysis/apply_naming.py" => Some(apply_naming::run),
@@ -101,6 +103,7 @@ fn json_tool_timeout(script: &str) -> Duration {
         "batch_product_analysis/batch_product_analysis.py" => Duration::from_secs(3600),
         "honeycomb_rib/honeycomb_rib.py" => Duration::from_secs(300),
         "wcc/wcc_cli.py" => Duration::from_secs(600),
+        "ipp/ipp_cli.py" => Duration::from_secs(1200),
         "trim_boundary/trim_boundary.py" => Duration::from_secs(600),
         "product_analysis/apply_naming.py" => Duration::from_secs(900),
         "product_analysis/find_near_parts.py" => Duration::from_secs(600),
