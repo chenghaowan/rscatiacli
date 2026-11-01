@@ -14,9 +14,12 @@ pub mod dump_solid;
 pub mod find_near_parts;
 pub mod hide_show;
 pub mod honeycomb_rib;
+pub mod drawlink;
+pub mod expose2d;
 pub mod ipp;
 pub mod image_post;
 pub mod join_surface;
+pub mod grid;
 pub mod link_fixer;
 pub mod measure_capture;
 pub mod measure_harness;
@@ -69,6 +72,9 @@ fn json_tool(script: &str) -> Option<JsonToolFn> {
         "honeycomb_rib/honeycomb_rib.py" => Some(honeycomb_rib::run),
         "wcc/wcc_cli.py" => Some(wcc::run),
         "ipp/ipp_cli.py" => Some(ipp::run),
+        "drawlink/drawlink_cli.py" => Some(drawlink::run),
+        "grid/grid_cli.py" => Some(grid::run),
+        "expose2d/expose2d_cli.py" => Some(expose2d::run),
         "trim_boundary/trim_boundary.py" => Some(trim_boundary::run),
         // product_analysis 一批
         "product_analysis/apply_naming.py" => Some(apply_naming::run),
@@ -104,6 +110,9 @@ fn json_tool_timeout(script: &str) -> Duration {
         "honeycomb_rib/honeycomb_rib.py" => Duration::from_secs(300),
         "wcc/wcc_cli.py" => Duration::from_secs(600),
         "ipp/ipp_cli.py" => Duration::from_secs(1200),
+        "drawlink/drawlink_cli.py" => Duration::from_secs(300),
+        "grid/grid_cli.py" => Duration::from_secs(600),
+        "expose2d/expose2d_cli.py" => Duration::from_secs(1200),
         "trim_boundary/trim_boundary.py" => Duration::from_secs(600),
         "product_analysis/apply_naming.py" => Duration::from_secs(900),
         "product_analysis/find_near_parts.py" => Duration::from_secs(600),

@@ -35,6 +35,7 @@ macro_rules! com_wrapper {
 pub mod annotation;
 pub mod application;
 pub mod distances;
+pub mod drafting;
 pub mod documents;
 pub mod groups;
 pub mod hybrid_shape_factory;
@@ -61,6 +62,11 @@ pub use annotation::{
 };
 pub use application::Application;
 pub use distances::{Distance, Distances, CAT_DISTANCE_BETWEEN_TWO, CAT_DISTANCE_MEASURE_MINIMUM};
+pub use drafting::{
+    DrawingDocument, DrawingSheet, DrawingSheets, DrawingText, DrawingTexts, DrawingView,
+    DrawingViewGenerativeBehavior, DrawingViews, PAPER_A0, PAPER_A1, PAPER_A2, PAPER_A3,
+    PAPER_A4,
+};
 pub use documents::{Document, Documents, PartDocument, ProductDocument};
 pub use groups::{Group, Groups};
 pub use hybrid_shape_factory::HybridShapeFactory;
