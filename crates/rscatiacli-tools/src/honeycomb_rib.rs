@@ -196,12 +196,12 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
         .as_str()
         .unwrap_or("Honeycomb_Rib")
         .to_string();
-    let plane_key = get("plane", json!("xy"))
+    let _plane_key = get("plane", json!("xy"))
         .as_str()
         .unwrap_or("xy")
         .to_lowercase();
-    let offset = get("offset", json!(0.0)).as_f64().unwrap_or(0.0);
-    let center = get("center", json!(true)).as_bool().unwrap_or(true);
+    let _offset = get("offset", json!(0.0)).as_f64().unwrap_or(0.0);
+    let _center = get("center", json!(true)).as_bool().unwrap_or(true);
     let dry_run = get("dry_run", json!(false)).as_bool().unwrap_or(false);
 
     let mut empty_data = json!({

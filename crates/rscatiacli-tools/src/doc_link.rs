@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use rscatiacli::objects::{Application, Document};
-use rscatiacli::{ComCollection, ComObject, Progress};
+use rscatiacli::{ComCollection, Progress};
 
 /// 路径归一（小写 + 反斜杠，Windows 文件系统本就不分大小写）。
 pub(crate) fn norm_path(p: &str) -> String {

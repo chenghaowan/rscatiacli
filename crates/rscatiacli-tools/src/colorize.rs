@@ -8,7 +8,7 @@
 use std::time::Duration;
 
 use rscatiacli::{
-    attach_with_guard, run_on_sta, ComCollection, ComError, ComObject, ComResult, Progress,
+    attach_with_guard, run_on_sta, ComCollection, ComError, ComResult, Progress,
 };
 
 /// 经典 16 色调色板（已避开红色系）。与 Python 版 COLORS 完全一致。

@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 
 use serde_json::{json, Value};
 
-use rscatiacli::objects::{Application, Document};
+use rscatiacli::objects::Document;
 use rscatiacli::{attach_with_guard, ComCollection, ComObject as _, ComResult, Progress};
 
 use crate::batch_analysis;
@@ -28,7 +28,7 @@ const SHOT_MAX_SIZE: u32 = 512;
 /// 一张截图的完整通道：视角 → 白底 → 截图 → 后处理 → PNG 落盘。
 #[allow(clippy::too_many_arguments)]
 fn capture_one(
-    win: &rscatiacli::objects::Window,
+    _win: &rscatiacli::objects::Window,
     viewer: &rscatiacli::objects::Viewer3D,
     out_path: &Path,
     sight: Option<[f64; 3]>,

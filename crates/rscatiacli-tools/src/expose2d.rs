@@ -108,7 +108,7 @@ fn create_drawing(
 /// 在指定 sheet 上插入一个生成视图（真实链路）。
 #[allow(clippy::too_many_arguments)]
 fn insert_view(
-    app: &rscatiacli::objects::Application,
+    _app: &rscatiacli::objects::Application,
     drawing: &DrawingDocument,
     part_doc: &Document,
     sheet_name: &str,
