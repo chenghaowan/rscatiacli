@@ -115,4 +115,13 @@ impl Viewpoint3D {
     pub fn set_projection_mode(&self, value: i32) -> ComResult<()> {
         self.com().put("ProjectionMode", Arg::I32(value))
     }
+
+    /// 视图缩放系数（capture 的 zoom_factor 用：Reframe 后乘系数微调）。
+    pub fn zoom(&self) -> ComResult<f64> {
+        self.com().get("Zoom")?.as_f64()
+    }
+
+    pub fn set_zoom(&self, value: f64) -> ComResult<()> {
+        self.com().put("Zoom", Arg::F64(value))
+    }
 }

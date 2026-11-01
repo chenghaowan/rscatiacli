@@ -47,4 +47,66 @@ impl Inertia {
         }
         Ok([values[0], values[1], values[2]])
     }
+
+    /// 惯量矩 9 分量 Ixx/Ixy/Ixz/Iyx/Iyy/Iyz/Izx/Izy/Izz（(KgM)^2；VBA 中转，
+    /// 同 pycatia get_inertia_matrix 路径）。
+    pub fn get_inertia_matrix(&self, ss: &SystemService) -> ComResult<Vec<f64>> {
+        self.inertia_nine(ss, "GetInertiaMatrix", "rscatiacli_inertia_matrix")
+    }
+
+    /// 主轴 9 分量（A1/A2/A3 三轴的 XYZ；VBA 中转）。
+    pub fn get_principal_axes(&self, ss: &SystemService) -> ComResult<Vec<f64>> {
+        self.inertia_nine(ss, "GetPrincipalAxes", "rscatiacli_principal_axes")
+    }
+
+    /// 主惯量矩 3 分量（M1/M2/M3；VBA 中转）。
+    pub fn get_principal_moments(&self, ss: &SystemService) -> ComResult<Vec<f64>> {
+        let function = "rscatiacli_principal_moments";
+        let code = format!(
+            r#"
+        Public Function {function}(oInertia As Inertia)
+            Dim oValues(2) As Variant
+            oInertia.GetPrincipalMoments oValues
+            {function} = oValues
+        End Function
+        "#
+        );
+        let values = ss
+            .evaluate(&code, 0, function, &[Arg::Obj(self.com().clone())])?
+            .as_f64_array()?;
+        if values.len() < 3 {
+            return Err(crate::error::ComError::runtime(format!(
+                "GetPrincipalMoments 返回了 {} 个分量，期望 3",
+                values.len()
+            )));
+        }
+        Ok(values)
+    }
+
+    fn inertia_nine(
+        &self,
+        ss: &SystemService,
+        member: &str,
+        function: &str,
+    ) -> ComResult<Vec<f64>> {
+        let code = format!(
+            r#"
+        Public Function {function}(oInertia As Inertia)
+            Dim oMatrix(8) As Variant
+            oInertia.{member} oMatrix
+            {function} = oMatrix
+        End Function
+        "#
+        );
+        let values = ss
+            .evaluate(&code, 0, function, &[Arg::Obj(self.com().clone())])?
+            .as_f64_array()?;
+        if values.len() < 9 {
+            return Err(crate::error::ComError::runtime(format!(
+                "{member} 返回了 {} 个分量，期望 9",
+                values.len()
+            )));
+        }
+        Ok(values)
+    }
 }

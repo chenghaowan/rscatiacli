@@ -34,6 +34,7 @@ fn capture_one(
     sight: Option<[f64; 3]>,
     up: [f64; 3],
     reframe: bool,
+    zoom_factor: f64,
     progress: &dyn Fn(&str),
 ) -> Result<(f64, String), String> {
     if let Some(sight) = sight {
@@ -46,6 +47,15 @@ fn capture_one(
     let _ = viewer.put_background_color([1.0, 1.0, 1.0]);
     if reframe {
         let _ = viewer.reframe();
+        // Reframe 后缩放微调（Python _reframe_zoom：vp.Zoom *= zoom_factor，默认 1.0 不动）
+        if (zoom_factor - 1.0).abs() > f64::EPSILON {
+            if let Ok(vp) = viewer.viewpoint3d() {
+                if let Ok(current) = vp.zoom() {
+                    let _ = vp.set_zoom(current * zoom_factor);
+                    progress(&format!("🔍 缩放: Reframe×{zoom_factor} (原={current:.4})"));
+                }
+            }
+        }
     }
     let _ = viewer.update();
     viewer
@@ -167,7 +177,8 @@ fn iso_or_direct(params: &Value, progress: Progress<'_>, iso: bool) -> ComResult
     } else {
         (None, [0.0, 0.0, 1.0], false)
     };
-    let capture = capture_one(&win, &viewer, &out_path, sight, up, reframe, &progress);
+    let zoom_factor = params.get("zoom_factor").and_then(|v| v.as_f64()).unwrap_or(1.0);
+    let capture = capture_one(&win, &viewer, &out_path, sight, up, reframe, zoom_factor, &progress);
 
     if let Some(l) = orig_layout {
         let _ = win.set_layout(l);
@@ -262,6 +273,7 @@ fn per_part(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
     let out_dir = output_dir_of(params, &doc);
     let _ = std::fs::create_dir_all(&out_dir);
     let ss = app.system_service()?;
+    let zoom_factor = params.get("zoom_factor").and_then(|v| v.as_f64()).unwrap_or(1.0);
 
     // 全局方向（无 tooling 轴系时的回退，对齐 Python X/Y/Z/ISO）
     let global_dirs: Vec<(String, [f64; 3], [f64; 3])> = vec![
@@ -310,7 +322,7 @@ fn per_part(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
 
         for (dir_name, sight, up) in &directions {
             let out_path = out_dir.join(format!("{ref_name}_{dir_name}.png"));
-            match capture_one(&win, &viewer, &out_path, Some(*sight), *up, true, &progress) {
+            match capture_one(&win, &viewer, &out_path, Some(*sight), *up, true, zoom_factor, &progress) {
                 Ok((_, file)) => files.push(file),
                 Err(e) => {
                     progress(&format!("  [FAIL] {dir_name}: {e}"));
