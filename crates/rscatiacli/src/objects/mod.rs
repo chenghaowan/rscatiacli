@@ -39,6 +39,7 @@ pub mod documents;
 pub mod groups;
 pub mod hybrid_shape_factory;
 pub mod hybrid_shapes;
+pub mod inertia;
 pub mod instance_factory;
 pub mod material;
 pub mod parameter;
@@ -67,6 +68,7 @@ pub use hybrid_shapes::{
     Extract, HybridShapeAffinity, HybridShapeJoin, HybridShapeLinePtPt, HybridShapeOffset,
     HybridShapeTranslate,
 };
+pub use inertia::Inertia;
 pub use instance_factory::InstanceFactory;
 pub use material::{
     Material, MaterialDocument, MaterialFamilies, MaterialFamily, MaterialManager, Materials,

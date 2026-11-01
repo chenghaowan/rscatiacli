@@ -33,6 +33,7 @@ pub mod surface_common;
 pub mod text_outline;
 pub mod text_to_sketch;
 pub mod trim_boundary;
+pub mod wcc;
 pub mod vba_bbox_generate;
 
 use std::cell::RefCell;
@@ -65,6 +66,7 @@ fn json_tool(script: &str) -> Option<JsonToolFn> {
         // 批量产品分析: 遍历产品树逐件 bbox/投影/截图, 部件数大时很耗时
         "batch_product_analysis/batch_product_analysis.py" => Some(batch_analysis::run),
         "honeycomb_rib/honeycomb_rib.py" => Some(honeycomb_rib::run),
+        "wcc/wcc_cli.py" => Some(wcc::run),
         "trim_boundary/trim_boundary.py" => Some(trim_boundary::run),
         // product_analysis 一批
         "product_analysis/apply_naming.py" => Some(apply_naming::run),
@@ -98,6 +100,7 @@ fn json_tool_timeout(script: &str) -> Duration {
         "stitch_surface/stitch_surface.py" => Duration::from_secs(600),
         "batch_product_analysis/batch_product_analysis.py" => Duration::from_secs(3600),
         "honeycomb_rib/honeycomb_rib.py" => Duration::from_secs(300),
+        "wcc/wcc_cli.py" => Duration::from_secs(600),
         "trim_boundary/trim_boundary.py" => Duration::from_secs(600),
         "product_analysis/apply_naming.py" => Duration::from_secs(900),
         "product_analysis/find_near_parts.py" => Duration::from_secs(600),

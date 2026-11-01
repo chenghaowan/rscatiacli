@@ -70,6 +70,25 @@ impl Product {
         self.com().get("Name")?.as_string()
     }
 
+    /// 所属文档（`Parent`；wcc 递归遍历子件文档用）。
+    pub fn parent_document(&self) -> ComResult<crate::objects::documents::Document> {
+        Ok(crate::objects::documents::Document::new(
+            self.com().get("Parent")?.as_obj()?,
+        ))
+    }
+
+    /// 质量属性对象（`GetTechnologicalObject("Inertia")`）。
+    pub fn get_inertia(&self) -> ComResult<crate::objects::inertia::Inertia> {
+        Ok(crate::objects::inertia::Inertia::new(
+            self.com()
+                .call(
+                    "GetTechnologicalObject",
+                    &[Arg::Str("Inertia".to_string())],
+                )?
+                .as_obj()?,
+        ))
+    }
+
     /// 更新产品树（断链/几何变化后重算，尽力而为）。
     pub fn update(&self) -> ComResult<()> {
         self.com().call("Update", &[]).map(|_| ())
