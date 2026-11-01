@@ -253,7 +253,7 @@ fn root_product_reference_path(app: &Application, docs: &Documents) -> ComResult
 }
 
 /// 递归遍历产品树，收集所有 Part 引用路径（按已开文档名匹配）。
-fn collect_parts(
+pub(crate) fn collect_parts(
     product: &rscatiacli::objects::Product,
     docs: &Documents,
     out: &mut Vec<(String, String)>,

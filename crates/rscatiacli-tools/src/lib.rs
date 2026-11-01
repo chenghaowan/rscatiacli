@@ -32,6 +32,7 @@ pub mod rule_bounding_box;
 pub mod rule_projected_surface;
 pub mod save_product_without_history;
 pub mod batch_analysis;
+pub mod capture;
 pub mod stitch_surface;
 pub mod surface_common;
 pub mod text_outline;
@@ -75,6 +76,7 @@ fn json_tool(script: &str) -> Option<JsonToolFn> {
         "drawlink/drawlink_cli.py" => Some(drawlink::run),
         "grid/grid_cli.py" => Some(grid::run),
         "expose2d/expose2d_cli.py" => Some(expose2d::run),
+        "capture_active_part/capture_active_part.py" => Some(capture::run),
         "trim_boundary/trim_boundary.py" => Some(trim_boundary::run),
         // product_analysis 一批
         "product_analysis/apply_naming.py" => Some(apply_naming::run),
@@ -113,6 +115,7 @@ fn json_tool_timeout(script: &str) -> Duration {
         "drawlink/drawlink_cli.py" => Duration::from_secs(300),
         "grid/grid_cli.py" => Duration::from_secs(600),
         "expose2d/expose2d_cli.py" => Duration::from_secs(1200),
+        "capture_active_part/capture_active_part.py" => Duration::from_secs(900),
         "trim_boundary/trim_boundary.py" => Duration::from_secs(600),
         "product_analysis/apply_naming.py" => Duration::from_secs(900),
         "product_analysis/find_near_parts.py" => Duration::from_secs(600),

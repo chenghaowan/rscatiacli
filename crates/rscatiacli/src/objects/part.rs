@@ -328,6 +328,50 @@ impl AxisSystem {
     }
 
     /// 轴定义方式：catAxisSystemAxisByCoordinates = 1（恒定平行）。
+    /// 是否为当前轴系（capture_active_part 的 tooling 轴系用）。
+    pub fn is_current(&self) -> ComResult<bool> {
+        self.com().get("IsCurrent")?.as_bool()
+    }
+
+    pub fn set_current(&self, value: bool) -> ComResult<()> {
+        self.com().put("IsCurrent", Arg::Bool(value))
+    }
+
+    /// 轴系 X/Y 向量在模型空间的坐标（GetVectors 双 SAFEARRAY 出参，VBA 中转；
+    /// capture_active_part 的方向视图用）。返回 (x 向量, y 向量)。
+    pub fn get_vectors(
+        &self,
+        ss: &crate::objects::system_service::SystemService,
+    ) -> ComResult<([f64; 3], [f64; 3])> {
+        let function = "rscatiacli_axis_vectors";
+        let code = format!(
+            r#"
+        Public Function {function}(oAxis As AxisSystem)
+            Dim vx(2) As Variant
+            Dim vy(2) As Variant
+            oAxis.GetVectors vx, vy
+            Dim out(5) As Variant
+            out(0) = vx(0): out(1) = vx(1): out(2) = vx(2)
+            out(3) = vy(0): out(4) = vy(1): out(5) = vy(2)
+            {function} = out
+        End Function
+        "#
+        );
+        let values = ss
+            .evaluate(&code, 0, function, &[Arg::Obj(self.com().clone())])?
+            .as_f64_array()?;
+        if values.len() < 6 {
+            return Err(crate::error::ComError::runtime(format!(
+                "GetVectors 返回了 {} 个分量，期望 6",
+                values.len()
+            )));
+        }
+        Ok((
+            [values[0], values[1], values[2]],
+            [values[3], values[4], values[5]],
+        ))
+    }
+
     pub fn set_x_axis_type(&self, value: i32) -> ComResult<()> {
         self.com().put("XAxisType", Arg::I32(value))
     }
