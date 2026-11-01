@@ -16,6 +16,7 @@ com_wrapper!(HybridBodies);
 com_wrapper!(HybridBody);
 com_wrapper!(AxisSystems);
 com_wrapper!(AxisSystem);
+com_wrapper!(Planes);
 com_wrapper!(OriginElements);
 com_wrapper!(Entities);
 com_wrapper!(Entity);
@@ -26,6 +27,10 @@ pub type HybridShapes = Entities;
 
 impl ComCollection for Bodies {
     type Item = Body;
+}
+
+impl ComCollection for Planes {
+    type Item = Entity;
 }
 
 impl Bodies {
@@ -90,6 +95,11 @@ impl Part {
 
     pub fn axis_systems(&self) -> ComResult<AxisSystems> {
         child(self.com(), "AxisSystems")
+    }
+
+    /// 用户参考平面集合（批量分析截图前统一隐藏用）。
+    pub fn planes(&self) -> ComResult<Planes> {
+        child(self.com(), "Planes")
     }
 
     /// 零件级约束集合（包围盒 dz 长度约束挂这里）。
@@ -200,6 +210,11 @@ impl Part {
 }
 
 impl Body {
+    /// Body 名字（与主 Body 对比判断"其他 Body"用）。
+    pub fn name(&self) -> ComResult<String> {
+        self.com().get("Name")?.as_string()
+    }
+
     /// Body 内的几何图形集（直线可能挂在这里）。
     pub fn hybrid_bodies(&self) -> ComResult<HybridBodies> {
         child(self.com(), "HybridBodies")

@@ -74,7 +74,7 @@ pub use material::{
 pub use parameter::{Parameter, Parameters};
 pub use part::{
     AxisSystem, AxisSystems, Bodies, Body, Entities, Entity, HybridBodies, HybridBody,
-    HybridShapes, OriginElements, Part, Shapes,
+    HybridShapes, OriginElements, Part, Planes, Shapes,
 };
 pub use plane::Plane;
 pub use product::{Product, Products};
@@ -89,4 +89,4 @@ pub use sketch::{
 };
 pub use spa_workbench::{Measurable, SPAWorkbench};
 pub use system_service::SystemService;
-pub use viewer::{Viewer3D, Window};
+pub use viewer::{Viewpoint3D, Viewer3D, Window};

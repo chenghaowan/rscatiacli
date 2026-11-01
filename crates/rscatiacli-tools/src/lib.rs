@@ -26,6 +26,7 @@ pub mod rule_axis;
 pub mod rule_bounding_box;
 pub mod rule_projected_surface;
 pub mod save_product_without_history;
+pub mod batch_analysis;
 pub mod stitch_surface;
 pub mod surface_common;
 pub mod text_outline;
@@ -60,6 +61,8 @@ fn json_tool(script: &str) -> Option<JsonToolFn> {
         "join_surface/join_surface.py" => Some(join_surface::run),
         "offset_surface/offset_surface.py" => Some(offset_surface::run),
         "stitch_surface/stitch_surface.py" => Some(stitch_surface::run),
+        // 批量产品分析: 遍历产品树逐件 bbox/投影/截图, 部件数大时很耗时
+        "batch_product_analysis/batch_product_analysis.py" => Some(batch_analysis::run),
         "trim_boundary/trim_boundary.py" => Some(trim_boundary::run),
         // product_analysis 一批
         "product_analysis/apply_naming.py" => Some(apply_naming::run),
@@ -91,6 +94,7 @@ fn json_tool_timeout(script: &str) -> Duration {
         "join_surface/join_surface.py" => Duration::from_secs(300),
         "offset_surface/offset_surface.py" => Duration::from_secs(300),
         "stitch_surface/stitch_surface.py" => Duration::from_secs(600),
+        "batch_product_analysis/batch_product_analysis.py" => Duration::from_secs(3600),
         "trim_boundary/trim_boundary.py" => Duration::from_secs(600),
         "product_analysis/apply_naming.py" => Duration::from_secs(900),
         "product_analysis/find_near_parts.py" => Duration::from_secs(600),

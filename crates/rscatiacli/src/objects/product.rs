@@ -65,6 +65,11 @@ impl Product {
         self.com().get("PartNumber")?.as_string()
     }
 
+    /// 实例名（`Name`，如 "Part1.1"；与已开文档 Name 匹配用）。
+    pub fn name(&self) -> ComResult<String> {
+        self.com().get("Name")?.as_string()
+    }
+
     /// 更新产品树（断链/几何变化后重算，尽力而为）。
     pub fn update(&self) -> ComResult<()> {
         self.com().call("Update", &[]).map(|_| ())

@@ -45,6 +45,11 @@ impl Document {
         self.com().get("FullName")?.as_string()
     }
 
+    /// 文档名（如 "Part1.CATPart"；Product 树匹配已开文档用）。
+    pub fn name(&self) -> ComResult<String> {
+        self.com().get("Name")?.as_string()
+    }
+
     pub fn is_read_only(&self) -> ComResult<bool> {
         self.com().get("IsReadOnly")?.as_bool()
     }

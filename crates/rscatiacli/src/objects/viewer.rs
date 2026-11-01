@@ -10,6 +10,7 @@ use crate::error::ComResult;
 
 com_wrapper!(Window);
 com_wrapper!(Viewer3D);
+com_wrapper!(Viewpoint3D);
 
 impl Window {
     /// 当前活动查看器。
@@ -69,5 +70,49 @@ impl Viewer3D {
                 &[Arg::I32(format), Arg::Str(path.to_string())],
             )
             .map(|_| ())
+    }
+
+    /// 3D 视点（sight/up 方向与投影模式；批量分析截图用 ISO 视角）。
+    pub fn viewpoint3d(&self) -> ComResult<Viewpoint3D> {
+        Ok(Viewpoint3D::new(self.com().get("Viewpoint3D")?.as_obj()?))
+    }
+}
+
+impl Viewpoint3D {
+    /// 视线方向（ISO 视角用 (-1,-1,-1)）。
+    pub fn put_sight_direction(&self, dir: [f64; 3]) -> ComResult<()> {
+        self.com()
+            .call(
+                "PutSightDirection",
+                &[Arg::SafeArray(vec![
+                    Arg::F64(dir[0]),
+                    Arg::F64(dir[1]),
+                    Arg::F64(dir[2]),
+                ])],
+            )
+            .map(|_| ())
+    }
+
+    /// 视图上方向（水平视角用 (0,0,1)）。
+    pub fn put_up_direction(&self, dir: [f64; 3]) -> ComResult<()> {
+        self.com()
+            .call(
+                "PutUpDirection",
+                &[Arg::SafeArray(vec![
+                    Arg::F64(dir[0]),
+                    Arg::F64(dir[1]),
+                    Arg::F64(dir[2]),
+                ])],
+            )
+            .map(|_| ())
+    }
+
+    /// 投影模式（0 = 透视, 1 = 平行投影）。
+    pub fn projection_mode(&self) -> ComResult<i32> {
+        self.com().get("ProjectionMode")?.as_i32()
+    }
+
+    pub fn set_projection_mode(&self, value: i32) -> ComResult<()> {
+        self.com().put("ProjectionMode", Arg::I32(value))
     }
 }
