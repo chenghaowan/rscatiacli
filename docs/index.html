@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rscatiacli · pycatia → Rust 翻译进度</title>
+<style>
+  :root {
+    --bg: #f6f8fa; --card: #ffffff; --ink: #1f2328; --muted: #656d76;
+    --line: #d8dee4; --accent: #0f6cbd; --accent2: #ce422b;
+    --ok: #1a7f37; --okbg: #e6f4ea; --mid: #0f6cbd; --low: #bf8700;
+    --code-bg: #f0f3f6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.65 "Segoe UI", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 64px; }
+  header.site {
+    background: linear-gradient(135deg, #10233b 0%, #0f6cbd 130%);
+    color: #fff; padding: 36px 0 30px;
+  }
+  header.site .wrap { padding-bottom: 0; }
+  header.site h1 { margin: 0; font-size: 26px; letter-spacing: .3px; }
+  header.site h1 .arrow { color: #ffb86b; }
+  header.site .sub { margin-top: 6px; color: #cfe3f7; font-size: 14px; }
+  .chips { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    display: inline-block; padding: 2px 10px; border-radius: 999px;
+    font-size: 12.5px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25);
+  }
+  section { margin-top: 28px; }
+  h2 { font-size: 19px; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--line); }
+  h2 .en { color: var(--muted); font-size: 13px; font-weight: normal; margin-left: 8px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; }
+
+  /* hero */
+  .hero { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: stretch; }
+  @media (max-width: 760px) { .hero { grid-template-columns: 1fr; } }
+  .bigpct { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+  .bigpct .num { font-size: 56px; font-weight: 700; color: var(--accent); line-height: 1.1; }
+  .bigpct .cap { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .stat b { display: block; font-size: 22px; }
+  .stat span { color: var(--muted); font-size: 12.5px; }
+
+  /* family rows */
+  .fam { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .fam .head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .fam .mod { font-family: Consolas, monospace; font-size: 14.5px; font-weight: 600; }
+  .fam .zh { color: var(--muted); font-size: 13px; }
+  .fam .count { margin-left: auto; font-weight: 600; font-size: 14px; }
+  .phase { font-size: 11.5px; padding: 1px 8px; border-radius: 999px; border: 1px solid; white-space: nowrap; }
+  .p-done { color: var(--ok); border-color: var(--ok); background: var(--okbg); }
+  .p-1 { color: #fff; border-color: var(--accent2); background: var(--accent2); }
+  .p-n { color: var(--accent); border-color: var(--accent); background: #eaf3fb; }
+  .p-later { color: var(--muted); border-color: var(--line); background: var(--bg); }
+  .bar { height: 10px; border-radius: 999px; background: #e8ebef; margin: 10px 0 8px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; border-radius: 999px; background: var(--low); }
+  .bar > i.mid { background: var(--mid); } .bar > i.ok { background: var(--ok); }
+  .cov { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cov .t {
+    font-family: Consolas, monospace; font-size: 12px; padding: 1px 7px;
+    border-radius: 5px; background: var(--okbg); color: var(--ok); border: 1px solid #b7dfc3;
+  }
+  details.miss { margin-top: 8px; font-size: 13px; color: var(--muted); }
+  details.miss summary { cursor: pointer; user-select: none; }
+  details.miss code { color: var(--muted); font-size: 12px; }
+  details.miss .grp { margin: 6px 0 2px; font-weight: 600; color: var(--ink); }
+
+  /* phase list */
+  ol.phases { margin: 0; padding-left: 22px; }
+  ol.phases > li { margin-bottom: 14px; }
+  ol.phases b.t { color: var(--ink); }
+  ol.phases .d { color: var(--muted); font-size: 13.5px; }
+  ol.phases code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+  .goal { margin-top: 14px; padding: 10px 14px; border-left: 4px solid var(--accent2); background: #fdf3f1; border-radius: 0 8px 8px 0; font-size: 14px; }
+
+  /* notes */
+  .note { font-size: 13.5px; color: var(--muted); }
+  .note b { color: var(--ink); }
+  ul.plain { margin: 8px 0 0; padding-left: 20px; }
+  ul.plain li { margin-bottom: 6px; }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+  footer { margin-top: 36px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 14px; }
+  footer a { color: var(--accent); }
+  a { color: var(--accent); text-decoration: none; }
+  table.oos { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.oos td { padding: 4px 8px; border-bottom: 1px solid var(--line); }
+  table.oos td:last-child { text-align: right; color: var(--muted); white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <h1>rscatiacli <span class="arrow">·</span> pycatia <span class="arrow">→</span> Rust 翻译进度</h1>
+    <div class="sub">CATIA V5 COM 自动化的 Rust 绑定库与工具层 —— 对齐 pycatia 命名，只封装实际用到的成员</div>
+    <div class="chips">
+      <span class="chip" id="chip-ver">rscatiacli</span>
+      <span class="chip" id="chip-pycatia">pycatia</span>
+      <span class="chip">静态说明页 · 数据可由脚本再生</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<section>
+  <h2>总体进度 <span class="en">overall progress</span></h2>
+  <div class="hero">
+    <div class="bigpct card">
+      <div class="num" id="hero-pct">–</div>
+      <div class="cap">规划范围内 pycatia 功能类已封装比例</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="st-covered">–</b><span>已封装类 / 规划范围功能类</span></div>
+      <div class="stat"><b id="st-all">–</b><span>pycatia 全部类（<span id="st-fams">–</span> 个模块族）</span></div>
+      <div class="stat"><b id="st-enum">–</b><span>枚举常量池（按需引入，Rust 侧已有 <span id="st-consts">–</span> 个）</span></div>
+      <div class="stat"><b>28+1</b><span>工具层已 Rust 化（28 个 JSON 工具 + colorize CLI），Python sidecar 退役</span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>这是什么 <span class="en">about</span></h2>
+  <div class="card note">
+    <p><b>rscatiacli</b> 是面向 CATIA V5 COM（IDispatch 晚绑定）的 Rust 绑定库 + 工具 CLI，
+       作为 ltl-manage 应用层 Python CATIA sidecar 的 Rust 替代。API 命名与
+       <a href="https://github.com/evereux/pycatia">pycatia</a> 对齐
+       （<code>PartDocument</code>、<code>HybridBodies</code>、<code>SPAWorkbench</code>……照搬不擅改），
+       但遵循项目的抽取规则：</p>
+    <blockquote style="border-left:4px solid var(--accent); margin:10px 0; padding:2px 12px; background:#eaf3fb; border-radius:0 8px 8px 0;">
+      <b>只封装应用真正用到的成员。</b> 绑定库随应用层的迁移而生长；不做 pycatia 1:1 全镜像。
+    </blockquote>
+    <ul class="plain">
+      <li><b>双层结构：</b><code>rscatiacli</code>（绑定库：会话/IDispatch/类型化对象模型）与
+          <code>rscatiacli-tools</code>（工具层：JSON 工具注册表 + CLI）。</li>
+      <li><b>进度口径：</b>以"类"为粒度统计。分母 = 14 个规划内模块族的<b>功能类</b>
+          （剔除 <code>*SettingAtt</code> 设置面板类与 COM 基础设施类；
+          <code>enumeration</code> 的 339 个枚举常量单列、按需引入）。</li>
+      <li><b>版本策略：</b>0.0.x 允许破坏性变更；<b>0.1.0 需要规划范围内功能类覆盖 ≥ 50%</b>
+          且迁移工具稳定；1.0.0 在 pycatia 自身 1.0 前不计划。</li>
+      <li>rscatiacli 侧另有少量 pycatia 没有同名类的扩展封装
+          （<span id="extras-inline">–</span>），不计入分母。</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>模块族进度明细 <span class="en">coverage by family</span></h2>
+  <div id="families"></div>
+</section>
+
+<section>
+  <h2>Python → Rust 翻译阶段计划 <span class="en">phases</span></h2>
+  <div class="card">
+    <ol class="phases">
+      <li>
+        <b class="t">阶段 1 —— part_interfaces + product_structure_interfaces（✅ 已完成，2026-11-03）</b>
+        <div class="d">用户指定的起点，两族均已 100%：<code>product_structure_interfaces</code>
+            收尾 <code>Analyze</code>（产品级质量属性，VBA 中转出参数组）与
+            <code>AssemblyConvertor</code>（<code>GetItem("BillOfMaterial")</code> + Print 导出）；
+            <code>part_interfaces</code> 68 类全部有类型化包装，经
+            <code>ShapeFactory::add_new_*</code> 创建（约 45 个创建方法）。
+            特征创建/参数写入路径待真机建特征验证；成员面上 pycatia 未暴露的部分走
+            <code>com()</code> 逃生舱。</div>
+      </li>
+      <li>
+        <b class="t">阶段 2 —— mec_mod_interfaces 补全</b>
+        <div class="d">拓扑读取：<code>Boundary/Face/Edge/Vertex</code> 系列、
+            <code>GeometricElements</code>、<code>HybridShape/HybridShapeInstance</code>、
+            <code>Solid</code>、<code>Factory</code>、<code>OrderedGeometricalSet(s)</code>、
+            <code>FixTogether(s)</code>。</div>
+      </li>
+      <li>
+        <b class="t">阶段 3 —— sketcher_interfaces 补全</b>
+        <div class="d"><code>Circle2D/Ellipse2D/Spline2D/Curve2D/Geometry2D/Axis2D/ControlPoint2D</code> 等，
+            支撑文字转草图与蜂窝肋等 Factory2D 批量场景。</div>
+      </li>
+      <li>
+        <b class="t">阶段 4 —— in_interfaces 文件 / 相机 / 窗口</b>
+        <div class="d"><code>References</code>、<code>Cameras</code>、
+            <code>FileSystem/Files/Folders/TextStream</code>、<code>Windows</code>、
+            <code>Move/Position</code>。<code>system_interfaces</code> 侧
+            <code>SystemService</code> 已就绪，其余为基础设施（不计划）。</div>
+      </li>
+      <li>
+        <b class="t">阶段 5 —— knowledge_interfaces</b>
+        <div class="d">类型化参数（<code>IntParam/RealParam/StrParam/BoolParam/Length/Angle/Dimension</code>）
+            与 <code>Relations/Formula/Rule/SetOfEquation/ParameterSets/Law/List/Units</code>；
+            <code>DesignTable</code> 视需要后置。</div>
+      </li>
+      <li>
+        <b class="t">阶段 6 —— hybrid_shape_interfaces 按需扩展</b>
+        <div class="d">GSD 111 类是分母大头。优先补工具链已用到的构造器族
+            （点/线/平面构造、<code>Project/Intersection/Extremum</code>、
+            <code>Sweep/Loft/Blend/Rotate/Scaling/Symmetry</code>），其余按应用需要生长。</div>
+      </li>
+      <li>
+        <b class="t">阶段 7 —— drafting_interfaces 剩余</b>
+        <div class="d">尺寸标注、表格、引出线、GDT、图片、图框组件等 30 类。</div>
+      </li>
+      <li>
+        <b class="t">阶段 8 —— space_analyses / navigator 收尾</b>
+        <div class="d"><code>Clashes/Sections/Inertias</code> 与导航器
+            <code>Marker2D/3D/Hyperlink</code>；3D 标注（<code>cat_tps_interfaces</code>）语义 GDT 部分按需跟进。</div>
+      </li>
+    </ol>
+    <div class="goal"><b>0.1.0 门槛：</b>规划范围功能类覆盖 ≥ <b>50%</b>（约 <span id="goal-need">–</span> 类）
+      且迁移工具稳定。阶段 1 已完成（141/446 ≈ 31.6%）；剩余各阶段新增覆盖预估：
+      P2 ≈ +18，P3 ≈ +10，P4 ≈ +15，P5 ≈ +20，P6 ≈ +30，P7 ≈ +25，P8 ≈ +8。</div>
+  </div>
+</section>
+
+<section>
+  <h2>工具层状态 <span class="en">tools layer</span></h2>
+  <div class="card note">
+    <ul class="plain">
+      <li><code>rscatiacli-tools</code>：28 个 JSON 工具（注册表按原 Python 脚本名映射到 Rust 实现，
+          例 <code>json body_rename/rename_bodies.py '{"dry_run":true}'</code>）+ <code>colorize</code> 独立 CLI。</li>
+      <li>覆盖命名/着色/显隐/断链修复/体转零件/材料/曲面四件套/产品分析/量测/包围盒/投影面积/
+          文字与二维码转草图/蜂窝肋/重量重心/测长 FTA/图纸三件套/IPP 等。</li>
+      <li>Python sidecar 已退役（最后一个工具 <code>capture_active_part</code> 于 2026-10 迁入）；
+          <code>LTL_CATIA_RUST</code> A/B 开关保留至 Rust 路径切为默认后移除。</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>范围外模块族 <span class="en">out of scope</span></h2>
+  <div class="card note">
+    <p>以下模块族面向 CAM / DNC / 加工 / 装配仿真 / 系统集成等桌面工作台，ltl-manage 不使用，
+       <b>不计划封装</b>（与 ROADMAP 的非目标一致）。此清单仅用于说明分母为何取"规划范围"。</p>
+    <details>
+      <summary>展开完整清单（<span id="oos-count">–</span> 个模块族）</summary>
+      <table class="oos" id="oos-table" style="margin-top:10px"></table>
+    </details>
+  </div>
+</section>
+
+<footer>
+  <div>数据生成于 <b id="gen-date">–</b> ·
+    再生方式：<code>python scripts/parity_audit.py --write docs/index.html</code>
+    （pycatia 路径可用 <code>PYCATIA_PATH</code> 覆盖，默认取 ltl-manage frontR 虚拟环境）。</div>
+  <div style="margin-top:6px">
+    相关文档：<a href="../ROADMAP.zh-CN.md">ROADMAP.zh-CN.md</a> ·
+    <a href="../ROADMAP.md">ROADMAP.md</a> ·
+    <a href="../README.zh-CN.md">README.zh-CN.md</a> ·
+    <a href="https://github.com/evereux/pycatia">pycatia 上游</a>
+  </div>
+</footer>
+
+</div>
+
+<script>
+<!--PARITY-DATA:BEGIN-->
+window.__PARITY_DATA__ = {
+  "generated": "2026-11-03",
+  "pycatia_version": "0.9.6",
+  "rscatiacli_version": "0.0.1",
+  "totals": {
+    "pycatia_all_classes": 1508,
+    "pycatia_families": 84,
+    "scope_raw_classes": 495,
+    "scope_functional_classes": 446,
+    "covered": 141,
+    "percent": 31.6,
+    "enum_pool": 339,
+    "rust_constants": 14
+  },
+  "families": [
+    {
+      "module": "product_structure_interfaces",
+      "zh": "产品结构",
+      "raw_total": 7,
+      "functional_total": 7,
+      "covered": [
+        "Analyze",
+        "AssemblyConvertor",
+        "Product",
+        "ProductDocument",
+        "Products",
+        "Publication",
+        "Publications"
+      ],
+      "missing_in_scope": [],
+      "excluded": []
+    },
+    {
+      "module": "part_interfaces",
+      "zh": "零件特征（Part Design 特征/布尔/阵列）",
+      "raw_total": 68,
+      "functional_total": 68,
+      "covered": [
+        "Add",
+        "Affinity",
+        "AngularRepartition",
+        "Assemble",
+        "AutoDraft",
+        "AutoFillet",
+        "AxisToAxis",
+        "BooleanShape",
+        "Chamfer",
+        "CircPattern",
+        "CloseSurface",
+        "ConstRadEdgeFillet",
+        "Defeaturing",
+        "DefeaturingFilletFilter",
+        "DefeaturingFilter",
+        "DefeaturingFilterWithRange",
+        "DefeaturingFilters",
+        "DefeaturingHoleFilter",
+        "Draft",
+        "DraftDomain",
+        "DraftDomains",
+        "DressUpShape",
+        "EdgeFillet",
+        "FaceFillet",
+        "Fillet",
+        "Groove",
+        "Hole",
+        "Intersect",
+        "Limit",
+        "LinearRepartition",
+        "Loft",
+        "Mirror",
+        "Pad",
+        "Pattern",
+        "Pocket",
+        "Prism",
+        "RectPattern",
+        "Remove",
+        "RemoveFace",
+        "Repartition",
+        "ReplaceFace",
+        "Revolution",
+        "Rib",
+        "Rotate",
+        "Scaling",
+        "Scaling2",
+        "SewSurface",
+        "Shaft",
+        "ShapeFactory",
+        "Shell",
+        "SketchBasedShape",
+        "Slot",
+        "SolidCombine",
+        "Split",
+        "Stiffener",
+        "SurfaceBasedShape",
+        "Sweep",
+        "Symmetry",
+        "ThickSurface",
+        "Thickness",
+        "Thread",
+        "TransformationShape",
+        "Translate",
+        "Trim",
+        "TritangentFillet",
+        "UserPattern",
+        "UserRepartition",
+        "VarRadEdgeFillet"
+      ],
+      "missing_in_scope": [],
+      "excluded": []
+    },
+    {
+      "module": "mec_mod_interfaces",
+      "zh": "机械模型（实体体/几何集/拓扑）",
+      "raw_total": 43,
+      "functional_total": 42,
+      "covered": [
+        "AxisSystem",
+        "AxisSystems",
+        "Bodies",
+        "Body",
+        "Constraint",
+        "Constraints",
+        "HybridBodies",
+        "HybridBody",
+        "HybridShapes",
+        "InstanceFactory",
+        "OriginElements",
+        "Part",
+        "PartDocument",
+        "Shapes",
+        "Sketches"
+      ],
+      "missing_in_scope": [
+        "BiDimFeatEdge",
+        "Boundary",
+        "CylindricalFace",
+        "Edge",
+        "Face",
+        "Factory",
+        "FixTogether",
+        "FixTogethers",
+        "GeometricElements",
+        "HybridShape",
+        "HybridShapeInstance",
+        "MonoDimFeatEdge",
+        "NotWireBoundaryMonoDimFeatVertex",
+        "OrderedGeometricalSet",
+        "OrderedGeometricalSets",
+        "PartServices",
+        "PlanarFace",
+        "RectilinearBiDimFeatEdge",
+        "RectilinearMonoDimFeatEdge",
+        "RectilinearTriDimFeatEdge",
+        "Shape",
+        "ShapeInstance",
+        "Solid",
+        "TriDimFeatEdge",
+        "TriDimFeatVertexOrBiDimFeatVertex",
+        "Vertex",
+        "ZeroDimFeatVertexOrWireBoundaryMonoDimFeatVertex"
+      ],
+      "excluded": [
+        "PartInfrastructureSettingAtt"
+      ]
+    },
+    {
+      "module": "sketcher_interfaces",
+      "zh": "草绘器",
+      "raw_total": 14,
+      "functional_total": 14,
+      "covered": [
+        "Factory2D",
+        "Line2D",
+        "Point2D",
+        "Sketch"
+      ],
+      "missing_in_scope": [
+        "Axis2D",
+        "Circle2D",
+        "ControlPoint2D",
+        "Curve2D",
+        "Ellipse2D",
+        "GeometricElement",
+        "Geometry2D",
+        "Hyperbola2D",
+        "Parabola2D",
+        "Spline2D"
+      ],
+      "excluded": []
+    },
+    {
+      "module": "in_interfaces",
+      "zh": "文档 / 会话 / 文件 / 相机",
+      "raw_total": 51,
+      "functional_total": 40,
+      "covered": [
+        "Application",
+        "Document",
+        "Documents",
+        "Reference",
+        "Selection",
+        "SelectionItem",
+        "Viewer3D",
+        "Viewpoint3D",
+        "VisProperties",
+        "Window"
+      ],
+      "missing_in_scope": [
+        "Camera",
+        "Camera2D",
+        "Camera3D",
+        "Cameras",
+        "DraftingPageSetup",
+        "File",
+        "FileComponent",
+        "FileSystem",
+        "Files",
+        "Folder",
+        "Folders",
+        "LightSource",
+        "LightSources",
+        "Move",
+        "PageSetup",
+        "Position",
+        "Printer",
+        "Printers",
+        "References",
+        "SelectedElement",
+        "SelectionSets",
+        "SendToService",
+        "SpecsAndGeomWindow",
+        "SpecsViewer",
+        "SystemConfiguration",
+        "TextStream",
+        "ViewPoint3D",
+        "Viewer",
+        "Viewer2D",
+        "Viewers",
+        "Viewpoint2D",
+        "VisPropertySet",
+        "Windows"
+      ],
+      "excluded": [
+        "CgrAdhesionSettingAtt",
+        "DocumentationSettingAtt",
+        "GeneralSessionSettingAtt",
+        "MacrosSettingAtt",
+        "PrintersSettingAtt",
+        "SearchSettingAtt",
+        "SettingControllers",
+        "TreeVizManipSettingAtt",
+        "VisualizationSettingAtt",
+        "VrmlSettingAtt",
+        "Workbench"
+      ]
+    },
+    {
+      "module": "system_interfaces",
+      "zh": "系统服务与设置",
+      "raw_total": 25,
+      "functional_total": 1,
+      "covered": [
+        "SystemService"
+      ],
+      "missing_in_scope": [],
+      "excluded": [
+        "AccesslogStatisticsSettingAtt",
+        "AnyObject",
+        "CATBaseDispatch",
+        "CATBaseUnknown",
+        "CacheSettingAtt",
+        "Collection",
+        "CommandStatisticsSettingAtt",
+        "DisconnectionSettingAtt",
+        "DlNameSettingAtt",
+        "DynLicenseSettingAtt",
+        "ErrorlogStatisticsSettingAtt",
+        "FileAccessStatisticsSettingAtt",
+        "GeneralStatisticsSettingAtt",
+        "GlobalStatisticsSettingAtt",
+        "IDispatch",
+        "IUnknown",
+        "LicenseSettingAtt",
+        "MemoryWarningSettingAtt",
+        "PcsStatisticsSettingAtt",
+        "ServerStatisticsSettingAtt",
+        "SessionStatisticsSettingAtt",
+        "SettingController",
+        "SettingRepository",
+        "WorkbenchStatisticsSettingAtt"
+      ]
+    },
+    {
+      "module": "space_analyses_interfaces",
+      "zh": "空间分析（量测/公差/断面）",
+      "raw_total": 16,
+      "functional_total": 14,
+      "covered": [
+        "Distance",
+        "Distances",
+        "Inertia",
+        "Measurable",
+        "SPAWorkbench"
+      ],
+      "missing_in_scope": [
+        "Clash",
+        "ClashResult",
+        "ClashResults",
+        "Clashes",
+        "Conflict",
+        "Conflicts",
+        "Inertias",
+        "Section",
+        "Sections"
+      ],
+      "excluded": [
+        "MeasureSettingAtt",
+        "SectioningSettingAtt"
+      ]
+    },
+    {
+      "module": "knowledge_interfaces",
+      "zh": "知识工程（参数/关系/公式）",
+      "raw_total": 40,
+      "functional_total": 35,
+      "covered": [
+        "Parameter",
+        "Parameters"
+      ],
+      "missing_in_scope": [
+        "Angle",
+        "BoolParam",
+        "Check",
+        "ConstraintSatisfaction",
+        "DesignTable",
+        "Dimension",
+        "EnumParam",
+        "FeatureGenerator",
+        "Formula",
+        "FreeParameter",
+        "FreeParameters",
+        "IntParam",
+        "KnowledgeActivateObject",
+        "KnowledgeObject",
+        "Law",
+        "Length",
+        "List",
+        "ListParameter",
+        "Loop",
+        "Optimization",
+        "OptimizationConstraint",
+        "OptimizationConstraints",
+        "Optimizations",
+        "ParameterSet",
+        "ParameterSets",
+        "RealParam",
+        "Relation",
+        "Relations",
+        "Rule",
+        "SetOfEquation",
+        "StrParam",
+        "Unit",
+        "Units"
+      ],
+      "excluded": [
+        "KnowledgeSheetSettingAtt",
+        "LanguageSheetSettingAtt",
+        "ReportGenerationSheetSettingAtt",
+        "ToleranceSheetSettingAtt",
+        "UnitsSheetSettingAtt"
+      ]
+    },
+    {
+      "module": "drafting_interfaces",
+      "zh": "制图（2D 图纸）",
+      "raw_total": 38,
+      "functional_total": 37,
+      "covered": [
+        "DrawingDocument",
+        "DrawingSheet",
+        "DrawingSheets",
+        "DrawingText",
+        "DrawingTexts",
+        "DrawingView",
+        "DrawingViewGenerativeBehavior",
+        "DrawingViews"
+      ],
+      "missing_in_scope": [
+        "DrawingArrow",
+        "DrawingArrows",
+        "DrawingComponent",
+        "DrawingComponents",
+        "DrawingCoordDim",
+        "DrawingCoordDims",
+        "DrawingDimExtLine",
+        "DrawingDimLine",
+        "DrawingDimValue",
+        "DrawingDimension",
+        "DrawingDimensions",
+        "DrawingGDT",
+        "DrawingGDTs",
+        "DrawingLeader",
+        "DrawingLeaders",
+        "DrawingPageSetup",
+        "DrawingPicture",
+        "DrawingPictures",
+        "DrawingRoot",
+        "DrawingTable",
+        "DrawingTables",
+        "DrawingTextProperties",
+        "DrawingTextRange",
+        "DrawingThread",
+        "DrawingThreads",
+        "DrawingViewGenerativeLinks",
+        "DrawingWelding",
+        "DrawingWeldings",
+        "PrintArea"
+      ],
+      "excluded": [
+        "DraftingSettingAtt"
+      ]
+    },
+    {
+      "module": "cat_mat_interfaces",
+      "zh": "材料库",
+      "raw_total": 8,
+      "functional_total": 8,
+      "covered": [
+        "Material",
+        "MaterialDocument",
+        "MaterialFamilies",
+        "MaterialFamily",
+        "MaterialManager",
+        "Materials"
+      ],
+      "missing_in_scope": [
+        "AnalysisMaterial",
+        "PositionedMaterial"
+      ],
+      "excluded": []
+    },
+    {
+      "module": "cat_tps_interfaces",
+      "zh": "3D 标注（FTA / TPS）",
+      "raw_total": 58,
+      "functional_total": 55,
+      "covered": [
+        "Annotation",
+        "AnnotationFactory",
+        "AnnotationSets",
+        "Annotations",
+        "UserSurface",
+        "UserSurfaces"
+      ],
+      "missing_in_scope": [
+        "Annotation2",
+        "AnnotationFactory2",
+        "AnnotationSet",
+        "AnnotationSetTmpNoaIsolating",
+        "AnnotationSetTransformIntoAssemblySet",
+        "AssemblyAnnotationSets",
+        "AssociatedRefFrame",
+        "Capture",
+        "CaptureFactory",
+        "Captures",
+        "CompositeTolerance",
+        "ControlledRadius",
+        "CoordDim",
+        "DatumSimple",
+        "DatumTarget",
+        "DefaultAnnotation",
+        "Dimension3D",
+        "DimensionLimit",
+        "DimensionPattern",
+        "EnvelopeCondition",
+        "FlagNote",
+        "FreeState",
+        "MaterialCondition",
+        "MedianFeature",
+        "Noa",
+        "NonSemanticDatum",
+        "NonSemanticDatumTarget",
+        "NonSemanticDimension",
+        "NonSemanticGDT",
+        "NumericalDisplayFormat",
+        "ParticularTolElem",
+        "ProjectedToleranceZone",
+        "ReferenceFrame",
+        "Roughness",
+        "SemanticGDT",
+        "SemanticGDTCommonZone",
+        "SemanticGDTFrameExtension",
+        "SemanticGDTNxDisplay",
+        "ShiftedProfileTolerance",
+        "TPSParallelOnScreen",
+        "TPSView",
+        "TPSViewFactory",
+        "TPSViews",
+        "TangentPlane",
+        "Text",
+        "TolerancePerUnitBasisRestrictiveValue",
+        "ToleranceUnitBasisValue",
+        "ToleranceZone",
+        "Weld"
+      ],
+      "excluded": [
+        "DmuTolSettingAtt",
+        "FTASettingAtt",
+        "FtaInfraSettingAtt"
+      ]
+    },
+    {
+      "module": "navigator_interfaces",
+      "zh": "导航器（组 / DMU 标注）",
+      "raw_total": 16,
+      "functional_total": 14,
+      "covered": [
+        "Group",
+        "Groups"
+      ],
+      "missing_in_scope": [
+        "AnnotatedView",
+        "AnnotatedViews",
+        "DMUDataFlow",
+        "DMUReview",
+        "DMUReviews",
+        "Hyperlink",
+        "Hyperlinks",
+        "Marker2D",
+        "Marker2Ds",
+        "Marker3D",
+        "Marker3Ds",
+        "NavigatorWorkbench"
+      ],
+      "excluded": [
+        "MarkerSettingAtt",
+        "N4DNavigatorSettingAtt"
+      ]
+    },
+    {
+      "module": "hybrid_shape_interfaces",
+      "zh": "创成式外形设计（GSD）",
+      "raw_total": 111,
+      "functional_total": 111,
+      "covered": [
+        "Extract",
+        "HybridShapeAffinity",
+        "HybridShapeFactory",
+        "HybridShapeLinePtPt",
+        "HybridShapeOffset",
+        "HybridShapeTranslate",
+        "Plane"
+      ],
+      "missing_in_scope": [
+        "HybridShape3DCurveOffset",
+        "HybridShapeAssemble",
+        "HybridShapeAxisLine",
+        "HybridShapeAxisToAxis",
+        "HybridShapeBlend",
+        "HybridShapeBoundary",
+        "HybridShapeBump",
+        "HybridShapeCircle",
+        "HybridShapeCircle2PointsRad",
+        "HybridShapeCircle3Points",
+        "HybridShapeCircleBitangentPoint",
+        "HybridShapeCircleBitangentRadius",
+        "HybridShapeCircleCenterAxis",
+        "HybridShapeCircleCenterTangent",
+        "HybridShapeCircleCtrPt",
+        "HybridShapeCircleCtrRad",
+        "HybridShapeCircleExplicit",
+        "HybridShapeCircleTritangent",
+        "HybridShapeCombine",
+        "HybridShapeConic",
+        "HybridShapeConnect",
+        "HybridShapeCorner",
+        "HybridShapeCurveExplicit",
+        "HybridShapeCurvePar",
+        "HybridShapeCurveSmooth",
+        "HybridShapeCylinder",
+        "HybridShapeDevelop",
+        "HybridShapeDirection",
+        "HybridShapeExtract",
+        "HybridShapeExtractMulti",
+        "HybridShapeExtrapol",
+        "HybridShapeExtremum",
+        "HybridShapeExtremumPolar",
+        "HybridShapeExtrude",
+        "HybridShapeFill",
+        "HybridShapeFilletBiTangent",
+        "HybridShapeFilletTriTangent",
+        "HybridShapeHealing",
+        "HybridShapeHelix",
+        "HybridShapeIntegratedLaw",
+        "HybridShapeIntersection",
+        "HybridShapeInverse",
+        "HybridShapeLawDistProj",
+        "HybridShapeLineAngle",
+        "HybridShapeLineBiTangent",
+        "HybridShapeLineBisecting",
+        "HybridShapeLineExplicit",
+        "HybridShapeLineNormal",
+        "HybridShapeLinePtDir",
+        "HybridShapeLineTangency",
+        "HybridShapeLoft",
+        "HybridShapeMidSurface",
+        "HybridShapeNear",
+        "HybridShapePlane1Curve",
+        "HybridShapePlane1Line1Pt",
+        "HybridShapePlane2Lines",
+        "HybridShapePlane3Points",
+        "HybridShapePlaneAngle",
+        "HybridShapePlaneBetween",
+        "HybridShapePlaneEquation",
+        "HybridShapePlaneExplicit",
+        "HybridShapePlaneMean",
+        "HybridShapePlaneNormal",
+        "HybridShapePlaneOffset",
+        "HybridShapePlaneOffsetPt",
+        "HybridShapePlaneTangent",
+        "HybridShapePointBetween",
+        "HybridShapePointCenter",
+        "HybridShapePointCoord",
+        "HybridShapePointExplicit",
+        "HybridShapePointOnCurve",
+        "HybridShapePointOnPlane",
+        "HybridShapePointOnSurface",
+        "HybridShapePointTangent",
+        "HybridShapePolyline",
+        "HybridShapePositionTransfo",
+        "HybridShapeProject",
+        "HybridShapeReflectLine",
+        "HybridShapeRevol",
+        "HybridShapeRollingOffset",
+        "HybridShapeRotate",
+        "HybridShapeScaling",
+        "HybridShapeSection",
+        "HybridShapeSphere",
+        "HybridShapeSpine",
+        "HybridShapeSpiral",
+        "HybridShapeSpline",
+        "HybridShapeSplit",
+        "HybridShapeSurfaceExplicit",
+        "HybridShapeSweep",
+        "HybridShapeSweepCircle",
+        "HybridShapeSweepConic",
+        "HybridShapeSweepExplicit",
+        "HybridShapeSweepLine",
+        "HybridShapeSymmetry",
+        "HybridShapeThickness",
+        "HybridShapeTransfer",
+        "HybridShapeTrim",
+        "HybridShapeUnfold",
+        "HybridShapeVolumeExplicit",
+        "HybridShapeWrapCurve",
+        "HybridShapeWrapSurface",
+        "Line",
+        "Point",
+        "ShapeDesignWorkbench"
+      ],
+      "excluded": []
+    }
+  ],
+  "enumeration": {
+    "total": 339
+  },
+  "extras": [
+    "AnnotationText",
+    "Entities",
+    "Entity",
+    "HybridShapeJoin",
+    "PAPER_A0",
+    "PAPER_A1",
+    "PAPER_A2",
+    "PAPER_A3",
+    "PAPER_A4",
+    "Planes"
+  ],
+  "out_of_scope": [
+    {
+      "module": "abq_automation_interfaces",
+      "classes": 71
+    },
+    {
+      "module": "analysis_interfaces",
+      "classes": 39
+    },
+    {
+      "module": "arrangement_interfaces",
+      "classes": 24
+    },
+    {
+      "module": "assembly_interfaces",
+      "classes": 8
+    },
+    {
+      "module": "base_interfaces",
+      "classes": 2
+    },
+    {
+      "module": "behavior_interfaces",
+      "classes": 4
+    },
+    {
+      "module": "bkt_interfaces",
+      "classes": 1
+    },
+    {
+      "module": "caa_composites_interfaces",
+      "classes": 2
+    },
+    {
+      "module": "cat_dde_settings_interfaces",
+      "classes": 2
+    },
+    {
+      "module": "cat_ipd_adapter_interfaces",
+      "classes": 4
+    },
+    {
+      "module": "cat_plant_ship_interfaces",
+      "classes": 31
+    },
+    {
+      "module": "cat_rdg_interfaces",
+      "classes": 1
+    },
+    {
+      "module": "cat_rma_interfaces",
+      "classes": 1
+    },
+    {
+      "module": "cat_rsc_interfaces",
+      "classes": 7
+    },
+    {
+      "module": "cat_sch_platform_interfaces",
+      "classes": 83
+    },
+    {
+      "module": "cat_sde_setting_interfaces",
+      "classes": 1
+    },
+    {
+      "module": "cat_sm_interfaces",
+      "classes": 2
+    },
+    {
+      "module": "cat_smarteam_integ_interfaces",
+      "classes": 3
+    },
+    {
+      "module": "cat_str_functional_interfaces",
+      "classes": 36
+    },
+    {
+      "module": "catia_de_settings_interfaces",
+      "classes": 1
+    },
+    {
+      "module": "catia_v4_interfaces",
+      "classes": 5
+    },
+    {
+      "module": "cdma_interoperability",
+      "classes": 1
+    },
+    {
+      "module": "components_catalogs_interfaces",
+      "classes": 1
+    },
+    {
+      "module": "dmaps_interfaces",
+      "classes": 12
+    },
+    {
+      "module": "dnb_asy_activity_interfaces",
+      "classes": 1
+    },
+    {
+      "module": "dnb_d5_iInterfaces",
+      "classes": 1
+    },
+    {
+      "module": "dnb_device_activity_interfaces",
+      "classes": 2
+    },
+    {
+      "module": "dnb_device_interfaces",
+      "classes": 7
+    },
+    {
+      "module": "dnb_dpm_interfaces",
+      "classes": 2
+    },
+    {
+      "module": "dnb_ehm_interfaces",
+      "classes": 2
+    },
+    {
+      "module": "dnb_ehs_interfaces",
+      "classes": 1
+    },
+    {
+      "module": "dnb_ekp_interfaces",
+      "classes": 1
+    },
+    {
+      "module": "dnb_fastener_interfaces",
+      "classes": 9
+    },
+    {
+      "module": "dnb_graph_editor",
+      "classes": 1
+    },
+    {
+      "module": "dnb_human_modeling_interfaces",
+      "classes": 23
+    },
+    {
+      "module": "dnb_human_sim_interfaces",
+      "classes": 18
+    },
+    {
+      "module": "dnb_igp_arc_commands",
+      "classes": 4
+    },
+    {
+      "module": "dnb_igp_olp_ui",
+      "classes": 2
+    },
+    {
+      "module": "dnb_igp_setup_interfaces",
+      "classes": 20
+    },
+    {
+      "module": "dnb_manufacturing_layout_interfaces",
+      "classes": 3
+    },
+    {
+      "module": "dnb_mhi_interfaces",
+      "classes": 3
+    },
+    {
+      "module": "dnb_reporting_interfaces",
+      "classes": 1
+    },
+    {
+      "module": "dnb_resource_program_interfaces",
+      "classes": 3
+    },
+    {
+      "module": "dnb_robot_interfaces",
+      "classes": 16
+    },
+    {
+      "module": "dnb_sim_activity_interfaces",
+      "classes": 3
+    },
+    {
+      "module": "dnb_simulation_interfaces",
+      "classes": 4
+    },
+    {
+      "module": "dnb_sor_interfaces",
+      "classes": 1
+    },
+    {
+      "module": "dnb_state_interfaces",
+      "classes": 3
+    },
+    {
+      "module": "dnb_work_interfaces",
+      "classes": 6
+    },
+    {
+      "module": "drafting_2dL_interfaces",
+      "classes": 7
+    },
+    {
+      "module": "electrical_schematic_interfaces",
+      "classes": 2
+    },
+    {
+      "module": "eno_cd5_interfaces",
+      "classes": 15
+    },
+    {
+      "module": "exception_handling",
+      "classes": 2
+    },
+    {
+      "module": "fitting_interfaces",
+      "classes": 11
+    },
+    {
+      "module": "funct_system_interfaces",
+      "classes": 24
+    },
+    {
+      "module": "general_knowledge_interfaces",
+      "classes": 13
+    },
+    {
+      "module": "kinematics_interfaces",
+      "classes": 9
+    },
+    {
+      "module": "manufacturing_interfaces",
+      "classes": 45
+    },
+    {
+      "module": "multi_cad_interfaces",
+      "classes": 1
+    },
+    {
+      "module": "osm_interfaces",
+      "classes": 6
+    },
+    {
+      "module": "pcb_board_base",
+      "classes": 6
+    },
+    {
+      "module": "ppr_interfaces",
+      "classes": 3
+    },
+    {
+      "module": "prismatic_machining_interfaces",
+      "classes": 1
+    },
+    {
+      "module": "reporter_interfaces",
+      "classes": 1
+    },
+    {
+      "module": "scripts",
+      "classes": 1
+    },
+    {
+      "module": "simulation_interfaces",
+      "classes": 1
+    },
+    {
+      "module": "smt_interfaces",
+      "classes": 19
+    },
+    {
+      "module": "structure_interfaces",
+      "classes": 25
+    },
+    {
+      "module": "surface_machining_interfaces",
+      "classes": 2
+    },
+    {
+      "module": "threed_xml_interfaces",
+      "classes": 1
+    }
+  ]
+};
+<!--PARITY-DATA:END-->
+
+(function () {
+  const d = window.__PARITY_DATA__ || {};
+  const t = d.totals || {};
+  const $ = (id) => document.getElementById(id);
+  if (!t.scope_functional_classes) return;
+
+  const PHASES = {
+    product_structure_interfaces: { tag: "阶段 1 ✅", cls: "p-done" },
+    part_interfaces:              { tag: "阶段 1 ✅", cls: "p-done" },
+    mec_mod_interfaces:           { tag: "阶段 2", cls: "p-n" },
+    sketcher_interfaces:          { tag: "阶段 3", cls: "p-n" },
+    in_interfaces:                { tag: "阶段 4", cls: "p-n" },
+    system_interfaces:            { tag: "已就绪", cls: "p-done" },
+    knowledge_interfaces:         { tag: "阶段 5", cls: "p-n" },
+    hybrid_shape_interfaces:      { tag: "阶段 6", cls: "p-n" },
+    drafting_interfaces:          { tag: "阶段 7", cls: "p-n" },
+    space_analyses_interfaces:    { tag: "阶段 8", cls: "p-n" },
+    navigator_interfaces:         { tag: "阶段 8", cls: "p-n" },
+    cat_mat_interfaces:           { tag: "基本完成", cls: "p-done" },
+    cat_tps_interfaces:           { tag: "按需跟进", cls: "p-later" },
+  };
+
+  $("hero-pct").textContent = t.percent + "%";
+  $("st-covered").textContent = t.covered + " / " + t.scope_functional_classes;
+  $("st-all").textContent = t.pycatia_all_classes;
+  $("st-fams").textContent = t.pycatia_families;
+  $("st-enum").textContent = t.enum_pool;
+  $("st-consts").textContent = t.rust_constants;
+  $("goal-need").textContent = Math.ceil(t.scope_functional_classes * 0.5);
+  $("gen-date").textContent = d.generated;
+  $("chip-ver").textContent = "rscatiacli v" + d.rscatiacli_version;
+  $("chip-pycatia").textContent = "对齐 pycatia " + d.pycatia_version;
+  $("extras-inline").textContent = (d.extras || []).join(", ");
+
+  const famRoot = $("families");
+  for (const f of d.families || []) {
+    const pct = f.functional_total ? Math.round(f.covered.length * 100 / f.functional_total) : 0;
+    const ph = PHASES[f.module] || { tag: "计划中", cls: "p-later" };
+    const barCls = pct >= 70 ? "ok" : pct >= 30 ? "mid" : "";
+    const el = document.createElement("div");
+    el.className = "fam";
+    let covHtml = "";
+    if (f.covered.length) {
+      covHtml = '<div class="cov">' + f.covered.map((c) => '<span class="t">' + c + "</span>").join("") + "</div>";
+    }
+    let missHtml = "";
+    if (f.missing_in_scope.length) {
+      missHtml =
+        '<details class="miss"><summary>未封装 ' + f.missing_in_scope.length +
+        ' 个（点击展开）</summary><div class="grp">规划内待封装</div><code>' +
+        f.missing_in_scope.join(" · ") + "</code>" +
+        (f.excluded.length ? '<div class="grp">不计分母（设置面板 / COM 基础设施）</div><code>' +
+          f.excluded.join(" · ") + "</code>" : "") +
+        "</details>";
+    } else if (f.excluded.length) {
+      missHtml = '<details class="miss"><summary>规划内已全部封装（另有 ' + f.excluded.length +
+        ' 个不计分母）</summary><code>' + f.excluded.join(" · ") + "</code></details>";
+    }
+    el.innerHTML =
+      '<div class="head"><span class="mod">' + f.module + '</span>' +
+      '<span class="phase ' + ph.cls + '">' + ph.tag + '</span>' +
+      '<span class="zh">' + f.zh + '</span>' +
+      '<span class="count">' + f.covered.length + " / " + f.functional_total +
+      (f.raw_total !== f.functional_total ? ' <span style="color:var(--muted);font-weight:400;font-size:12px">(原始 ' + f.raw_total + ")</span>" : "") +
+      "</span></div>" +
+      '<div class="bar"><i class="' + barCls + '" style="width:' + pct + '%"></i></div>' +
+      covHtml + missHtml;
+    famRoot.appendChild(el);
+  }
+
+  const oos = (d.out_of_scope || []).slice().sort((a, b) => b.classes - a.classes);
+  $("oos-count").textContent = oos.length;
+  $("oos-table").innerHTML = oos
+    .map((o) => "<tr><td>" + o.module + "</td><td>" + o.classes + " 类</td></tr>")
+    .join("");
+})();
+</script>
+</body>
+</html>
