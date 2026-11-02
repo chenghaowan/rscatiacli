@@ -5,12 +5,38 @@
 //! 在晚绑定下取不到出参，走 Evaluate 注入 VBA 取回 —— 与 ltl-manage Python 侧
 //! （drawing_common / add_material）同一条实测路径。
 
-use crate::dispatch::{Arg, ComObject, Ret};
-use crate::error::ComResult;
+use crate::dispatch::{Arg, ComObj, ComObject, Ret};
+use crate::error::{ComError, ComResult};
 
 com_wrapper!(SystemService);
 
 impl SystemService {
+    /// VBA 中转读取 3 分量出参数组（`GetXXX(CATSafeArrayVariant o...)` 型成员，
+    /// 与 `Inertia::get_cog_position` 同路径；晚绑定下出参数组取不到，须注入
+    /// VBA 转交）。
+    pub(crate) fn direction_out_param(&self, obj: &ComObj, member: &str) -> ComResult<[f64; 3]> {
+        let function = format!("rscatiacli_{}", member.to_lowercase());
+        let code = format!(
+            r#"
+        Public Function {function}(oFeature As Object)
+            Dim oValues(2) As Variant
+            oFeature.{member} oValues
+            {function} = oValues
+        End Function
+        "#
+        );
+        let values = self
+            .evaluate(&code, 0, &function, &[Arg::Obj(obj.clone())])?
+            .as_f64_array()?;
+        if values.len() < 3 {
+            return Err(ComError::runtime(format!(
+                "{member} 返回了 {} 个分量，期望 3",
+                values.len()
+            )));
+        }
+        Ok([values[0], values[1], values[2]])
+    }
+
     /// 读 CATIA 环境文件变量（如 CATInstallPath；setcatenv 设置的变量通常
     /// 不在系统环境里，问运行中的 CATIA 最可靠）。
     pub fn environ(&self, name: &str) -> ComResult<String> {

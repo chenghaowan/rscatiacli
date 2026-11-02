@@ -76,11 +76,25 @@ The user-set starting point; both families are at 100% class coverage:
   write paths still need a real part-document run.
 - Members pycatia does not expose stay reachable through the `com()` escape hatch.
 
-### Phase 2 — mec_mod_interfaces completion
+### ✅ Phase 2 — mec_mod_interfaces completion (done 2026-11-03)
 
-Topology reads (`Boundary` / `Face` / `Edge` / `Vertex` family), `GeometricElements`,
-`HybridShape` / `HybridShapeInstance`, `Solid`, `Factory`, `OrderedGeometricalSet(s)`,
-`FixTogether(s)`.
+All 27 remaining classes wrapped (41→42/42 incl. the earlier work):
+
+- Topology markers `Boundary` / `Edge` / `Face` / `Vertex` (+ `BiDimFeatEdge`,
+  `MonoDimFeatEdge`, `TriDimFeatEdge`, `NotWireBoundaryMonoDimFeatVertex`,
+  `TriDimFeatVertexOrBiDimFeatVertex`, `ZeroDimFeatVertexOrWireBoundaryMonoDimFeatVertex`),
+  measurable topology `CylindricalFace`, `PlanarFace`, `Rectilinear{Bi,Mono,Tri}DimFeatEdge`
+  (direction/origin out-arrays via the VBA relay).
+- `Shape`, `ShapeInstance`, `HybridShape`, `HybridShapeInstance` (input/output/parameter
+  put-get surface), `Solid`, `Factory`, `GeometricElements`, `OrderedGeometricalSet(s)`,
+  `FixTogether(s)`, `PartServices`.
+- `Part` gained `analyze` / `density` (get+put) / `geometric_elements` /
+  `ordered_geometrical_sets` / `in_work_object`; `Body` gained
+  `ordered_geometrical_sets`; `HybridBody` gained `geometric_elements`; shape
+  collections gained `GetBoundary` (B-Rep label → `Boundary`).
+- `direction_via_vba` moved into `SystemService::direction_out_param` (shared by
+  part_interfaces and mec_mod).
+- Topology reads still need live verification on a real part document.
 
 ### Phase 3 — sketcher_interfaces completion
 
@@ -135,10 +149,9 @@ Semantic GDT in `cat_tps_interfaces` follows on demand.
 
 - **0.0.x (current):** bindings and tools are still moving; breaking changes are allowed.
 - **0.1.0:** requires at least **50% of the in-scope functional class surface** covered
-  by typed bindings (currently 141/446; the gate is ≈223 classes), plus stable migrated
-  tools. Phase 1 cleared ≈ +69 classes; remaining estimates: P2 ≈ +18, P3 ≈ +10,
-  P4 ≈ +15, P5 ≈ +20, P6 ≈ +30, P7 ≈ +25, P8 ≈ +8 — roughly 240–250 cumulative,
-  clearing the gate.
+  by typed bindings (currently 168/446; the gate is ≈223 classes), plus stable migrated
+  tools. Phases 1–2 cleared ≈ +96 classes; remaining estimates: P3 ≈ +10, P4 ≈ +15,
+  P5 ≈ +20, P6 ≈ +30, P7 ≈ +25, P8 ≈ +8 — roughly 240–250 cumulative, clearing the gate.
 - **1.0.0:** not planned while pycatia itself is pre-1.0 and this project intentionally
   wraps only what the application needs.
 

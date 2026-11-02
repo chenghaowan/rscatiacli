@@ -169,11 +169,17 @@
             <code>com()</code> 逃生舱。</div>
       </li>
       <li>
-        <b class="t">阶段 2 —— mec_mod_interfaces 补全</b>
-        <div class="d">拓扑读取：<code>Boundary/Face/Edge/Vertex</code> 系列、
-            <code>GeometricElements</code>、<code>HybridShape/HybridShapeInstance</code>、
-            <code>Solid</code>、<code>Factory</code>、<code>OrderedGeometricalSet(s)</code>、
-            <code>FixTogether(s)</code>。</div>
+        <b class="t">阶段 2 —— mec_mod_interfaces 补全（✅ 已完成，2026-11-03）</b>
+        <div class="d">27 类全部有类型化包装：拓扑标记族
+            （<code>Boundary/Edge/Face/Vertex</code> 及 <code>BiDim/MonoDim/TriDim</code>、
+            Rectilinear 系、<code>CylindricalFace/PlanarFace</code>）、
+            <code>Shape/ShapeInstance/Solid/Factory/HybridShape/HybridShapeInstance</code>、
+            <code>GeometricElements</code>、<code>OrderedGeometricalSet(s)</code>、
+            <code>FixTogether(s)</code>、<code>PartServices</code>。
+            出参方向/原点读数走 VBA 中转；<code>Part</code> 补
+            <code>analyze/density/geometric_elements/ordered_geometrical_sets/in_work_object</code>，
+            <code>Body</code> 补有序几何集、<code>HybridBody</code> 补几何元素、
+            形状集合补 <code>GetBoundary</code>。拓扑读数待真机零件验证。</div>
       </li>
       <li>
         <b class="t">阶段 3 —— sketcher_interfaces 补全</b>
@@ -210,8 +216,8 @@
       </li>
     </ol>
     <div class="goal"><b>0.1.0 门槛：</b>规划范围功能类覆盖 ≥ <b>50%</b>（约 <span id="goal-need">–</span> 类）
-      且迁移工具稳定。阶段 1 已完成（141/446 ≈ 31.6%）；剩余各阶段新增覆盖预估：
-      P2 ≈ +18，P3 ≈ +10，P4 ≈ +15，P5 ≈ +20，P6 ≈ +30，P7 ≈ +25，P8 ≈ +8。</div>
+      且迁移工具稳定。阶段 1–2 已完成（168/446 ≈ 37.7%）；剩余各阶段新增覆盖预估：
+      P3 ≈ +10，P4 ≈ +15，P5 ≈ +20，P6 ≈ +30，P7 ≈ +25，P8 ≈ +8。</div>
   </div>
 </section>
 
@@ -266,8 +272,8 @@ window.__PARITY_DATA__ = {
     "pycatia_families": 84,
     "scope_raw_classes": 495,
     "scope_functional_classes": 446,
-    "covered": 141,
-    "percent": 31.6,
+    "covered": 168,
+    "percent": 37.7,
     "enum_pool": 339,
     "rust_constants": 14
   },
@@ -375,23 +381,12 @@ window.__PARITY_DATA__ = {
       "covered": [
         "AxisSystem",
         "AxisSystems",
+        "BiDimFeatEdge",
         "Bodies",
         "Body",
+        "Boundary",
         "Constraint",
         "Constraints",
-        "HybridBodies",
-        "HybridBody",
-        "HybridShapes",
-        "InstanceFactory",
-        "OriginElements",
-        "Part",
-        "PartDocument",
-        "Shapes",
-        "Sketches"
-      ],
-      "missing_in_scope": [
-        "BiDimFeatEdge",
-        "Boundary",
         "CylindricalFace",
         "Edge",
         "Face",
@@ -399,12 +394,19 @@ window.__PARITY_DATA__ = {
         "FixTogether",
         "FixTogethers",
         "GeometricElements",
+        "HybridBodies",
+        "HybridBody",
         "HybridShape",
         "HybridShapeInstance",
+        "HybridShapes",
+        "InstanceFactory",
         "MonoDimFeatEdge",
         "NotWireBoundaryMonoDimFeatVertex",
         "OrderedGeometricalSet",
         "OrderedGeometricalSets",
+        "OriginElements",
+        "Part",
+        "PartDocument",
         "PartServices",
         "PlanarFace",
         "RectilinearBiDimFeatEdge",
@@ -412,12 +414,15 @@ window.__PARITY_DATA__ = {
         "RectilinearTriDimFeatEdge",
         "Shape",
         "ShapeInstance",
+        "Shapes",
+        "Sketches",
         "Solid",
         "TriDimFeatEdge",
         "TriDimFeatVertexOrBiDimFeatVertex",
         "Vertex",
         "ZeroDimFeatVertexOrWireBoundaryMonoDimFeatVertex"
       ],
+      "missing_in_scope": [],
       "excluded": [
         "PartInfrastructureSettingAtt"
       ]
@@ -1229,7 +1234,7 @@ window.__PARITY_DATA__ = {
   const PHASES = {
     product_structure_interfaces: { tag: "阶段 1 ✅", cls: "p-done" },
     part_interfaces:              { tag: "阶段 1 ✅", cls: "p-done" },
-    mec_mod_interfaces:           { tag: "阶段 2", cls: "p-n" },
+    mec_mod_interfaces:           { tag: "阶段 2 ✅", cls: "p-done" },
     sketcher_interfaces:          { tag: "阶段 3", cls: "p-n" },
     in_interfaces:                { tag: "阶段 4", cls: "p-n" },
     system_interfaces:            { tag: "已就绪", cls: "p-done" },

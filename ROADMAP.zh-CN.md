@@ -72,11 +72,25 @@
   `GetItem("BillOfMaterial")`。特征创建/参数写入路径待真机建特征验证。
 - pycatia 未暴露的成员走 `com()` 逃生舱按名派发。
 
-### 阶段 2 —— mec_mod_interfaces 补全
+### ✅ 阶段 2 —— mec_mod_interfaces 补全（已完成，2026-11-03）
 
-拓扑读取（`Boundary` / `Face` / `Edge` / `Vertex` 族）、`GeometricElements`、
-`HybridShape` / `HybridShapeInstance`、`Solid`、`Factory`、`OrderedGeometricalSet(s)`、
-`FixTogether(s)`。
+剩余 27 类全部有类型化包装（该族 42/42）：
+
+- 拓扑标记族 `Boundary` / `Edge` / `Face` / `Vertex`（+ `BiDimFeatEdge`、
+  `MonoDimFeatEdge`、`TriDimFeatEdge`、`NotWireBoundaryMonoDimFeatVertex`、
+  `TriDimFeatVertexOrBiDimFeatVertex`、`ZeroDimFeatVertexOrWireBoundaryMonoDimFeatVertex`），
+  可量测拓扑 `CylindricalFace`、`PlanarFace`、`Rectilinear{Bi,Mono,Tri}DimFeatEdge`
+  （方向/原点出参数组走 VBA 中转）。
+- `Shape`、`ShapeInstance`、`HybridShape`、`HybridShapeInstance`（输入/输出/参数
+  读写面）、`Solid`、`Factory`、`GeometricElements`、`OrderedGeometricalSet(s)`、
+  `FixTogether(s)`、`PartServices`。
+- `Part` 补 `analyze` / `density`（读+写）/ `geometric_elements` /
+  `ordered_geometrical_sets` / `in_work_object`；`Body` 补 `ordered_geometrical_sets`；
+  `HybridBody` 补 `geometric_elements`；形状集合补 `GetBoundary`
+  （B-Rep 标签 → `Boundary`）。
+- `direction_via_vba` 上移为 `SystemService::direction_out_param`
+  （part_interfaces 与 mec_mod 共用）。
+- 拓扑读数待真机零件文档验证。
 
 ### 阶段 3 —— sketcher_interfaces 补全
 
@@ -128,8 +142,8 @@ GSD 的 111 类是分母大头。优先补工具链已用到的构造器族（�
 ## 版本策略
 
 - **0.0.x（当前）：** 绑定和工具仍在演进，允许破坏性变更。
-- **0.1.0：** 需要规划范围功能类覆盖至少 **50%**（当前 141/446；门槛约 223 类），
-  且已迁移工具稳定。阶段 1 已过 ≈ +69 类；剩余预估：P2 ≈ +18，P3 ≈ +10，P4 ≈ +15，
+- **0.1.0：** 需要规划范围功能类覆盖至少 **50%**（当前 168/446；门槛约 223 类），
+  且已迁移工具稳定。阶段 1–2 已过 ≈ +96 类；剩余预估：P3 ≈ +10，P4 ≈ +15，
   P5 ≈ +20，P6 ≈ +30，P7 ≈ +25，P8 ≈ +8 —— 累计约 240–250 类，可过门槛。
 - **1.0.0：** pycatia 自己都还没到 1.0，本项目又只按需封装，暂不考虑。
 

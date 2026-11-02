@@ -4,7 +4,9 @@ use crate::collections::ComCollection;
 use crate::dispatch::{Arg, ComObj, ComObject, FromComObj};
 use crate::error::ComResult;
 
+use super::analyze::Analyze;
 use super::hybrid_shape_factory::HybridShapeFactory;
+use super::mec_mod::{GeometricElements, OrderedGeometricalSets};
 use super::reference::Reference;
 use super::shape_factory::ShapeFactory;
 use super::system_service::SystemService;
@@ -77,6 +79,16 @@ impl Entities {
                 .as_obj()?,
         ))
     }
+
+    /// 按 B-Rep 标签取边界（`GetBoundary`；标签格式见 `Reference::DisplayName`，
+    /// 如 `Face:Face1.(Brp:(...)`）。
+    pub fn get_boundary(&self, label: &str) -> ComResult<crate::objects::mec_mod::Boundary> {
+        Ok(crate::objects::mec_mod::Boundary::new(
+            self.com()
+                .call("GetBoundary", &[Arg::Str(label.to_string())])?
+                .as_obj()?,
+        ))
+    }
 }
 
 /// 取对象的子集合属性，例如 `Part.Bodies`。
@@ -115,6 +127,36 @@ impl Part {
     /// 参考坐标系三平面（CATIA 的 Part 没有 ReferenceElements）。
     pub fn origin_elements(&self) -> ComResult<OriginElements> {
         child(self.com(), "OriginElements")
+    }
+
+    /// 产品级质量属性（`Analyze`；零件文档沿 Product.Analyze 同口径）。
+    pub fn analyze(&self) -> ComResult<Analyze> {
+        Ok(Analyze::new(self.com().get("Analyze")?.as_obj()?))
+    }
+
+    /// 密度（`Density`，kg/m³）。
+    pub fn density(&self) -> ComResult<f64> {
+        self.com().get("Density")?.as_f64()
+    }
+
+    /// 设置密度（`Density`）。
+    pub fn set_density(&self, value: f64) -> ComResult<()> {
+        self.com().put("Density", Arg::F64(value))
+    }
+
+    /// 几何元素集合（`GeometricElements`）。
+    pub fn geometric_elements(&self) -> ComResult<GeometricElements> {
+        child(self.com(), "GeometricElements")
+    }
+
+    /// 有序几何集集合（`OrderedGeometricalSets`）。
+    pub fn ordered_geometrical_sets(&self) -> ComResult<OrderedGeometricalSets> {
+        child(self.com(), "OrderedGeometricalSets")
+    }
+
+    /// 当前工作对象（`InWorkObject`；写入用 [`Part::set_in_work_object`]）。
+    pub fn in_work_object(&self) -> ComResult<Entity> {
+        child(self.com(), "InWorkObject")
     }
 
     pub fn update(&self) -> ComResult<()> {
@@ -266,6 +308,11 @@ impl Body {
         self.com().get("InBooleanOperation")?.as_bool()
     }
 
+    /// 有序几何集集合（`OrderedGeometricalSets`）。
+    pub fn ordered_geometrical_sets(&self) -> ComResult<OrderedGeometricalSets> {
+        child(self.com(), "OrderedGeometricalSets")
+    }
+
     /// 把 datum 插入 PartDesign Body（几何图形集用 append_hybrid_shape）。
     /// 几何图形集改名（蜂窝筋放置平面图形集用）。
     pub fn set_name(&self, value: &str) -> ComResult<()> {
@@ -292,6 +339,11 @@ impl HybridBody {
     /// Body 内的草图集合（包围盒 sketch 建在这里）。
     pub fn hybrid_sketches(&self) -> ComResult<crate::objects::sketch::Sketches> {
         child(self.com(), "HybridSketches")
+    }
+
+    /// 几何元素集合（`GeometricElements`）。
+    pub fn geometric_elements(&self) -> ComResult<GeometricElements> {
+        child(self.com(), "GeometricElements")
     }
 
     /// 把 datum 追加进本图形集。

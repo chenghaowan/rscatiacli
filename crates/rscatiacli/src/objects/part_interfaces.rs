@@ -17,94 +17,12 @@
 
 use crate::collections::ComCollection;
 use crate::dispatch::{Arg, ComObj, ComObject};
-use crate::error::{ComError, ComResult};
+use crate::error::ComResult;
 
 use super::part::Body;
 use super::reference::Reference;
 use super::sketch::Sketch;
 use super::system_service::SystemService;
-
-/// 生成属性读/写方法对（成员名与 CATIA/pycatia 一致；`set_xxx` 为 put）。
-macro_rules! prop_pair {
-    ($get:ident, $set:ident, $member:literal, f64) => {
-        /// 属性读。
-        pub fn $get(&self) -> ComResult<f64> {
-            self.com().get($member)?.as_f64()
-        }
-        /// 属性写。
-        pub fn $set(&self, value: f64) -> ComResult<()> {
-            self.com().put($member, Arg::F64(value))
-        }
-    };
-    ($get:ident, $set:ident, $member:literal, i32) => {
-        /// 属性读。
-        pub fn $get(&self) -> ComResult<i32> {
-            self.com().get($member)?.as_i32()
-        }
-        /// 属性写。
-        pub fn $set(&self, value: i32) -> ComResult<()> {
-            self.com().put($member, Arg::I32(value))
-        }
-    };
-    ($get:ident, $set:ident, $member:literal, bool) => {
-        /// 属性读。
-        pub fn $get(&self) -> ComResult<bool> {
-            self.com().get($member)?.as_bool()
-        }
-        /// 属性写。
-        pub fn $set(&self, value: bool) -> ComResult<()> {
-            self.com().put($member, Arg::Bool(value))
-        }
-    };
-    ($get:ident, $set:ident, $member:literal, ref_) => {
-        /// 属性读（Reference）。
-        pub fn $get(&self) -> ComResult<Reference> {
-            Ok(Reference::new(self.com().get($member)?.as_obj()?))
-        }
-        /// 属性写（Reference）。
-        pub fn $set(&self, value: &Reference) -> ComResult<()> {
-            self.com().put($member, Arg::Obj(value.com().clone()))
-        }
-    };
-    ($get:ident, $set:ident, $member:literal, obj) => {
-        /// 属性读（原始对象）。
-        pub fn $get(&self) -> ComResult<ComObj> {
-            self.com().get($member)?.as_obj()
-        }
-        /// 属性写（原始对象）。
-        pub fn $set(&self, value: &impl ComObject) -> ComResult<()> {
-            self.com().put($member, Arg::Obj(value.com().clone()))
-        }
-    };
-}
-
-/// 生成只读属性方法。
-macro_rules! prop_get {
-    ($get:ident, $member:literal, f64) => {
-        /// 属性读（只读）。
-        pub fn $get(&self) -> ComResult<f64> {
-            self.com().get($member)?.as_f64()
-        }
-    };
-    ($get:ident, $member:literal, i32) => {
-        /// 属性读（只读）。
-        pub fn $get(&self) -> ComResult<i32> {
-            self.com().get($member)?.as_i32()
-        }
-    };
-    ($get:ident, $member:literal, str) => {
-        /// 属性读（只读）。
-        pub fn $get(&self) -> ComResult<String> {
-            self.com().get($member)?.as_string()
-        }
-    };
-    ($get:ident, $member:literal, ref_) => {
-        /// 属性读（只读，Reference）。
-        pub fn $get(&self) -> ComResult<Reference> {
-            Ok(Reference::new(self.com().get($member)?.as_obj()?))
-        }
-    };
-}
 
 /// 成员列表读取：属性优先、方法兜底（CATIA 版本差异，与 `item_at` 同思路）。
 fn member_ref_array(obj: &ComObj, name: &str) -> ComResult<Vec<Reference>> {
@@ -127,31 +45,6 @@ fn member_obj_array(obj: &ComObj, name: &str) -> ComResult<Vec<ComObj>> {
             Err(e)
         }
     })
-}
-
-/// VBA 中转取 3 分量出参数组（`GetXXX(CATSafeArrayVariant o...)` 型成员，
-/// 与 `Inertia::get_cog_position` 同路径）。
-fn direction_via_vba(obj: &ComObj, ss: &SystemService, member: &str) -> ComResult<[f64; 3]> {
-    let function = format!("rscatiacli_{}", member.to_lowercase());
-    let code = format!(
-        r#"
-        Public Function {function}(oFeature As Object)
-            Dim oValues(2) As Variant
-            oFeature.{member} oValues
-            {function} = oValues
-        End Function
-        "#
-    );
-    let values = ss
-        .evaluate(&code, 0, &function, &[Arg::Obj(obj.clone())])?
-        .as_f64_array()?;
-    if values.len() < 3 {
-        return Err(ComError::runtime(format!(
-            "{member} 返回了 {} 个分量，期望 3",
-            values.len()
-        )));
-    }
-    Ok([values[0], values[1], values[2]])
 }
 
 /// 底层 GSD 对象（变换类的 `HybridShape` 属性；具体类型阶段 6 补齐）。
@@ -275,7 +168,7 @@ impl Prism {
 
     /// 方向分量（`GetDirection`，VBA 中转）。
     pub fn get_direction(&self, ss: &SystemService) -> ComResult<[f64; 3]> {
-        direction_via_vba(self.com(), ss, "GetDirection")
+        ss.direction_out_param(self.com(), "GetDirection")
     }
 }
 
@@ -411,12 +304,12 @@ impl Hole {
 
     /// 孔轴方向分量（`GetDirection`，VBA 中转）。
     pub fn get_direction(&self, ss: &SystemService) -> ComResult<[f64; 3]> {
-        direction_via_vba(self.com(), ss, "GetDirection")
+        ss.direction_out_param(self.com(), "GetDirection")
     }
 
     /// 孔原点分量（`GetOrigin`，VBA 中转）。
     pub fn get_origin(&self, ss: &SystemService) -> ComResult<[f64; 3]> {
-        direction_via_vba(self.com(), ss, "GetOrigin")
+        ss.direction_out_param(self.com(), "GetOrigin")
     }
 
     /// 反转孔方向（`Reverse`）。
@@ -962,7 +855,7 @@ impl DraftDomain {
 
     /// 拔模方向分量（`GetPullingDirection`，VBA 中转）。
     pub fn get_pulling_direction(&self, ss: &SystemService) -> ComResult<[f64; 3]> {
-        direction_via_vba(self.com(), ss, "GetPullingDirection")
+        ss.direction_out_param(self.com(), "GetPullingDirection")
     }
 
     /// 指定拔模方向分量（`SetPullingDirection`）。
@@ -1510,12 +1403,12 @@ impl RectPattern {
 
     /// 第一方向分量（`GetFirstDirection`，VBA 中转）。
     pub fn get_first_direction(&self, ss: &SystemService) -> ComResult<[f64; 3]> {
-        direction_via_vba(self.com(), ss, "GetFirstDirection")
+        ss.direction_out_param(self.com(), "GetFirstDirection")
     }
 
     /// 第二方向分量（`GetSecondDirection`，VBA 中转）。
     pub fn get_second_direction(&self, ss: &SystemService) -> ComResult<[f64; 3]> {
-        direction_via_vba(self.com(), ss, "GetSecondDirection")
+        ss.direction_out_param(self.com(), "GetSecondDirection")
     }
 
     /// 指定第一方向（`SetFirstDirection`）。
@@ -1612,12 +1505,12 @@ impl CircPattern {
 
     /// 旋转轴分量（`GetRotationAxis`，VBA 中转）。
     pub fn get_rotation_axis(&self, ss: &SystemService) -> ComResult<[f64; 3]> {
-        direction_via_vba(self.com(), ss, "GetRotationAxis")
+        ss.direction_out_param(self.com(), "GetRotationAxis")
     }
 
     /// 旋转中心分量（`GetRotationCenter`，VBA 中转）。
     pub fn get_rotation_center(&self, ss: &SystemService) -> ComResult<[f64; 3]> {
-        direction_via_vba(self.com(), ss, "GetRotationCenter")
+        ss.direction_out_param(self.com(), "GetRotationCenter")
     }
 
     /// 设角度间距实例数与间距（`SetInstanceAngularSpacing`）。

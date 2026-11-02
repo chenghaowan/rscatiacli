@@ -32,6 +32,93 @@ macro_rules! com_wrapper {
     };
 }
 
+/// 生成属性读/写方法对（成员名与 CATIA/pycatia 一致；`set_xxx` 为 put）。
+macro_rules! prop_pair {
+    ($get:ident, $set:ident, $member:literal, f64) => {
+        /// 属性读。
+        pub fn $get(&self) -> $crate::error::ComResult<f64> {
+            self.com().get($member)?.as_f64()
+        }
+        /// 属性写。
+        pub fn $set(&self, value: f64) -> $crate::error::ComResult<()> {
+            self.com().put($member, $crate::dispatch::Arg::F64(value))
+        }
+    };
+    ($get:ident, $set:ident, $member:literal, i32) => {
+        /// 属性读。
+        pub fn $get(&self) -> $crate::error::ComResult<i32> {
+            self.com().get($member)?.as_i32()
+        }
+        /// 属性写。
+        pub fn $set(&self, value: i32) -> $crate::error::ComResult<()> {
+            self.com().put($member, $crate::dispatch::Arg::I32(value))
+        }
+    };
+    ($get:ident, $set:ident, $member:literal, bool) => {
+        /// 属性读。
+        pub fn $get(&self) -> $crate::error::ComResult<bool> {
+            self.com().get($member)?.as_bool()
+        }
+        /// 属性写。
+        pub fn $set(&self, value: bool) -> $crate::error::ComResult<()> {
+            self.com().put($member, $crate::dispatch::Arg::Bool(value))
+        }
+    };
+    ($get:ident, $set:ident, $member:literal, ref_) => {
+        /// 属性读（Reference）。
+        pub fn $get(&self) -> $crate::error::ComResult<$crate::Reference> {
+            Ok($crate::Reference::new(self.com().get($member)?.as_obj()?))
+        }
+        /// 属性写（Reference）。
+        pub fn $set(&self, value: &$crate::Reference) -> $crate::error::ComResult<()> {
+            self.com()
+                .put($member, $crate::dispatch::Arg::Obj(value.com().clone()))
+        }
+    };
+    ($get:ident, $set:ident, $member:literal, obj) => {
+        /// 属性读（原始对象）。
+        pub fn $get(&self) -> $crate::error::ComResult<$crate::dispatch::ComObj> {
+            self.com().get($member)?.as_obj()
+        }
+        /// 属性写（原始对象）。
+        pub fn $set(
+            &self,
+            value: &impl $crate::dispatch::ComObject,
+        ) -> $crate::error::ComResult<()> {
+            self.com()
+                .put($member, $crate::dispatch::Arg::Obj(value.com().clone()))
+        }
+    };
+}
+
+/// 生成只读属性方法。
+macro_rules! prop_get {
+    ($get:ident, $member:literal, f64) => {
+        /// 属性读（只读）。
+        pub fn $get(&self) -> $crate::error::ComResult<f64> {
+            self.com().get($member)?.as_f64()
+        }
+    };
+    ($get:ident, $member:literal, i32) => {
+        /// 属性读（只读）。
+        pub fn $get(&self) -> $crate::error::ComResult<i32> {
+            self.com().get($member)?.as_i32()
+        }
+    };
+    ($get:ident, $member:literal, str) => {
+        /// 属性读（只读）。
+        pub fn $get(&self) -> $crate::error::ComResult<String> {
+            self.com().get($member)?.as_string()
+        }
+    };
+    ($get:ident, $member:literal, ref_) => {
+        /// 属性读（只读，Reference）。
+        pub fn $get(&self) -> $crate::error::ComResult<$crate::Reference> {
+            Ok($crate::Reference::new(self.com().get($member)?.as_obj()?))
+        }
+    };
+}
+
 pub mod analyze;
 pub mod annotation;
 pub mod application;
@@ -45,6 +132,7 @@ pub mod hybrid_shapes;
 pub mod inertia;
 pub mod instance_factory;
 pub mod material;
+pub mod mec_mod;
 pub mod parameter;
 pub mod part;
 pub mod part_interfaces;
@@ -82,6 +170,14 @@ pub use inertia::Inertia;
 pub use instance_factory::InstanceFactory;
 pub use material::{
     Material, MaterialDocument, MaterialFamilies, MaterialFamily, MaterialManager, Materials,
+};
+pub use mec_mod::{
+    BiDimFeatEdge, Boundary, CylindricalFace, Edge, Face, Factory, FixTogether, FixTogethers,
+    GeometricElements, HybridShape, HybridShapeInstance, MonoDimFeatEdge,
+    NotWireBoundaryMonoDimFeatVertex, OrderedGeometricalSet, OrderedGeometricalSets, PartServices,
+    PlanarFace, RectilinearBiDimFeatEdge, RectilinearMonoDimFeatEdge, RectilinearTriDimFeatEdge,
+    Shape, ShapeInstance, Solid, TriDimFeatEdge, TriDimFeatVertexOrBiDimFeatVertex, Vertex,
+    ZeroDimFeatVertexOrWireBoundaryMonoDimFeatVertex,
 };
 pub use parameter::{Parameter, Parameters};
 pub use part::{
