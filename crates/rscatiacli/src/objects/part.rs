@@ -120,6 +120,11 @@ impl Part {
     }
 
     /// 知识工程参数集合（Bbox_dx/dy/dz）。
+    /// 知识工程关系集合（`Relations`；公式/规则/检查/设计表）。
+    pub fn relations(&self) -> ComResult<crate::objects::knowledge::Relations> {
+        child(self.com(), "Relations")
+    }
+
     pub fn parameters(&self) -> ComResult<crate::objects::parameter::Parameters> {
         child(self.com(), "Parameters")
     }

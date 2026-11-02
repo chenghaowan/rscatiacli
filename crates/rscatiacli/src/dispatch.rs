@@ -400,6 +400,34 @@ impl Ret {
         }
         Ok(out)
     }
+
+    /// 取出字符串数组（`GetEnumerateValues`（StrParam）/ `GetListOfSelectionSet`
+    /// 等返回 BSTR 数组的接口）。
+    pub fn as_string_array(&self) -> ComResult<Vec<String>> {
+        let (psa, lo, hi) = self.safearray()?;
+        let elem_is_variant = self.vt() & VT_VARIANT.0 != 0;
+        let mut out = Vec::with_capacity((hi - lo + 1).max(0) as usize);
+        for i in lo..=hi {
+            // SAFETY: psa 有效、i 在界内；GetElement 拷贝 BSTR，由 Ret 释放。
+            let s = if elem_is_variant {
+                let mut v = VARIANT::default();
+                unsafe { SafeArrayGetElement(psa, &i, std::ptr::from_mut(&mut v).cast()) }
+                    .map_err(|e| {
+                        ComError::runtime(format!("SAFEARRAY 读取元素失败: {}", e.message()))
+                    })?;
+                Ret(v).as_string()?
+            } else {
+                let mut b = BSTR::new();
+                unsafe { SafeArrayGetElement(psa, &i, std::ptr::from_mut(&mut b).cast()) }
+                    .map_err(|e| {
+                        ComError::runtime(format!("SAFEARRAY 读取元素失败: {}", e.message()))
+                    })?;
+                b.to_string()
+            };
+            out.push(s);
+        }
+        Ok(out)
+    }
 }
 
 /// 从 EXCEPINFO 取可读描述，并按 COM 规则释放被调用方分配的字符串。

@@ -157,6 +157,7 @@ pub mod hybrid_shapes;
 pub mod in_interfaces;
 pub mod inertia;
 pub mod instance_factory;
+pub mod knowledge;
 pub mod material;
 pub mod mec_mod;
 pub mod parameter;
@@ -200,6 +201,13 @@ pub use in_interfaces::{
 };
 pub use inertia::Inertia;
 pub use instance_factory::InstanceFactory;
+pub use knowledge::{
+    Angle, BoolParam, Check, ConstraintSatisfaction, DesignTable, Dimension, EnumParam,
+    FeatureGenerator, Formula, FreeParameter, FreeParameters, IntParam, KnowledgeActivateObject,
+    KnowledgeObject, Law, Length, List, ListParameter, Loop, Optimization, OptimizationConstraint,
+    OptimizationConstraints, Optimizations, ParameterSet, ParameterSets, RealParam, Relation,
+    Relations, Rule, SetOfEquation, StrParam, Unit, Units,
+};
 pub use material::{
     Material, MaterialDocument, MaterialFamilies, MaterialFamily, MaterialManager, Materials,
 };

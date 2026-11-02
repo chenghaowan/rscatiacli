@@ -96,6 +96,23 @@ impl SystemService {
             .as_obj_array()
     }
 
+    /// VBA 中转读取字符串数组出参（`StrParam.GetEnumerateValues(oSafeArray)` /
+    /// `SelectionSets.GetListOfSelectionSet(oList)` 型）。
+    pub(crate) fn strings_out_param(&self, obj: &ComObj, member: &str) -> ComResult<Vec<String>> {
+        let function = format!("rscatiacli_{}", member.to_lowercase());
+        let code = format!(
+            r#"
+        Public Function {function}(oFeature As Object)
+            Dim oValues() As Variant
+            oFeature.{member} oValues
+            {function} = oValues
+        End Function
+        "#
+        );
+        self.evaluate(&code, 0, &function, &[Arg::Obj(obj.clone())])?
+            .as_string_array()
+    }
+
     /// 读 CATIA 环境文件变量（如 CATInstallPath；setcatenv 设置的变量通常
     /// 不在系统环境里，问运行中的 CATIA 最可靠）。
     pub fn environ(&self, name: &str) -> ComResult<String> {

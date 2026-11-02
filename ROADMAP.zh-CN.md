@@ -135,11 +135,23 @@
 - `SelectionSets` / `SendToService` / `SystemConfiguration` 的出参列表读取
   走 `com()` 逃生舱。
 
-### 阶段 5 —— knowledge_interfaces
+### ✅ 阶段 5 —— knowledge_interfaces（已完成，2026-11-03；0.1.0 覆盖率门槛达标）
 
-类型化参数（`IntParam` / `RealParam` / `StrParam` / `BoolParam` / `Length` /
-`Angle` / `Dimension`）与 `Relations` / `Formula` / `Rule` / `SetOfEquation` /
-`ParameterSets` / `Law` / `List` / `Units`；`DesignTable` 视需要后置。
+该族 35/35：`Relation` 基类（注释/上下文/输入输出参数/`Modify`/`Rename`）与
+`Formula` / `Rule` / `Check` / `DesignTable` / `SetOfEquation` /
+`ConstraintSatisfaction` / `Law` / `Loop`（`UseSymbolcTransformations` 为
+CAA/COM 原拼写）；类型化参数 `RealParam` / `IntParam` / `StrParam` / `BoolParam` /
+`EnumParam` / `Length` / `Angle` / `Dimension` / `ListParameter`（值/量程/容差/
+枚举值，字符串枚举走新的 `strings_out_param` 中转）；`List` / `FreeParameters` /
+`ParameterSet(s)` / `Units`（MKS 换算）；`Optimization(s)` /
+`OptimizationConstraint(s)` / `FeatureGenerator`。`Parameters` 补
+`CreateReal` / `CreateInteger` / `CreateString` / `CreateBoolean` / `CreateList`
+等；`Parameter` 补备注/只读/重命名/字符串赋值；`Part` 与 `Product` 补
+`relations` / `parameters`。
+
+真机只读验证已过（产品级 `Parameters` / `Relations` / `RootParameterSet`）。
+实测记录：产品身份参数（`Product1\Part Number`）上 `ValueAsString`
+返回"找不到成员"——改用专用访问器。
 
 ### 阶段 6 —— hybrid_shape_interfaces 按需扩展
 
@@ -173,9 +185,9 @@ GSD 的 111 类是分母大头。优先补工具链已用到的构造器族（�
 ## 版本策略
 
 - **0.0.x（当前）：** 绑定和工具仍在演进，允许破坏性变更。
-- **0.1.0：** 需要规划范围功能类覆盖至少 **50%**（当前 208/446；门槛约 223 类），
-  且已迁移工具稳定。阶段 1–4 已过 ≈ +136 类；剩余预估：P5 ≈ +20，P6 ≈ +30，
-  P7 ≈ +25，P8 ≈ +8 —— P5 完成即可基本过线。
+- **0.1.0：** 需要规划范围功能类覆盖至少 **50%**，且已迁移工具稳定。
+  **两个条件均已满足**（阶段 1–5 后 241/446 ≈ 54.0%；28 个 JSON 工具 + colorize
+  已稳定）。剩余阶段 P6–P8 继续扩大覆盖但不阻塞发版，由维护者决定切版时机。
 - **1.0.0：** pycatia 自己都还没到 1.0，本项目又只按需封装，暂不考虑。
 
 ## ⛔ 非目标

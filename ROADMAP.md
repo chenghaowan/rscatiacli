@@ -140,11 +140,25 @@ All 27 remaining classes wrapped (41→42/42 incl. the earlier work):
 - Out-param list getters on `SelectionSets` / `SendToService` /
   `SystemConfiguration` stay on the `com()` escape hatch.
 
-### Phase 5 — knowledge_interfaces
+### ✅ Phase 5 — knowledge_interfaces (done 2026-11-03; 0.1.0 coverage gate met)
 
-Typed parameters (`IntParam` / `RealParam` / `StrParam` / `BoolParam` / `Length` /
-`Angle` / `Dimension`) and `Relations` / `Formula` / `Rule` / `SetOfEquation` /
-`ParameterSets` / `Law` / `List` / `Units`. `DesignTable` later if needed.
+35/35 — `Relation` base (comment/context/in-out parameters/`Modify`/`Rename`) with
+`Formula` / `Rule` / `Check` / `DesignTable` / `SetOfEquation` /
+`ConstraintSatisfaction` / `Law` / `Loop` (`UseSymbolcTransformations` spelled as
+CAA/COM has it); typed parameters `RealParam` / `IntParam` / `StrParam` /
+`BoolParam` / `EnumParam` / `Length` / `Angle` / `Dimension` / `ListParameter`
+(values, ranges, tolerances, enumerate values — string arrays via the new
+`strings_out_param` relay); `List` / `FreeParameters` / `ParameterSet(s)` /
+`Units` (MKS conversions); `Optimization(s)` / `OptimizationConstraint(s)` /
+`FeatureGenerator`. `Parameters` gained `CreateReal` / `CreateInteger` /
+`CreateString` / `CreateBoolean` / `CreateList` and friends; `Parameter` gained
+comment/read-only/rename/valuate-from-string; `Part` and `Product` gained
+`relations` / `parameters`.
+
+Live read-only verification passed (product-level `Parameters` /
+`Relations` / `RootParameterSet`). Live note: `ValueAsString` is member-missing
+on product identity parameters (`Product1\Part Number`) — use the dedicated
+accessors instead.
 
 ### Phase 6 — hybrid_shape_interfaces, on demand
 
@@ -181,9 +195,10 @@ Semantic GDT in `cat_tps_interfaces` follows on demand.
 
 - **0.0.x (current):** bindings and tools are still moving; breaking changes are allowed.
 - **0.1.0:** requires at least **50% of the in-scope functional class surface** covered
-  by typed bindings (currently 208/446; the gate is ≈223 classes), plus stable migrated
-  tools. Phases 1–4 cleared ≈ +136 classes; remaining estimates: P5 ≈ +20, P6 ≈ +30,
-  P7 ≈ +25, P8 ≈ +8 — P5 alone nearly closes the gate.
+  by typed bindings, plus stable migrated tools. **Both conditions are now met**
+  (241/446 ≈ 54.0% after phases 1–5; the 28 JSON tools + colorize have been stable).
+  Remaining phases P6–P8 continue to grow coverage but are not gate-blocking.
+  Cut the release when the maintainer decides.
 - **1.0.0:** not planned while pycatia itself is pre-1.0 and this project intentionally
   wraps only what the application needs.
 

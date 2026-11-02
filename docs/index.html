@@ -212,10 +212,21 @@
             <code>Release/Version</code> 返回整数（与 pycatia 字符串标注不同）。</div>
       </li>
       <li>
-        <b class="t">阶段 5 —— knowledge_interfaces</b>
-        <div class="d">类型化参数（<code>IntParam/RealParam/StrParam/BoolParam/Length/Angle/Dimension</code>）
-            与 <code>Relations/Formula/Rule/SetOfEquation/ParameterSets/Law/List/Units</code>；
-            <code>DesignTable</code> 视需要后置。</div>
+        <b class="t">阶段 5 —— knowledge_interfaces（✅ 已完成，2026-11-03）—— 0.1.0 覆盖率门槛达标</b>
+        <div class="d">该族 35/35：<code>Relation</code> 基类（注释/上下文/输入输出参数/
+            Modify/Rename）与 <code>Formula/Rule/Check/DesignTable/SetOfEquation/
+            ConstraintSatisfaction/Law/Loop</code>（<code>UseSymbolcTransformations</code>
+            为 CAA/COM 原拼写）；类型化参数 <code>RealParam/IntParam/StrParam/BoolParam/
+            EnumParam/Length/Angle/Dimension/ListParameter</code>（值/量程/容差/枚举值，
+            字符串枚举走 <code>strings_out_param</code> 中转）；<code>List/FreeParameters/
+            ParameterSet(s)/Units</code>（MKS 换算）；<code>Optimization(s)/
+            OptimizationConstraint(s)/FeatureGenerator</code>。
+            <code>Parameters</code> 补 <code>CreateReal/Integer/String/Boolean/List</code>
+            等九个方法，<code>Parameter</code> 补备注/只读/重命名/字符串赋值等十个成员；
+            <code>Part</code>/<code>Product</code> 补 <code>relations/parameters</code>。
+            <b>真机只读验证已过</b>（产品级 Parameters/Relations/RootParameterSet），
+            实测记录：产品身份参数（<code>Product1\Part Number</code>）上
+            <code>ValueAsString</code> 返回"找不到成员"，改用专用访问器。</div>
       </li>
       <li>
         <b class="t">阶段 6 —— hybrid_shape_interfaces 按需扩展</b>
@@ -234,8 +245,9 @@
       </li>
     </ol>
     <div class="goal"><b>0.1.0 门槛：</b>规划范围功能类覆盖 ≥ <b>50%</b>（约 <span id="goal-need">–</span> 类）
-      且迁移工具稳定。阶段 1–4 已完成（208/446 ≈ 46.6%）；剩余各阶段新增覆盖预估：
-      P5 ≈ +20，P6 ≈ +30，P7 ≈ +25，P8 ≈ +8。</div>
+      <b>阶段 1–5 已完成，覆盖率 241/446 ≈ 54.0% —— ≥50% 门槛已达标</b>
+      （配合已稳定的迁移工具，0.1.0 发布条件就绪）；剩余预估：
+      P6 ≈ +30，P7 ≈ +25，P8 ≈ +8。</div>
   </div>
 </section>
 
@@ -290,8 +302,8 @@ window.__PARITY_DATA__ = {
     "pycatia_families": 84,
     "scope_raw_classes": 495,
     "scope_functional_classes": 446,
-    "covered": 208,
-    "percent": 46.6,
+    "covered": 241,
+    "percent": 54.0,
     "enum_pool": 339,
     "rust_constants": 14
   },
@@ -605,10 +617,6 @@ window.__PARITY_DATA__ = {
       "raw_total": 40,
       "functional_total": 35,
       "covered": [
-        "Parameter",
-        "Parameters"
-      ],
-      "missing_in_scope": [
         "Angle",
         "BoolParam",
         "Check",
@@ -632,8 +640,10 @@ window.__PARITY_DATA__ = {
         "OptimizationConstraint",
         "OptimizationConstraints",
         "Optimizations",
+        "Parameter",
         "ParameterSet",
         "ParameterSets",
+        "Parameters",
         "RealParam",
         "Relation",
         "Relations",
@@ -643,6 +653,7 @@ window.__PARITY_DATA__ = {
         "Unit",
         "Units"
       ],
+      "missing_in_scope": [],
       "excluded": [
         "KnowledgeSheetSettingAtt",
         "LanguageSheetSettingAtt",
@@ -1255,7 +1266,7 @@ window.__PARITY_DATA__ = {
     sketcher_interfaces:          { tag: "阶段 3 ✅", cls: "p-done" },
     in_interfaces:                { tag: "阶段 4 ✅", cls: "p-done" },
     system_interfaces:            { tag: "已就绪", cls: "p-done" },
-    knowledge_interfaces:         { tag: "阶段 5", cls: "p-n" },
+    knowledge_interfaces:         { tag: "阶段 5 ✅", cls: "p-done" },
     hybrid_shape_interfaces:      { tag: "阶段 6", cls: "p-n" },
     drafting_interfaces:          { tag: "阶段 7", cls: "p-n" },
     space_analyses_interfaces:    { tag: "阶段 8", cls: "p-n" },

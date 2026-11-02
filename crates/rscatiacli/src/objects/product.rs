@@ -22,6 +22,20 @@ impl Product {
         Ok(Analyze::new(self.com().get("Analyze")?.as_obj()?))
     }
 
+    /// 产品级参数集合（`Parameters`；实例级参数/关系所在）。
+    pub fn parameters(&self) -> ComResult<crate::objects::parameter::Parameters> {
+        Ok(crate::objects::parameter::Parameters::new(
+            self.com().get("Parameters")?.as_obj()?,
+        ))
+    }
+
+    /// 产品级关系集合（`Relations`）。
+    pub fn relations(&self) -> ComResult<crate::objects::knowledge::Relations> {
+        Ok(crate::objects::knowledge::Relations::new(
+            self.com().get("Relations")?.as_obj()?,
+        ))
+    }
+
     /// 装配 BOM / 清单输出（`GetItem("BillOfMaterial")`，与录制宏同口径；
     /// 用法见 [`AssemblyConvertor`]）。
     pub fn assembly_convertor(&self) -> ComResult<AssemblyConvertor> {
