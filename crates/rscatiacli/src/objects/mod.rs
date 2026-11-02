@@ -32,11 +32,13 @@ macro_rules! com_wrapper {
     };
 }
 
+pub mod analyze;
 pub mod annotation;
 pub mod application;
+pub mod assembly_convertor;
 pub mod distances;
-pub mod drafting;
 pub mod documents;
+pub mod drafting;
 pub mod groups;
 pub mod hybrid_shape_factory;
 pub mod hybrid_shapes;
@@ -45,6 +47,7 @@ pub mod instance_factory;
 pub mod material;
 pub mod parameter;
 pub mod part;
+pub mod part_interfaces;
 pub mod plane;
 pub mod product;
 pub mod publication;
@@ -56,18 +59,19 @@ pub mod spa_workbench;
 pub mod system_service;
 pub mod viewer;
 
+pub use analyze::Analyze;
 pub use annotation::{
     Annotation, AnnotationFactory, AnnotationSets, AnnotationText, Annotations, UserSurface,
     UserSurfaces,
 };
 pub use application::Application;
+pub use assembly_convertor::AssemblyConvertor;
 pub use distances::{Distance, Distances, CAT_DISTANCE_BETWEEN_TWO, CAT_DISTANCE_MEASURE_MINIMUM};
+pub use documents::{Document, Documents, PartDocument, ProductDocument};
 pub use drafting::{
     DrawingDocument, DrawingSheet, DrawingSheets, DrawingText, DrawingTexts, DrawingView,
-    DrawingViewGenerativeBehavior, DrawingViews, PAPER_A0, PAPER_A1, PAPER_A2, PAPER_A3,
-    PAPER_A4,
+    DrawingViewGenerativeBehavior, DrawingViews, PAPER_A0, PAPER_A1, PAPER_A2, PAPER_A3, PAPER_A4,
 };
-pub use documents::{Document, Documents, PartDocument, ProductDocument};
 pub use groups::{Group, Groups};
 pub use hybrid_shape_factory::HybridShapeFactory;
 pub use hybrid_shapes::{
@@ -84,6 +88,17 @@ pub use part::{
     AxisSystem, AxisSystems, Bodies, Body, Entities, Entity, HybridBodies, HybridBody,
     HybridShapes, OriginElements, Part, Planes, Shapes,
 };
+pub use part_interfaces::{
+    Add, Affinity, AngularRepartition, Assemble, AutoDraft, AutoFillet, AxisToAxis, BooleanShape,
+    Chamfer, CircPattern, CloseSurface, ConstRadEdgeFillet, Defeaturing, DefeaturingFilletFilter,
+    DefeaturingFilter, DefeaturingFilterWithRange, DefeaturingFilters, DefeaturingHoleFilter,
+    Draft, DraftDomain, DraftDomains, DressUpShape, EdgeFillet, FaceFillet, Fillet, Groove, Hole,
+    Intersect, Limit, LinearRepartition, Loft, Mirror, Pad, Pattern, Pocket, Prism, RectPattern,
+    Remove, RemoveFace, Repartition, ReplaceFace, Revolution, Rib, Rotate, Scaling, Scaling2,
+    SewSurface, Shaft, Shell, SketchBasedShape, Slot, SolidCombine, Split, Stiffener,
+    SurfaceBasedShape, Sweep, Symmetry, ThickSurface, Thickness, Thread, TransformationShape,
+    Translate, Trim, TritangentFillet, UserPattern, UserRepartition, VarRadEdgeFillet,
+};
 pub use plane::Plane;
 pub use product::{Product, Products};
 pub use publication::{Publication, Publications};
@@ -97,4 +112,4 @@ pub use sketch::{
 };
 pub use spa_workbench::{Measurable, SPAWorkbench};
 pub use system_service::SystemService;
-pub use viewer::{Viewpoint3D, Viewer3D, Window};
+pub use viewer::{Viewer3D, Viewpoint3D, Window};

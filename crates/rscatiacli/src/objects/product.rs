@@ -4,6 +4,8 @@ use crate::collections::ComCollection;
 use crate::dispatch::{Arg, ComObject};
 use crate::error::ComResult;
 
+use super::analyze::Analyze;
+use super::assembly_convertor::AssemblyConvertor;
 use super::documents::Document;
 use super::publication::Publications;
 
@@ -15,6 +17,21 @@ impl ComCollection for Products {
 }
 
 impl Product {
+    /// 产品级质量属性（`Analyze` 属性；零件级优先用 GetTechnologicalObject("Inertia")）。
+    pub fn analyze(&self) -> ComResult<Analyze> {
+        Ok(Analyze::new(self.com().get("Analyze")?.as_obj()?))
+    }
+
+    /// 装配 BOM / 清单输出（`GetItem("BillOfMaterial")`，与录制宏同口径；
+    /// 用法见 [`AssemblyConvertor`]）。
+    pub fn assembly_convertor(&self) -> ComResult<AssemblyConvertor> {
+        Ok(AssemblyConvertor::new(
+            self.com()
+                .call("GetItem", &[Arg::Str("BillOfMaterial".to_string())])?
+                .as_obj()?,
+        ))
+    }
+
     /// 子装配 / 零件实例集合。
     pub fn products(&self) -> ComResult<Products> {
         Ok(Products::new(self.com().get("Products")?.as_obj()?))
@@ -81,10 +98,7 @@ impl Product {
     pub fn get_inertia(&self) -> ComResult<crate::objects::inertia::Inertia> {
         Ok(crate::objects::inertia::Inertia::new(
             self.com()
-                .call(
-                    "GetTechnologicalObject",
-                    &[Arg::Str("Inertia".to_string())],
-                )?
+                .call("GetTechnologicalObject", &[Arg::Str("Inertia".to_string())])?
                 .as_obj()?,
         ))
     }

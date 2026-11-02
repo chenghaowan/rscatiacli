@@ -334,7 +334,7 @@ fn split_solid(part: &Part, body: &Body, plane_info: &PlaneInfo, split_side: i32
         Ok(r) => r,
         Err(e) => return format!("创建平面引用失败: {e}"),
     };
-    let split = match (|| -> ComResult<rscatiacli::objects::Entity> {
+    let split = match (|| -> ComResult<rscatiacli::Split> {
         part.set_in_work_object(body)?;
         let factory = part.shape_factory()?;
         factory.add_new_split(&plane_ref, split_side)
