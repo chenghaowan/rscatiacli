@@ -38,10 +38,9 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
     let doc = app
         .active_document()
         .map_err(|_| rscatiacli::ComError::runtime("无打开文档"))?;
-    let product = doc
-        .product_document()
-        .product()
-        .map_err(|_| rscatiacli::ComError::runtime("当前文档不是 Product,请激活一个 .CATProduct"))?;
+    let product = doc.product_document().product().map_err(|_| {
+        rscatiacli::ComError::runtime("当前文档不是 Product,请激活一个 .CATProduct")
+    })?;
 
     // ── 收集所有 Part 路径（递归遍历整棵产品树） ──
     progress("[批量] 递归遍历产品树收集 Part ...");
@@ -60,10 +59,7 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
     }
     progress(&format!("[去重] {} 个唯一文件", unique.len()));
 
-    let root_children = product
-        .products()
-        .and_then(|p| p.count())
-        .unwrap_or(0);
+    let root_children = product.products().and_then(|p| p.count()).unwrap_or(0);
 
     if dry_run {
         for (idx, (name, path)) in unique.iter().enumerate() {
@@ -90,7 +86,11 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
     let product_name = doc
         .name()
         .ok()
-        .and_then(|n| PathBuf::from(&n).file_stem().map(|s| s.to_string_lossy().to_string()))
+        .and_then(|n| {
+            PathBuf::from(&n)
+                .file_stem()
+                .map(|s| s.to_string_lossy().to_string())
+        })
         .unwrap_or_else(|| "product".into());
 
     // ── 逐个处理（核心循环） ──
@@ -129,15 +129,29 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
             if let Some(d) = bbox.get("data") {
                 progress(&format!(
                     "  -> L={} W={} H={} V={}",
-                    d.get("length_mm").and_then(|v| v.as_f64()).map_or("?".into(), |v| format!("{v:.2}")),
-                    d.get("width_mm").and_then(|v| v.as_f64()).map_or("?".into(), |v| format!("{v:.2}")),
-                    d.get("height_mm").and_then(|v| v.as_f64()).map_or("?".into(), |v| format!("{v:.2}")),
-                    d.get("volume_mm3").and_then(|v| v.as_f64()).map_or("?".into(), |v| format!("{v:.1}")),
+                    d.get("length_mm")
+                        .and_then(|v| v.as_f64())
+                        .map_or("?".into(), |v| format!("{v:.2}")),
+                    d.get("width_mm")
+                        .and_then(|v| v.as_f64())
+                        .map_or("?".into(), |v| format!("{v:.2}")),
+                    d.get("height_mm")
+                        .and_then(|v| v.as_f64())
+                        .map_or("?".into(), |v| format!("{v:.2}")),
+                    d.get("volume_mm3")
+                        .and_then(|v| v.as_f64())
+                        .map_or("?".into(), |v| format!("{v:.1}")),
                 ));
             }
         } else {
-            let msg = bbox.get("message").and_then(|v| v.as_str()).unwrap_or("跳过");
-            progress(&format!("  -> {}", &msg.chars().take(80).collect::<String>()));
+            let msg = bbox
+                .get("message")
+                .and_then(|v| v.as_str())
+                .unwrap_or("跳过");
+            progress(&format!(
+                "  -> {}",
+                &msg.chars().take(80).collect::<String>()
+            ));
         }
         item["bbox"] = bbox;
 
@@ -149,12 +163,20 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
             if let Some(d) = area.get("data") {
                 progress(&format!(
                     "  -> XY投影={}",
-                    d.get("projected_area_xy_mm2").and_then(|v| v.as_f64()).map_or("?".into(), |v| format!("{v:.2}"))
+                    d.get("projected_area_xy_mm2")
+                        .and_then(|v| v.as_f64())
+                        .map_or("?".into(), |v| format!("{v:.2}"))
                 ));
             }
         } else {
-            let msg = area.get("message").and_then(|v| v.as_str()).unwrap_or("跳过");
-            progress(&format!("  -> {}", &msg.chars().take(80).collect::<String>()));
+            let msg = area
+                .get("message")
+                .and_then(|v| v.as_str())
+                .unwrap_or("跳过");
+            progress(&format!(
+                "  -> {}",
+                &msg.chars().take(80).collect::<String>()
+            ));
         }
         item["area"] = area;
 
@@ -186,7 +208,11 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
             let is_part = cur
                 .full_name()
                 .ok()
-                .and_then(|fp| Path::new(&fp).extension().map(|e| e.to_string_lossy().to_lowercase()))
+                .and_then(|fp| {
+                    Path::new(&fp)
+                        .extension()
+                        .map(|e| e.to_string_lossy().to_lowercase())
+                })
                 .map(|ext| ext == "catpart")
                 .unwrap_or(false);
             if is_part {
@@ -338,7 +364,12 @@ fn screenshot(
                     let _ = sel.clear();
                 };
                 if let Ok(items) = part.axis_systems().and_then(|c| c.items()) {
-                    hide(items.into_iter().map(|a| rscatiacli::objects::Entity::new(a.com().clone())).collect());
+                    hide(
+                        items
+                            .into_iter()
+                            .map(|a| rscatiacli::objects::Entity::new(a.com().clone()))
+                            .collect(),
+                    );
                 }
                 if let Ok(items) = part.planes().and_then(|c| c.items()) {
                     hide(items);
@@ -347,16 +378,18 @@ fn screenshot(
                 if let Ok(items) = part.bodies().and_then(|c| c.items()) {
                     let others: Vec<rscatiacli::objects::Entity> = items
                         .into_iter()
-                        .filter(|b| {
-                            main_name.as_deref()
-                                != b.name().ok().as_deref()
-                        })
+                        .filter(|b| main_name.as_deref() != b.name().ok().as_deref())
                         .map(|b| rscatiacli::objects::Entity::new(b.com().clone()))
                         .collect();
                     hide(others);
                 }
                 if let Ok(items) = part.hybrid_bodies().and_then(|c| c.items()) {
-                    hide(items.into_iter().map(|h| rscatiacli::objects::Entity::new(h.com().clone())).collect());
+                    hide(
+                        items
+                            .into_iter()
+                            .map(|h| rscatiacli::objects::Entity::new(h.com().clone()))
+                            .collect(),
+                    );
                 }
             }
         }
@@ -383,7 +416,10 @@ fn screenshot(
         .unwrap_or(0.0);
     progress(&format!(
         "[PNG] {} | {size_kb:.1}KB",
-        png_path.file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or_default()
+        png_path
+            .file_name()
+            .map(|s| s.to_string_lossy().to_string())
+            .unwrap_or_default()
     ));
     Ok(json!({
         "success": true,
@@ -413,31 +449,55 @@ fn postprocess_shot(path: &Path) -> Result<(), String> {
     // 中心扩展裁剪：从中心向四边找内容边界（±2px 余量）
     let (w, h) = (img.width() as i64, img.height() as i64);
     let (cx, cy) = (w / 2, h / 2);
-    let content = |x: i64, y: i64| pixel_white_diff(*img.get_pixel(x as u32, y as u32)) > WHITE_THRESHOLD;
+    let content =
+        |x: i64, y: i64| pixel_white_diff(*img.get_pixel(x as u32, y as u32)) > WHITE_THRESHOLD;
     let row_has_content = |y: i64| (0..w).any(|x| content(x, y));
     let col_has_content = |x: i64| (0..h).any(|y| content(x, y));
     let mut top = cy;
     for y in (0..=cy).rev() {
-        if row_has_content(y) { top = y; } else { break; }
+        if row_has_content(y) {
+            top = y;
+        } else {
+            break;
+        }
     }
     let mut bottom = cy;
     for y in cy..h {
-        if row_has_content(y) { bottom = y; } else { break; }
+        if row_has_content(y) {
+            bottom = y;
+        } else {
+            break;
+        }
     }
     let mut left = cx;
     for x in (0..=cx).rev() {
-        if col_has_content(x) { left = x; } else { break; }
+        if col_has_content(x) {
+            left = x;
+        } else {
+            break;
+        }
     }
     let mut right = cx;
     for x in cx..w {
-        if col_has_content(x) { right = x; } else { break; }
+        if col_has_content(x) {
+            right = x;
+        } else {
+            break;
+        }
     }
     let top = (top - 2).max(0);
     let bottom = (bottom + 2).min(h - 1);
     let left = (left - 2).max(0);
     let right = (right + 2).min(w - 1);
     if right > left && bottom > top {
-        img = image::imageops::crop_imm(&img, left as u32, top as u32, (right - left + 1) as u32, (bottom - top + 1) as u32).to_image();
+        img = image::imageops::crop_imm(
+            &img,
+            left as u32,
+            top as u32,
+            (right - left + 1) as u32,
+            (bottom - top + 1) as u32,
+        )
+        .to_image();
     }
 
     // 擦除右上残余（指南针可能在边缘附近）
@@ -451,7 +511,9 @@ fn postprocess_shot(path: &Path) -> Result<(), String> {
                     break;
                 }
             }
-            if dirty { break; }
+            if dirty {
+                break;
+            }
         }
         if dirty {
             for y in 0..100u32 {
@@ -468,7 +530,12 @@ fn postprocess_shot(path: &Path) -> Result<(), String> {
         let scale = SHOT_MAX_EDGE as f64 / w2.max(h2) as f64;
         let nw = (w2 as f64 * scale).round() as u32;
         let nh = (h2 as f64 * scale).round() as u32;
-        image::imageops::resize(&img, nw.max(1), nh.max(1), image::imageops::FilterType::Lanczos3)
+        image::imageops::resize(
+            &img,
+            nw.max(1),
+            nh.max(1),
+            image::imageops::FilterType::Lanczos3,
+        )
     } else {
         img
     };

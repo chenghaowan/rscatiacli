@@ -60,7 +60,10 @@ impl WccConfig {
                     if let Some(o) = data.get("output_dir").and_then(|v| v.as_str()) {
                         cfg.output_dir = o.to_string();
                     }
-                    if let Some(c) = data.get("report_include_children").and_then(|v| v.as_bool()) {
+                    if let Some(c) = data
+                        .get("report_include_children")
+                        .and_then(|v| v.as_bool())
+                    {
                         cfg.include_children = c;
                     }
                 }
@@ -204,9 +207,7 @@ fn calculate_recursive(
         if let Ok(children) = product.products() {
             let self_name = doc.name().unwrap_or_default();
             for child in children.items().unwrap_or_default() {
-                let child_doc = child
-                    .reference_product()
-                    .and_then(|r| r.parent_document());
+                let child_doc = child.reference_product().and_then(|r| r.parent_document());
                 if let Ok(child_doc) = child_doc {
                     if child_doc.name().unwrap_or_default() != self_name {
                         calculate_recursive(app, &child_doc, cfg, depth + 1, rows, progress);
@@ -281,7 +282,11 @@ fn generate_text_report(rows: &[WeightRow], cfg: &WccConfig) -> String {
     lines.push(String::new());
     lines.push("Summary:".to_string());
     lines.push(format!("  Total parts/products  : {}", rows.len()));
-    lines.push(format!("  Total mass            : {:.dp$} kg", total_mass, dp = dp));
+    lines.push(format!(
+        "  Total mass            : {:.dp$} kg",
+        total_mass,
+        dp = dp
+    ));
     lines.push(format!("  Warnings              : {warnings}"));
     lines.push(format!("  Criticals             : {criticals}"));
     lines.push(String::new());
@@ -293,7 +298,11 @@ fn generate_text_report(rows: &[WeightRow], cfg: &WccConfig) -> String {
 }
 
 /// CSV 导出（对齐 export_weight_csv：utf-8-sig BOM + TOTAL 行；返回 (行数, 总质量)）。
-fn export_csv(rows: &[WeightRow], cfg: &WccConfig, output_path: &Path) -> Result<(usize, f64), String> {
+fn export_csv(
+    rows: &[WeightRow],
+    cfg: &WccConfig,
+    output_path: &Path,
+) -> Result<(usize, f64), String> {
     if rows.is_empty() {
         return Err("No weight data to export.".to_string());
     }
@@ -302,7 +311,8 @@ fn export_csv(rows: &[WeightRow], cfg: &WccConfig, output_path: &Path) -> Result
     }
     let dp = cfg.decimal_places;
     let mut f = std::fs::File::create(output_path).map_err(|e| e.to_string())?;
-    f.write_all(&[0xEF, 0xBB, 0xBF]).map_err(|e| e.to_string())?; // utf-8-sig BOM
+    f.write_all(&[0xEF, 0xBB, 0xBF])
+        .map_err(|e| e.to_string())?; // utf-8-sig BOM
     let mut write_row = |fields: &[String]| -> Result<(), String> {
         writeln!(f, "{}", fields.join(",")).map_err(|e| e.to_string())
     };
@@ -367,7 +377,10 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
             }));
         }
         "config-init" => {
-            let path = params.get("output").and_then(|v| v.as_str()).unwrap_or("wcc_config.json");
+            let path = params
+                .get("output")
+                .and_then(|v| v.as_str())
+                .unwrap_or("wcc_config.json");
             if let Some(parent) = Path::new(path).parent() {
                 let _ = std::fs::create_dir_all(parent);
             }
@@ -393,9 +406,7 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
     match command.as_str() {
         "info" => {
             let name = doc.name().unwrap_or_else(|_| "(unknown)".into());
-            let path = doc
-                .full_name()
-                .unwrap_or_else(|_| "(not saved)".into());
+            let path = doc.full_name().unwrap_or_else(|_| "(not saved)".into());
             let dtype = document_type_name(&doc);
             progress(&format!("Name:  {name}"));
             progress(&format!("Path:  {path}"));
@@ -407,12 +418,24 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
                 .ok_or_else(|| rscatiacli::ComError::runtime("Failed to calculate weight."))?;
             let dp = cfg.decimal_places;
             progress(&format!("Part Number:     {}", row.part_number));
-            progress(&format!("Mass:            {:.dp$} kg", row.mass_kg, dp = dp));
-            progress(&format!("Volume:          {} m3", fmt_exp(row.volume_m3, dp)));
-            progress(&format!("Surface Area:    {} m2", fmt_exp(row.surface_area_m2, dp)));
+            progress(&format!(
+                "Mass:            {:.dp$} kg",
+                row.mass_kg,
+                dp = dp
+            ));
+            progress(&format!(
+                "Volume:          {} m3",
+                fmt_exp(row.volume_m3, dp)
+            ));
+            progress(&format!(
+                "Surface Area:    {} m2",
+                fmt_exp(row.surface_area_m2, dp)
+            ));
             progress(&format!(
                 "Density:         {} g/cm3",
-                row.density_raw.map(|d| fmt_fixed(d, dp)).unwrap_or_default()
+                row.density_raw
+                    .map(|d| fmt_fixed(d, dp))
+                    .unwrap_or_default()
             ));
             progress(&format!("Status:          {}", row.status));
             Ok(json!({
@@ -433,7 +456,11 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
             let dp = cfg.decimal_places;
             progress(&format!("Document:        {name}"));
             progress(&format!("Part Number:     {}", row.part_number));
-            progress(&format!("Mass:            {:.dp$} kg", row.mass_kg, dp = dp));
+            progress(&format!(
+                "Mass:            {:.dp$} kg",
+                row.mass_kg,
+                dp = dp
+            ));
             progress(&format!("Status:          {}", row.status));
             progress(&format!(
                 "Thresholds:      Warning >= {} kg, Critical >= {} kg",
@@ -466,7 +493,11 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
             progress(&report);
             progress(String::new().as_str());
             let mut data = json!({"total": rows.len(), "report": report});
-            if let Some(output) = params.get("output").and_then(|v| v.as_str()).filter(|s| !s.is_empty()) {
+            if let Some(output) = params
+                .get("output")
+                .and_then(|v| v.as_str())
+                .filter(|s| !s.is_empty())
+            {
                 if let Some(parent) = Path::new(output).parent() {
                     let _ = std::fs::create_dir_all(parent);
                 }
@@ -504,11 +535,13 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
                     };
                     base.join(format!("{stem}_weight.csv"))
                 });
-            let (count, total) = export_csv(&rows, &cfg, &output)
-                .map_err(|e| rscatiacli::ComError::runtime(e))?;
+            let (count, total) =
+                export_csv(&rows, &cfg, &output).map_err(rscatiacli::ComError::runtime)?;
             let out_str = output.to_string_lossy().to_string();
             progress(&format!("Weight report saved: {out_str}"));
-            progress(&format!("Total assemblies: {count}, Total mass: {total:.3} kg"));
+            progress(&format!(
+                "Total assemblies: {count}, Total mass: {total:.3} kg"
+            ));
             Ok(json!({
                 "success": true,
                 "data": {"path": out_str, "count": count, "total_mass_kg": total},

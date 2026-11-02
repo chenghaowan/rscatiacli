@@ -6,6 +6,7 @@
 //!   2. 只被 1 个单元使用的边即外边界，串成闭环 = 外轮廓；
 //!   3. 外轮廓向外米特偏置 t/2，每单元放内缩六边形孔（壁厚处处 t）；
 //!   4. 单草图 = 1 外轮廓 + N 孔，一次 Pad 拉筋高。
+//!
 //! 注意：Pad 必须建在实体 Body 里（InWorkObject 默认是几何图形集，不切会失败）。
 
 use serde_json::{json, Value};
@@ -113,12 +114,9 @@ fn offset_polygon_outward(pts: &[(f64, f64)], d: f64) -> Vec<(f64, f64)> {
 }
 
 /// 草图全部闭合轮廓：[(外轮廓, 孔1, 孔2, ...)]。
-fn build_profile(
-    cols: i64,
-    rows: i64,
-    diameter: f64,
-    thickness: f64,
-) -> Result<(Vec<(f64, f64)>, Vec<Vec<(f64, f64)>>), String> {
+type HexProfile = Result<(Vec<(f64, f64)>, Vec<Vec<(f64, f64)>>), String>;
+
+fn build_profile(cols: i64, rows: i64, diameter: f64, thickness: f64) -> HexProfile {
     let r = diameter / 2.0;
     // 孔的顶点按 R 定位、按孔半径缩放 —— 混用会让相邻孔重叠，Pad 直接失败
     let hole_r = r - (thickness / 2.0) / (30f64.to_radians().cos());
@@ -214,13 +212,17 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
         return Ok(json!({"success": false, "message": "行列数必须 >= 1", "data": empty_data}));
     }
     if d <= 0.0 || t <= 0.0 || height <= 0.0 {
-        return Ok(json!({"success": false, "message": "直径/壁厚/筋高必须 > 0", "data": empty_data}));
+        return Ok(
+            json!({"success": false, "message": "直径/壁厚/筋高必须 > 0", "data": empty_data}),
+        );
     }
 
     let (outer, holes) = match build_profile(cols, rows, d, t) {
         Ok(v) => v,
         Err(e) => {
-            return Ok(json!({"success": false, "message": format!("轮廓计算失败: {e}"), "data": empty_data}))
+            return Ok(
+                json!({"success": false, "message": format!("轮廓计算失败: {e}"), "data": empty_data}),
+            )
         }
     };
     let wall_area = polygon_area(&outer) - holes.iter().map(|h| polygon_area(h)).sum::<f64>();
@@ -272,7 +274,9 @@ fn run_catia(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
     let (outer, holes) = match build_profile(cols, rows, d, t) {
         Ok(v) => v,
         Err(e) => {
-            return Ok(json!({"success": false, "message": format!("轮廓计算失败: {e}"), "data": empty_data}))
+            return Ok(
+                json!({"success": false, "message": format!("轮廓计算失败: {e}"), "data": empty_data}),
+            )
         }
     };
     let wall_area = polygon_area(&outer) - holes.iter().map(|h| polygon_area(h)).sum::<f64>();

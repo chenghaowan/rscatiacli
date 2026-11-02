@@ -40,13 +40,15 @@ fn view_info(view: &DrawingView) -> Value {
     if let Ok(behavior) = view.generative_behavior() {
         if let Ok(doc) = behavior.document() {
             info["has_linked_doc"] = json!(true);
-            info["linked_doc_name"] = json!(doc.name().unwrap_or_else(|_| "(unknown 3D document)".into()));
+            info["linked_doc_name"] = json!(doc
+                .name()
+                .unwrap_or_else(|_| "(unknown 3D document)".into()));
         }
     }
     info
 }
 
-fn find_view<'a>(
+fn find_view(
     drawing: &DrawingDocument,
     sheet_name: &str,
     view_name: &str,

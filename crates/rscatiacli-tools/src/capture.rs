@@ -78,7 +78,9 @@ fn capture_one(
         .file_name()
         .map(|s| s.to_string_lossy().to_string())
         .unwrap_or_default();
-    progress(&format!("[PNG] {name} | {size_kb:.1}KB | {SHOT_MAX_SIZE}x{SHOT_MAX_SIZE}"));
+    progress(&format!(
+        "[PNG] {name} | {size_kb:.1}KB | {SHOT_MAX_SIZE}x{SHOT_MAX_SIZE}"
+    ));
     Ok((size_kb, out_path.to_string_lossy().to_string()))
 }
 
@@ -103,7 +105,12 @@ fn hide_part_aux_elements(doc: &Document) {
         let _ = sel.clear();
     };
     if let Ok(items) = part.axis_systems().and_then(|c| c.items()) {
-        hide(items.into_iter().map(|a| rscatiacli::objects::Entity::new(a.com().clone())).collect());
+        hide(
+            items
+                .into_iter()
+                .map(|a| rscatiacli::objects::Entity::new(a.com().clone()))
+                .collect(),
+        );
     }
     if let Ok(items) = part.planes().and_then(|c| c.items()) {
         hide(items);
@@ -118,13 +125,22 @@ fn hide_part_aux_elements(doc: &Document) {
         hide(others);
     }
     if let Ok(items) = part.hybrid_bodies().and_then(|c| c.items()) {
-        hide(items.into_iter().map(|h| rscatiacli::objects::Entity::new(h.com().clone())).collect());
+        hide(
+            items
+                .into_iter()
+                .map(|h| rscatiacli::objects::Entity::new(h.com().clone()))
+                .collect(),
+        );
     }
 }
 
 /// 输出目录：params.output_dir 优先，否则文档所在目录。
 fn output_dir_of(params: &Value, doc: &Document) -> PathBuf {
-    if let Some(d) = params.get("output_dir").and_then(|v| v.as_str()).filter(|s| !s.is_empty()) {
+    if let Some(d) = params
+        .get("output_dir")
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.is_empty())
+    {
         return PathBuf::from(d);
     }
     doc.full_name()
@@ -136,7 +152,11 @@ fn output_dir_of(params: &Value, doc: &Document) -> PathBuf {
 fn doc_stem(doc: &Document) -> String {
     doc.name()
         .ok()
-        .and_then(|n| Path::new(&n).file_stem().map(|s| s.to_string_lossy().to_string()))
+        .and_then(|n| {
+            Path::new(&n)
+                .file_stem()
+                .map(|s| s.to_string_lossy().to_string())
+        })
         .unwrap_or_else(|| "capture".into())
 }
 
@@ -177,14 +197,26 @@ fn iso_or_direct(params: &Value, progress: Progress<'_>, iso: bool) -> ComResult
     } else {
         (None, [0.0, 0.0, 1.0], false)
     };
-    let zoom_factor = params.get("zoom_factor").and_then(|v| v.as_f64()).unwrap_or(1.0);
-    let capture = capture_one(&win, &viewer, &out_path, sight, up, reframe, zoom_factor, &progress);
+    let zoom_factor = params
+        .get("zoom_factor")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(1.0);
+    let capture = capture_one(
+        &win,
+        &viewer,
+        &out_path,
+        sight,
+        up,
+        reframe,
+        zoom_factor,
+        &progress,
+    );
 
     if let Some(l) = orig_layout {
         let _ = win.set_layout(l);
     }
 
-    let (size_kb, file) = capture.map_err(|e| rscatiacli::ComError::runtime(e))?;
+    let (size_kb, file) = capture.map_err(rscatiacli::ComError::runtime)?;
     Ok(json!({
         "success": true,
         "file": file,
@@ -195,11 +227,13 @@ fn iso_or_direct(params: &Value, progress: Progress<'_>, iso: bool) -> ComResult
 
 /// tooling 轴系：名字含 tooling（忽略大小写/空格/_/-），找到则设为 current
 /// 并返回四方向 (X/Y/Z/ISO, sight, up)。
+type AxisMeasures = Vec<(String, [f64; 3], [f64; 3])>;
+
 fn tooling_directions(
     part: &rscatiacli::objects::Part,
     ss: &rscatiacli::objects::SystemService,
     progress: &dyn Fn(&str),
-) -> Option<Vec<(String, [f64; 3], [f64; 3])>> {
+) -> Option<AxisMeasures> {
     let axes = part.axis_systems().ok()?;
     for axis in axes.items().ok()? {
         let raw = axis.name().unwrap_or_default();
@@ -221,7 +255,11 @@ fn tooling_directions(
                 [v[0] / len, v[1] / len, v[2] / len]
             };
             let cross = |a: [f64; 3], b: [f64; 3]| -> [f64; 3] {
-                [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+                [
+                    a[1] * b[2] - a[2] * b[1],
+                    a[2] * b[0] - a[0] * b[2],
+                    a[0] * b[1] - a[1] * b[0],
+                ]
             };
             let x = norm(x);
             let mut z = norm(cross(x, y));
@@ -229,11 +267,19 @@ fn tooling_directions(
             z = norm(z);
             progress(&format!(
                 "🧭 轴系向量 X={:?} Y={:?}",
-                x.iter().map(|v| (v * 1000.0).round() / 1000.0).collect::<Vec<_>>(),
-                y.iter().map(|v| (v * 1000.0).round() / 1000.0).collect::<Vec<_>>(),
+                x.iter()
+                    .map(|v| (v * 1000.0).round() / 1000.0)
+                    .collect::<Vec<_>>(),
+                y.iter()
+                    .map(|v| (v * 1000.0).round() / 1000.0)
+                    .collect::<Vec<_>>(),
             ));
             let neg = |v: [f64; 3]| [-v[0], -v[1], -v[2]];
-            let iso_sight = neg(norm([x[0] + y[0] + z[0], x[1] + y[1] + z[1], x[2] + y[2] + z[2]]));
+            let iso_sight = neg(norm([
+                x[0] + y[0] + z[0],
+                x[1] + y[1] + z[1],
+                x[2] + y[2] + z[2],
+            ]));
             return Some(vec![
                 ("X".into(), neg(x), z),
                 ("Y".into(), neg(y), z),
@@ -273,7 +319,10 @@ fn per_part(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
     let out_dir = output_dir_of(params, &doc);
     let _ = std::fs::create_dir_all(&out_dir);
     let ss = app.system_service()?;
-    let zoom_factor = params.get("zoom_factor").and_then(|v| v.as_f64()).unwrap_or(1.0);
+    let zoom_factor = params
+        .get("zoom_factor")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(1.0);
 
     // 全局方向（无 tooling 轴系时的回退，对齐 Python X/Y/Z/ISO）
     let global_dirs: Vec<(String, [f64; 3], [f64; 3])> = vec![
@@ -295,7 +344,11 @@ fn per_part(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
     let _ = win.set_layout(1);
 
     for (idx, (ref_name, target_path)) in unique.iter().enumerate() {
-        progress(&format!("\n=== [{}/{}] {ref_name} ===", idx + 1, unique.len()));
+        progress(&format!(
+            "\n=== [{}/{}] {ref_name} ===",
+            idx + 1,
+            unique.len()
+        ));
         if docs.open(target_path).is_err() {
             progress(&format!("[跳过] {ref_name}: 打开失败"));
             failures += 1;
@@ -322,7 +375,16 @@ fn per_part(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
 
         for (dir_name, sight, up) in &directions {
             let out_path = out_dir.join(format!("{ref_name}_{dir_name}.png"));
-            match capture_one(&win, &viewer, &out_path, Some(*sight), *up, true, zoom_factor, &progress) {
+            match capture_one(
+                &win,
+                &viewer,
+                &out_path,
+                Some(*sight),
+                *up,
+                true,
+                zoom_factor,
+                &progress,
+            ) {
                 Ok((_, file)) => files.push(file),
                 Err(e) => {
                     progress(&format!("  [FAIL] {dir_name}: {e}"));

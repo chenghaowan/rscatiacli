@@ -2,7 +2,7 @@
 //! 生成包围盒几何图形集并读出精确长/宽/高。
 //!
 //! 对应 ltl-manage resources/sidecars/product_analysis/vba_bbox_generate.py。
-//! 生成并保留整套几何：body "Boundingbox.<n>" + 几何集 "definition_points"
+//! 生成并保留整套几何：body `Boundingbox.<n>` + 几何集 "definition_points"
 //! （6 个极值点/上下平面/引导线）+ sketch1/2/3（矩形+距离约束）+ 扫掠实体 +
 //! `Bbox_dx/dy/dz` 参数 + 描述属性 x{}y{}z{}。
 //!

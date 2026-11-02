@@ -42,9 +42,7 @@ fn find_sheet(
 fn is_grid_label(name: &str) -> bool {
     !name.is_empty()
         && name.len() <= 5
-        && name
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric())
+        && name.chars().all(|c| c.is_ascii_alphanumeric())
         && name.chars().count() <= 4
 }
 
@@ -61,6 +59,7 @@ fn make_label(prefix: &str, num: i64) -> String {
 }
 
 /// 在主视图上画一条线 + 标号（真实几何，修正 Python 的 no-op）。
+#[allow(clippy::too_many_arguments)]
 fn create_grid_line(
     drawing: &DrawingDocument,
     sheet_name: &str,
@@ -84,9 +83,9 @@ fn create_grid_line(
         .factory_2d()
         .map_err(|e| rscatiacli::ComError::runtime(format!("Factory2D 不可用: {e}")))?;
     f2d.create_line(x1, y1, x2, y2)?;
-    let _ = main_view.texts().and_then(|t| {
-        t.add(axis_label, (x1 + x2) / 2.0, (y1 + y2) / 2.0)
-    });
+    let _ = main_view
+        .texts()
+        .and_then(|t| t.add(axis_label, (x1 + x2) / 2.0, (y1 + y2) / 2.0));
     progress(&format!(
         "  Grid line '{axis_label}' created: ({x1:.1},{y1:.1}) -> ({x2:.1},{y2:.1})"
     ));

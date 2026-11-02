@@ -49,7 +49,10 @@ impl IppConfig {
                     if let Some(b) = data.get("isolate_external_refs").and_then(|v| v.as_bool()) {
                         cfg.isolate_external_refs = b;
                     }
-                    if let Some(p) = data.get("external_ref_search_patterns").and_then(|v| v.as_array()) {
+                    if let Some(p) = data
+                        .get("external_ref_search_patterns")
+                        .and_then(|v| v.as_array())
+                    {
                         cfg.external_ref_search_patterns = p
                             .iter()
                             .filter_map(|v| v.as_str().map(String::from))
@@ -78,21 +81,24 @@ impl IppConfig {
 
 // ── 数据文件（对齐 load_data_file：xlsx 首表 / txt 分隔符探测）──
 
-fn load_data_file(file_path: &Path) -> Result<Vec<std::collections::BTreeMap<String, String>>, String> {
+fn load_data_file(
+    file_path: &Path,
+) -> Result<Vec<std::collections::BTreeMap<String, String>>, String> {
     let ext = file_path
         .extension()
         .map(|e| e.to_string_lossy().to_lowercase())
         .unwrap_or_default();
     match ext.as_str() {
         "xlsx" | "xls" => {
-            let mut book =
-                calamine::open_workbook_auto(file_path).map_err(|e| e.to_string())?;
+            let mut book = calamine::open_workbook_auto(file_path).map_err(|e| e.to_string())?;
             let first_sheet = book
                 .sheet_names()
                 .first()
                 .cloned()
                 .ok_or("数据文件没有工作表")?;
-            let range = book.worksheet_range(&first_sheet).map_err(|e| e.to_string())?;
+            let range = book
+                .worksheet_range(&first_sheet)
+                .map_err(|e| e.to_string())?;
             let mut rows = range.rows();
             let header: Vec<String> = rows
                 .next()
@@ -125,18 +131,31 @@ fn load_data_file(file_path: &Path) -> Result<Vec<std::collections::BTreeMap<Str
             let raw = std::fs::read_to_string(file_path).map_err(|e| e.to_string())?;
             // utf-8-sig BOM
             let raw = raw.strip_prefix('\u{feff}').unwrap_or(&raw);
-            let lines: Vec<&str> = raw.lines().map(str::trim).filter(|l| !l.is_empty()).collect();
+            let lines: Vec<&str> = raw
+                .lines()
+                .map(str::trim)
+                .filter(|l| !l.is_empty())
+                .collect();
             if lines.is_empty() {
                 return Ok(Vec::new());
             }
             let delimiter = if lines[0].contains('\t') { '\t' } else { ',' };
-            let headers: Vec<String> = lines[0].split(delimiter).map(|h| h.trim().to_string()).collect();
+            let headers: Vec<String> = lines[0]
+                .split(delimiter)
+                .map(|h| h.trim().to_string())
+                .collect();
             let mut out = Vec::new();
             for line in &lines[1..] {
                 let parts: Vec<&str> = line.split(delimiter).collect();
                 let mut rec = std::collections::BTreeMap::new();
                 for (i, h) in headers.iter().enumerate() {
-                    rec.insert(h.clone(), parts.get(i).map(|s| s.trim().to_string()).unwrap_or_default());
+                    rec.insert(
+                        h.clone(),
+                        parts
+                            .get(i)
+                            .map(|s| s.trim().to_string())
+                            .unwrap_or_default(),
+                    );
                 }
                 out.push(rec);
             }
@@ -290,10 +309,7 @@ fn print_results(results: &[Value], progress: &dyn Fn(&str)) {
             .or_else(|| r.get("document"))
             .and_then(|v| v.as_str())
             .unwrap_or("?");
-        progress(&format!(
-            "  {} {tag}",
-            if is_ok { "[OK]" } else { "[!!]" }
-        ));
+        progress(&format!("  {} {tag}", if is_ok { "[OK]" } else { "[!!]" }));
         if let Some(pn) = r.get("part_number").and_then(|v| v.as_str()) {
             progress(&format!("         Part Number: {pn}"));
         }
@@ -349,8 +365,11 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
             if let Some(parent) = Path::new(path).parent() {
                 let _ = std::fs::create_dir_all(parent);
             }
-            std::fs::write(path, serde_json::to_string_pretty(&data).unwrap_or_default())
-                .map_err(|e| rscatiacli::ComError::runtime(e.to_string()))?;
+            std::fs::write(
+                path,
+                serde_json::to_string_pretty(&data).unwrap_or_default(),
+            )
+            .map_err(|e| rscatiacli::ComError::runtime(e.to_string()))?;
             progress(&format!("[OK] Config saved to: {path}"));
             return Ok(json!({"success": true, "data": {"path": path}}));
         }
@@ -359,8 +378,8 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
                 .get("data_file")
                 .and_then(|v| v.as_str())
                 .ok_or_else(|| rscatiacli::ComError::runtime("请提供 data_file 路径"))?;
-            let records = load_data_file(Path::new(data_file))
-                .map_err(|e| rscatiacli::ComError::runtime(e))?;
+            let records =
+                load_data_file(Path::new(data_file)).map_err(rscatiacli::ComError::runtime)?;
             if records.is_empty() {
                 progress("[WARN] No records found in data file");
                 return Ok(json!({"success": true, "data": {"results": []}}));
@@ -380,7 +399,11 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
                     .map(|s| s.to_string())
                     .unwrap_or_else(|| (i + 1).to_string());
                 let new_pn = record.get("NewPartNumber").cloned().unwrap_or_default();
-                progress(&format!("\n[{}/{}] Processing: {part_id}", i + 1, records.len()));
+                progress(&format!(
+                    "\n[{}/{}] Processing: {part_id}",
+                    i + 1,
+                    records.len()
+                ));
 
                 let mut file_path = PathBuf::from(&part_id);
                 if !file_path.is_file() && !cfg.batch_folder.is_empty() {
@@ -394,7 +417,10 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
                             d
                         }
                         Err(e) => {
-                            progress(&format!("[ERROR] Failed to open {}: {e}", file_path.display()));
+                            progress(&format!(
+                                "[ERROR] Failed to open {}: {e}",
+                                file_path.display()
+                            ));
                             results.push(json!({"part": part_id, "status": "error", "error": "Failed to open"}));
                             continue;
                         }
@@ -415,7 +441,9 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
                 if !new_pn.is_empty() && new_pn != "null" {
                     if set_part_number(&doc, &new_pn) {
                         entry["new_part_number"] = json!(new_pn);
-                        progress(&format!("[OK] Part number changed: {current_pn} -> {new_pn}"));
+                        progress(&format!(
+                            "[OK] Part number changed: {current_pn} -> {new_pn}"
+                        ));
                     } else {
                         entry["new_part_number"] = json!("FAILED");
                     }
@@ -456,7 +484,13 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
         "isolate" => {
             let result = isolate_external_refs(&doc, &progress);
             let count = result["isolated_count"].as_i64().unwrap_or(0);
-            progress(&format!("External Refs:    {}", result["external_refs"].as_array().map(|a| a.len()).unwrap_or(0)));
+            progress(&format!(
+                "External Refs:    {}",
+                result["external_refs"]
+                    .as_array()
+                    .map(|a| a.len())
+                    .unwrap_or(0)
+            ));
             progress(&format!("Isolated:         {count}"));
             for r in result["external_refs"].as_array().unwrap_or(&Vec::new()) {
                 progress(&format!(
@@ -519,15 +553,21 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
                 }
                 if !cfg.output_suffix.is_empty() {
                     let parent = if cfg.output_dir.is_empty() {
-                        fp.parent().map(|p| p.to_path_buf()).unwrap_or_else(|| PathBuf::from("."))
+                        fp.parent()
+                            .map(|p| p.to_path_buf())
+                            .unwrap_or_else(|| PathBuf::from("."))
                     } else {
                         PathBuf::from(&cfg.output_dir)
                     };
                     let out = parent.join(format!(
                         "{}{}{}",
-                        fp.file_stem().map(|s| s.to_string_lossy()).unwrap_or_default(),
+                        fp.file_stem()
+                            .map(|s| s.to_string_lossy())
+                            .unwrap_or_default(),
                         cfg.output_suffix,
-                        fp.extension().map(|e| format!(".{}", e.to_string_lossy())).unwrap_or_default()
+                        fp.extension()
+                            .map(|e| format!(".{}", e.to_string_lossy()))
+                            .unwrap_or_default()
                     ));
                     if let Some(dir) = out.parent() {
                         let _ = std::fs::create_dir_all(dir);

@@ -30,7 +30,14 @@ fn view_basis(view_type: &str) -> Option<([f64; 3], [f64; 3])> {
         "right" => Some(([0.0, 0.0, 1.0], [0.0, 0.0, 1.0])),
         "top" => Some(([1.0, 0.0, 0.0], [0.0, -1.0, 0.0])),
         "bottom" => Some(([1.0, 0.0, 0.0], [0.0, 1.0, 0.0])),
-        "iso" => Some(([0.7071, -0.7071, 0.0], [0.4082, 0.4082, 0.8165])),
+        "iso" => Some((
+            [
+                std::f64::consts::FRAC_1_SQRT_2,
+                -std::f64::consts::FRAC_1_SQRT_2,
+                0.0,
+            ],
+            [0.4082, 0.4082, 0.8165],
+        )),
         _ => None,
     }
 }
@@ -49,7 +56,7 @@ fn drawing_as_document(drawing: &DrawingDocument) -> Document {
     Document::new(drawing.com().clone())
 }
 
-fn sheet_by_name<'a>(
+fn sheet_by_name(
     drawing: &DrawingDocument,
     sheet_name: &str,
 ) -> ComResult<Option<rscatiacli::objects::DrawingSheet>> {
@@ -185,7 +192,10 @@ pub fn run(params: &Value, progress: Progress<'_>) -> ComResult<Value> {
         .and_then(|v| v.as_str())
         .unwrap_or("A3")
         .to_string();
-    let auto_open = params.get("auto_open").and_then(|v| v.as_bool()).unwrap_or(true);
+    let auto_open = params
+        .get("auto_open")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true);
 
     match command.as_str() {
         "create-drawing" => {

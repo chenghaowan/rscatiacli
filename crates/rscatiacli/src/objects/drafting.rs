@@ -161,11 +161,7 @@ impl DrawingTexts {
             self.com()
                 .call(
                     "Add",
-                    &[
-                        Arg::Str(text.to_string()),
-                        Arg::F64(x),
-                        Arg::F64(y),
-                    ],
+                    &[Arg::Str(text.to_string()), Arg::F64(x), Arg::F64(y)],
                 )?
                 .as_obj()?,
         ))
@@ -190,8 +186,7 @@ impl DrawingText {
 impl DrawingViewGenerativeBehavior {
     /// 生成视图的 3D 源文档（`Document` put；须是已加载的 Part/Product 文档）。
     pub fn set_document(&self, document: &impl ComObject) -> ComResult<()> {
-        self.com()
-            .put("Document", Arg::Obj(document.com().clone()))
+        self.com().put("Document", Arg::Obj(document.com().clone()))
     }
 
     /// 读取 3D 源文档（drawlink 链接探测；无链接时 COM 报错）。
