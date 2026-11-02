@@ -54,6 +54,13 @@ impl Document {
         self.com().get("IsReadOnly")?.as_bool()
     }
 
+    /// 文档相机集合（`Cameras`）。
+    pub fn cameras(&self) -> ComResult<crate::objects::in_interfaces::Cameras> {
+        Ok(crate::objects::in_interfaces::Cameras::new(
+            self.com().get("Cameras")?.as_obj()?,
+        ))
+    }
+
     pub fn selection(&self) -> ComResult<Selection> {
         Ok(Selection::new(self.com().get("Selection")?.as_obj()?))
     }

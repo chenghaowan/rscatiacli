@@ -57,4 +57,33 @@ impl Application {
             self.com().get("SystemService")?.as_obj()?,
         ))
     }
+    /// 文件系统服务（`FileSystem`；CATIA 自带的文件/文件夹操作面）。
+    pub fn file_system(&self) -> ComResult<crate::objects::in_interfaces::FileSystem> {
+        Ok(crate::objects::in_interfaces::FileSystem::new(
+            self.com().get("FileSystem")?.as_obj()?,
+        ))
+    }
+
+    /// 打印机集合（`Printers`）。
+    pub fn printers(&self) -> ComResult<crate::objects::in_interfaces::Printers> {
+        Ok(crate::objects::in_interfaces::Printers::new(
+            self.com().get("Printers")?.as_obj()?,
+        ))
+    }
+
+    /// 系统配置（`SystemConfiguration`：版本/许可/产品计数）。
+    pub fn system_configuration(
+        &self,
+    ) -> ComResult<crate::objects::in_interfaces::SystemConfiguration> {
+        Ok(crate::objects::in_interfaces::SystemConfiguration::new(
+            self.com().get("SystemConfiguration")?.as_obj()?,
+        ))
+    }
+
+    /// 窗口集合（`Windows`）。
+    pub fn windows(&self) -> ComResult<crate::objects::in_interfaces::Windows> {
+        Ok(crate::objects::in_interfaces::Windows::new(
+            self.com().get("Windows")?.as_obj()?,
+        ))
+    }
 }

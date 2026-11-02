@@ -4,9 +4,13 @@
 //! `Application.ActiveWindow` → `Window.ActiveViewer` → 隐藏规格树 /
 //! 白底 / Reframe / `CaptureToFile(4=PNG, 路径)`。图像裁剪缩放量化在工具层
 //! （image + color_quant + png crate，见 rscatiacli-tools image_post.rs）。
+//! 阶段 4 补齐 pycatia `in_interfaces` 的 Window/Viewer3D/Viewpoint3D 成员面。
 
 use crate::dispatch::{Arg, ComObject};
 use crate::error::ComResult;
+
+use super::in_interfaces::LightSources;
+use super::system_service::SystemService;
 
 com_wrapper!(Window);
 com_wrapper!(Viewer3D);
@@ -24,6 +28,41 @@ impl Window {
 
     pub fn set_layout(&self, value: i32) -> ComResult<()> {
         self.com().put("Layout", Arg::I32(value))
+    }
+
+    prop_pair!(caption, set_caption, "Caption", str);
+    prop_pair!(height, set_height, "Height", i32);
+    prop_pair!(width, set_width, "Width", i32);
+    prop_pair!(left, set_left, "Left", i32);
+    prop_pair!(top, set_top, "Top", i32);
+    prop_pair!(window_state, set_window_state, "WindowState", i32);
+    prop_pair!(page_setup, set_page_setup, "PageSetup", PageSetup);
+
+    /// 激活下一个窗口（`ActivateNext`）。
+    pub fn activate_next(&self) -> ComResult<()> {
+        self.com().call("ActivateNext", &[]).map(|_| ())
+    }
+
+    /// 激活上一个窗口（`ActivatePrevious`）。
+    pub fn activate_previous(&self) -> ComResult<()> {
+        self.com().call("ActivatePrevious", &[]).map(|_| ())
+    }
+
+    /// 打印（`PrintOut`）。
+    pub fn print_out(&self) -> ComResult<()> {
+        self.com().call("PrintOut", &[]).map(|_| ())
+    }
+
+    /// 打印到文件（`PrintToFile`）。
+    pub fn print_to_file(&self, file_name: &str) -> ComResult<()> {
+        self.com()
+            .call("PrintToFile", &[Arg::Str(file_name.to_string())])
+            .map(|_| ())
+    }
+
+    /// 新建窗口（`NewWindow`）。
+    pub fn new_window(&self) -> ComResult<Window> {
+        Ok(Window::new(self.com().call("NewWindow", &[])?.as_obj()?))
     }
 }
 
@@ -123,5 +162,97 @@ impl Viewpoint3D {
 
     pub fn set_zoom(&self, value: f64) -> ComResult<()> {
         self.com().put("Zoom", Arg::F64(value))
+    }
+}
+
+impl Viewer3D {
+    prop_pair!(clipping_mode, set_clipping_mode, "ClippingMode", i32);
+    prop_pair!(far_limit, set_far_limit, "FarLimit", f64);
+    prop_pair!(near_limit, set_near_limit, "NearLimit", f64);
+    prop_pair!(foggy, set_foggy, "Foggy", bool);
+    prop_pair!(ground, set_ground, "Ground", bool);
+    prop_pair!(
+        lighting_intensity,
+        set_lighting_intensity,
+        "LightingIntensity",
+        f64
+    );
+    prop_pair!(lighting_mode, set_lighting_mode, "LightingMode", i32);
+    prop_pair!(
+        navigation_style,
+        set_navigation_style,
+        "NavigationStyle",
+        i32
+    );
+    prop_pair!(rendering_mode, set_rendering_mode, "RenderingMode", i32);
+
+    /// 光源集合（`LightSources`）。
+    pub fn light_sources(&self) -> ComResult<LightSources> {
+        Ok(LightSources::new(self.com().get("LightSources")?.as_obj()?))
+    }
+
+    /// 绕轴旋转视图（`Rotate`；axis 为 3 分量，angle 为弧度）。
+    pub fn rotate(&self, axis: [f64; 3], angle: f64) -> ComResult<()> {
+        self.com()
+            .call(
+                "Rotate",
+                &[
+                    Arg::SafeArray(vec![
+                        Arg::F64(axis[0]),
+                        Arg::F64(axis[1]),
+                        Arg::F64(axis[2]),
+                    ]),
+                    Arg::F64(angle),
+                ],
+            )
+            .map(|_| ())
+    }
+
+    /// 平移视图（`Translate`；3 分量）。
+    pub fn translate(&self, vector: [f64; 3]) -> ComResult<()> {
+        self.com()
+            .call(
+                "Translate",
+                &[Arg::SafeArray(vec![
+                    Arg::F64(vector[0]),
+                    Arg::F64(vector[1]),
+                    Arg::F64(vector[2]),
+                ])],
+            )
+            .map(|_| ())
+    }
+}
+
+impl Viewpoint3D {
+    prop_pair!(field_of_view, set_field_of_view, "FieldOfView", f64);
+    prop_pair!(focus_distance, set_focus_distance, "FocusDistance", f64);
+
+    /// 原点（`GetOrigin`，VBA 中转；3 分量）。
+    pub fn get_origin(&self, ss: &SystemService) -> ComResult<Vec<f64>> {
+        ss.numeric_out_param(self.com(), "GetOrigin")
+    }
+
+    /// 视线方向（`GetSightDirection`，VBA 中转；3 分量）。
+    pub fn get_sight_direction(&self, ss: &SystemService) -> ComResult<Vec<f64>> {
+        ss.numeric_out_param(self.com(), "GetSightDirection")
+    }
+
+    /// 上方向（`GetUpDirection`，VBA 中转；3 分量）。
+    pub fn get_up_direction(&self, ss: &SystemService) -> ComResult<Vec<f64>> {
+        ss.numeric_out_param(self.com(), "GetUpDirection")
+    }
+
+    /// 设置原点（`PutOrigin`；3 分量）。
+    pub fn put_origin(&self, origin: [f64; 3]) -> ComResult<()> {
+        self.com()
+            .call(
+                "PutOrigin",
+                &[Arg::SafeArray(vec![
+                    Arg::F64(origin[0]),
+                    Arg::F64(origin[1]),
+                    Arg::F64(origin[2]),
+                ])],
+            )
+            .map(|_| ())
     }
 }

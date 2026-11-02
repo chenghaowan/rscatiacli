@@ -64,6 +64,17 @@ macro_rules! prop_pair {
             self.com().put($member, $crate::dispatch::Arg::Bool(value))
         }
     };
+    ($get:ident, $set:ident, $member:literal, str) => {
+        /// 属性读。
+        pub fn $get(&self) -> $crate::error::ComResult<String> {
+            self.com().get($member)?.as_string()
+        }
+        /// 属性写。
+        pub fn $set(&self, value: &str) -> $crate::error::ComResult<()> {
+            self.com()
+                .put($member, $crate::dispatch::Arg::Str(value.to_string()))
+        }
+    };
     ($get:ident, $set:ident, $member:literal, ref_) => {
         /// 属性读（Reference）。
         pub fn $get(&self) -> $crate::error::ComResult<$crate::Reference> {
@@ -143,6 +154,7 @@ pub mod drafting;
 pub mod groups;
 pub mod hybrid_shape_factory;
 pub mod hybrid_shapes;
+pub mod in_interfaces;
 pub mod inertia;
 pub mod instance_factory;
 pub mod material;
@@ -179,6 +191,12 @@ pub use hybrid_shape_factory::HybridShapeFactory;
 pub use hybrid_shapes::{
     Extract, HybridShapeAffinity, HybridShapeJoin, HybridShapeLinePtPt, HybridShapeOffset,
     HybridShapeTranslate,
+};
+pub use in_interfaces::{
+    Camera, Camera2D, Camera3D, Cameras, DraftingPageSetup, File, FileComponent, FileSystem, Files,
+    Folder, Folders, LightSource, LightSources, Move, PageSetup, Position, Printer, Printers,
+    References, SelectionSets, SendToService, SpecsAndGeomWindow, SpecsViewer, SystemConfiguration,
+    TextStream, Viewer, Viewer2D, Viewers, Viewpoint2D, Windows,
 };
 pub use inertia::Inertia;
 pub use instance_factory::InstanceFactory;

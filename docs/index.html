@@ -195,11 +195,21 @@
             曲线读取待真机草图验证。</div>
       </li>
       <li>
-        <b class="t">阶段 4 —— in_interfaces 文件 / 相机 / 窗口</b>
-        <div class="d"><code>References</code>、<code>Cameras</code>、
-            <code>FileSystem/Files/Folders/TextStream</code>、<code>Windows</code>、
-            <code>Move/Position</code>。<code>system_interfaces</code> 侧
-            <code>SystemService</code> 已就绪，其余为基础设施（不计划）。</div>
+        <b class="t">阶段 4 —— in_interfaces 文件 / 相机 / 窗口（✅ 已完成，2026-11-03）</b>
+        <div class="d">该族 40/40：相机（<code>Cameras/Camera/Camera2D/Camera3D</code> +
+            <code>Viewpoint2D</code>）、文件系统（<code>FileSystem/File/Folder/TextStream</code>
+            等七类，新建/复制/删除/存在性/读写流全带）、定位（<code>Move/Position</code>）、
+            <code>References</code>、打印（<code>PageSetup/DraftingPageSetup/Printer(s)</code>）、
+            <code>SelectionSets/SendToService/SystemConfiguration</code>、查看器基族
+            （<code>Viewer/Viewer2D/Viewers/SpecsViewer/SpecsAndGeomWindow/Windows</code> +
+            <code>LightSource(s)</code>）；<code>Window/Viewer3D/Viewpoint3D</code> 补齐
+            pycatia 成员面。<code>Application</code> 补
+            <code>file_system/printers/system_configuration/windows</code>，
+            <code>Document</code> 补 <code>cameras</code>。
+            <b>真机只读验证已过</b>（FileSystem 分隔符/临时目录、SystemConfiguration、
+            Windows/Printers/Cameras 计数），并按实测修正两处类型：
+            <code>TemporaryDirectory</code> 返回 Folder 对象、
+            <code>Release/Version</code> 返回整数（与 pycatia 字符串标注不同）。</div>
       </li>
       <li>
         <b class="t">阶段 5 —— knowledge_interfaces</b>
@@ -224,8 +234,8 @@
       </li>
     </ol>
     <div class="goal"><b>0.1.0 门槛：</b>规划范围功能类覆盖 ≥ <b>50%</b>（约 <span id="goal-need">–</span> 类）
-      且迁移工具稳定。阶段 1–3 已完成（178/446 ≈ 39.9%）；剩余各阶段新增覆盖预估：
-      P4 ≈ +15，P5 ≈ +20，P6 ≈ +30，P7 ≈ +25，P8 ≈ +8。</div>
+      且迁移工具稳定。阶段 1–4 已完成（208/446 ≈ 46.6%）；剩余各阶段新增覆盖预估：
+      P5 ≈ +20，P6 ≈ +30，P7 ≈ +25，P8 ≈ +8。</div>
   </div>
 </section>
 
@@ -280,8 +290,8 @@ window.__PARITY_DATA__ = {
     "pycatia_families": 84,
     "scope_raw_classes": 495,
     "scope_functional_classes": 446,
-    "covered": 178,
-    "percent": 39.9,
+    "covered": 208,
+    "percent": 46.6,
     "enum_pool": 339,
     "rust_constants": 14
   },
@@ -466,21 +476,12 @@ window.__PARITY_DATA__ = {
       "functional_total": 40,
       "covered": [
         "Application",
-        "Document",
-        "Documents",
-        "Reference",
-        "Selection",
-        "SelectionItem",
-        "Viewer3D",
-        "Viewpoint3D",
-        "VisProperties",
-        "Window"
-      ],
-      "missing_in_scope": [
         "Camera",
         "Camera2D",
         "Camera3D",
         "Cameras",
+        "Document",
+        "Documents",
         "DraftingPageSetup",
         "File",
         "FileComponent",
@@ -495,21 +496,30 @@ window.__PARITY_DATA__ = {
         "Position",
         "Printer",
         "Printers",
+        "Reference",
         "References",
-        "SelectedElement",
+        "Selection",
+        "SelectionItem",
         "SelectionSets",
         "SendToService",
         "SpecsAndGeomWindow",
         "SpecsViewer",
         "SystemConfiguration",
         "TextStream",
-        "ViewPoint3D",
         "Viewer",
         "Viewer2D",
+        "Viewer3D",
         "Viewers",
         "Viewpoint2D",
-        "VisPropertySet",
+        "Viewpoint3D",
+        "VisProperties",
+        "Window",
         "Windows"
+      ],
+      "missing_in_scope": [
+        "SelectedElement",
+        "ViewPoint3D",
+        "VisPropertySet"
       ],
       "excluded": [
         "CgrAdhesionSettingAtt",
@@ -1243,7 +1253,7 @@ window.__PARITY_DATA__ = {
     part_interfaces:              { tag: "阶段 1 ✅", cls: "p-done" },
     mec_mod_interfaces:           { tag: "阶段 2 ✅", cls: "p-done" },
     sketcher_interfaces:          { tag: "阶段 3 ✅", cls: "p-done" },
-    in_interfaces:                { tag: "阶段 4", cls: "p-n" },
+    in_interfaces:                { tag: "阶段 4 ✅", cls: "p-done" },
     system_interfaces:            { tag: "已就绪", cls: "p-done" },
     knowledge_interfaces:         { tag: "阶段 5", cls: "p-n" },
     hybrid_shape_interfaces:      { tag: "阶段 6", cls: "p-n" },

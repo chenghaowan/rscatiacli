@@ -112,11 +112,28 @@
   `objects_out_param`），与 `direction_out_param` 并列。
 - 曲线读取待真机草图验证。
 
-### 阶段 4 —— in_interfaces 文件 / 相机 / 窗口
+### ✅ 阶段 4 —— in_interfaces 文件 / 相机 / 窗口（已完成，2026-11-03）
 
-`References`、`Cameras`、`FileSystem` / `Files` / `Folders` / `TextStream`、
-`Windows`、`Move` / `Position`。`system_interfaces` 实际已就绪
-（`SystemService` 已封装；其余为基础设施，不计划）。
+该族 40/40 全部有类型化包装：
+
+- 相机（`Cameras`/`Camera`/`Camera2D`/`Camera3D` + `Viewpoint2D`）、文件系统
+  （`FileSystem`/`FileComponent`/`File`/`Files`/`Folder`/`Folders`/`TextStream`
+  ——新建/复制/删除/存在性 + 文本流读写）、定位（`Move`/`Position`）、
+  `References`、打印（`PageSetup` 含约 22 个打印属性、`DraftingPageSetup`、
+  `Printer(s)`）、`SelectionSets` / `SendToService` / `SystemConfiguration`、
+  查看器基族（`Viewer`/`Viewer2D`/`Viewers`/`SpecsViewer`/`SpecsAndGeomWindow`/
+  `Windows` + `LightSource(s)`）。
+- `Window` / `Viewer3D` / `Viewpoint3D` 补齐 pycatia 成员面
+  （Viewer3D 几何/灯光/导航，Window 打印/标题/几何，Viewpoint3D 视场/焦距/
+  视线读数走 VBA 中转）。
+- `Application` 补 `file_system` / `printers` / `system_configuration` /
+  `windows`；`Document` 补 `cameras`。
+- **真机只读验证已过**（文件分隔符、临时目录、系统配置、窗口/打印机/相机
+  计数），并按实测修正两处与 pycatia 标注不同的 COM 事实：
+  `TemporaryDirectory` 返回 Folder 对象（非字符串）、`Release`/`Version`
+  返回整数（VT_I4）。
+- `SelectionSets` / `SendToService` / `SystemConfiguration` 的出参列表读取
+  走 `com()` 逃生舱。
 
 ### 阶段 5 —— knowledge_interfaces
 
@@ -156,9 +173,9 @@ GSD 的 111 类是分母大头。优先补工具链已用到的构造器族（�
 ## 版本策略
 
 - **0.0.x（当前）：** 绑定和工具仍在演进，允许破坏性变更。
-- **0.1.0：** 需要规划范围功能类覆盖至少 **50%**（当前 178/446；门槛约 223 类），
-  且已迁移工具稳定。阶段 1–3 已过 ≈ +106 类；剩余预估：P4 ≈ +15，P5 ≈ +20，
-  P6 ≈ +30，P7 ≈ +25，P8 ≈ +8 —— 累计约 240–250 类，可过门槛。
+- **0.1.0：** 需要规划范围功能类覆盖至少 **50%**（当前 208/446；门槛约 223 类），
+  且已迁移工具稳定。阶段 1–4 已过 ≈ +136 类；剩余预估：P5 ≈ +20，P6 ≈ +30，
+  P7 ≈ +25，P8 ≈ +8 —— P5 完成即可基本过线。
 - **1.0.0：** pycatia 自己都还没到 1.0，本项目又只按需封装，暂不考虑。
 
 ## ⛔ 非目标

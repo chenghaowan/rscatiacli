@@ -117,11 +117,28 @@ All 27 remaining classes wrapped (41→42/42 incl. the earlier work):
   `object_out_param`, `objects_out_param`) alongside `direction_out_param`.
 - Curve reads need live verification on a real sketch.
 
-### Phase 4 — in_interfaces files / cameras / windows
+### ✅ Phase 4 — in_interfaces files / cameras / windows (done 2026-11-03)
 
-`References`, `Cameras`, `FileSystem` / `Files` / `Folders` / `TextStream`,
-`Windows`, `Move` / `Position`. `system_interfaces` is effectively done
-(`SystemService` wrapped; the rest is infrastructure, not planned).
+40/40 — the whole family is now typed:
+
+- Cameras (`Cameras`/`Camera`/`Camera2D`/`Camera3D` + `Viewpoint2D`), file system
+  (`FileSystem`/`FileComponent`/`File`/`Files`/`Folder`/`Folders`/`TextStream` —
+  create/copy/delete/exists plus text read/write), positioning (`Move`/`Position`),
+  `References`, printing (`PageSetup` incl. ~22 print properties,
+  `DraftingPageSetup`, `Printer(s)`), `SelectionSets` / `SendToService` /
+  `SystemConfiguration`, viewer base family (`Viewer`/`Viewer2D`/`Viewers`/
+  `SpecsViewer`/`SpecsAndGeomWindow`/`Windows` + `LightSource(s)`).
+- `Window` / `Viewer3D` / `Viewpoint3D` completed to the pycatia surface
+  (geometry/lights/navigation on Viewer3D, print/caption/geometry on Window,
+  field-of-view/focus/sight reads via the VBA relay on Viewpoint3D).
+- `Application` gained `file_system` / `printers` / `system_configuration` /
+  `windows`; `Document` gained `cameras`.
+- **Live read-only verification passed** (file separators, temp directory,
+  system configuration, window/printer/camera counts), which corrected two
+  COM facts vs pycatia's annotations: `TemporaryDirectory` returns a Folder
+  object (not a string) and `Release`/`Version` return integers (VT_I4).
+- Out-param list getters on `SelectionSets` / `SendToService` /
+  `SystemConfiguration` stay on the `com()` escape hatch.
 
 ### Phase 5 — knowledge_interfaces
 
@@ -164,9 +181,9 @@ Semantic GDT in `cat_tps_interfaces` follows on demand.
 
 - **0.0.x (current):** bindings and tools are still moving; breaking changes are allowed.
 - **0.1.0:** requires at least **50% of the in-scope functional class surface** covered
-  by typed bindings (currently 178/446; the gate is ≈223 classes), plus stable migrated
-  tools. Phases 1–3 cleared ≈ +106 classes; remaining estimates: P4 ≈ +15, P5 ≈ +20,
-  P6 ≈ +30, P7 ≈ +25, P8 ≈ +8 — roughly 240–250 cumulative, clearing the gate.
+  by typed bindings (currently 208/446; the gate is ≈223 classes), plus stable migrated
+  tools. Phases 1–4 cleared ≈ +136 classes; remaining estimates: P5 ≈ +20, P6 ≈ +30,
+  P7 ≈ +25, P8 ≈ +8 — P5 alone nearly closes the gate.
 - **1.0.0:** not planned while pycatia itself is pre-1.0 and this project intentionally
   wraps only what the application needs.
 
