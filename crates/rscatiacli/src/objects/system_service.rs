@@ -37,6 +37,65 @@ impl SystemService {
         Ok([values[0], values[1], values[2]])
     }
 
+    /// VBA 中转读取数值出参数组（`GetXXX(CATSafeArrayVariant o...)` 型，
+    /// 分量数不固定的成员：`Curve2D.GetParamExtents` / `GetEndPoints` /
+    /// `GetRangeBox` 等）。分量数由调用方按 CAA 口径自行核对。
+    pub(crate) fn numeric_out_param(&self, obj: &ComObj, member: &str) -> ComResult<Vec<f64>> {
+        let function = format!("rscatiacli_{}", member.to_lowercase());
+        let code = format!(
+            r#"
+        Public Function {function}(oFeature As Object)
+            Dim oValues() As Variant
+            oFeature.{member} oValues
+            {function} = oValues
+        End Function
+        "#
+        );
+        self.evaluate(&code, 0, &function, &[Arg::Obj(obj.clone())])?
+            .as_f64_array()
+    }
+
+    /// VBA 中转读取单对象出参（`GetPointAtParam(iParam, oPoint)` 型；
+    /// `in_args` 为数值入参，按序插在出参前）。
+    pub(crate) fn object_out_param(
+        &self,
+        obj: &ComObj,
+        member: &str,
+        in_args: &[f64],
+    ) -> ComResult<ComObj> {
+        let function = format!("rscatiacli_{}", member.to_lowercase());
+        let mut call_args = in_args.iter().map(|v| format!("{v}")).collect::<Vec<_>>();
+        call_args.push("oValue".to_string());
+        let call_args = call_args.join(", ");
+        let code = format!(
+            r#"
+        Public Function {function}(oFeature As Object)
+            Dim oValue As Object
+            oFeature.{member} {call_args}
+            {function} = oValue
+        End Function
+        "#
+        );
+        self.evaluate(&code, 0, &function, &[Arg::Obj(obj.clone())])?
+            .as_obj()
+    }
+
+    /// VBA 中转读取对象数组出参（`Spline2D.GetControlPoints(oCtrlPoints)` 型）。
+    pub(crate) fn objects_out_param(&self, obj: &ComObj, member: &str) -> ComResult<Vec<ComObj>> {
+        let function = format!("rscatiacli_{}", member.to_lowercase());
+        let code = format!(
+            r#"
+        Public Function {function}(oFeature As Object)
+            Dim oValues() As Variant
+            oFeature.{member} oValues
+            {function} = oValues
+        End Function
+        "#
+        );
+        self.evaluate(&code, 0, &function, &[Arg::Obj(obj.clone())])?
+            .as_obj_array()
+    }
+
     /// 读 CATIA 环境文件变量（如 CATInstallPath；setcatenv 设置的变量通常
     /// 不在系统环境里，问运行中的 CATIA 最可靠）。
     pub fn environ(&self, name: &str) -> ComResult<String> {

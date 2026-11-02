@@ -96,11 +96,26 @@ All 27 remaining classes wrapped (41→42/42 incl. the earlier work):
   part_interfaces and mec_mod).
 - Topology reads still need live verification on a real part document.
 
-### Phase 3 — sketcher_interfaces completion
+### ✅ Phase 3 — sketcher_interfaces completion (done 2026-11-03)
 
-`Circle2D`, `Ellipse2D`, `Spline2D`, `Curve2D`, `Geometry2D`, `Axis2D`,
-`ControlPoint2D`, `Hyperbola2D`, `Parabola2D` — supports the text-to-sketch and
-honeycomb Factory2D batch scenarios.
+14/14 (the earlier `Sketch` / `Factory2D` / `Point2D` / `Line2D` plus the ten new):
+
+- `GeometricElement` / `Geometry2D` bases (`GeometricType`, `Construction`,
+  `ReportName`), `Axis2D`, `Curve2D` (param extents / end points / range box /
+  curvature / derivatives / tangent / point-at-param via the VBA relay,
+  `GetLengthAtParam` / `GetParamAtLength` / `IsPeriodic`), `Point2D.GetCoordinates`
+  / `SetData`, `ControlPoint2D` (curvature / tangent / unset), `Circle2D`,
+  `Ellipse2D`, `Hyperbola2D`, `Parabola2D`, `Spline2D` (control points, insert-after).
+- `Factory2D` gained `CreateClosedCircle` / `CreateCircle` / `CreateClosedEllipse` /
+  `CreateEllipse` / `CreateHyperbola` / `CreateParabola` / `CreateControlPoint` /
+  `CreateLineFromVector` / `CreateIntersection(s)` / `CreateProjection(s)`, returning
+  typed curves; `create_spline` now returns `Spline2D` (the one caller discarded the
+  result).
+- `Sketch` gained `AbsoluteAxis` / `CenterLine` (get+put) / `Factory2D` property /
+  `Evaluate` / `InverseOrientation` / `Get·SetAbsoluteAxisData`.
+- `SystemService` gained the generic out-param relays (`numeric_out_param`,
+  `object_out_param`, `objects_out_param`) alongside `direction_out_param`.
+- Curve reads need live verification on a real sketch.
 
 ### Phase 4 — in_interfaces files / cameras / windows
 
@@ -149,9 +164,9 @@ Semantic GDT in `cat_tps_interfaces` follows on demand.
 
 - **0.0.x (current):** bindings and tools are still moving; breaking changes are allowed.
 - **0.1.0:** requires at least **50% of the in-scope functional class surface** covered
-  by typed bindings (currently 168/446; the gate is ≈223 classes), plus stable migrated
-  tools. Phases 1–2 cleared ≈ +96 classes; remaining estimates: P3 ≈ +10, P4 ≈ +15,
-  P5 ≈ +20, P6 ≈ +30, P7 ≈ +25, P8 ≈ +8 — roughly 240–250 cumulative, clearing the gate.
+  by typed bindings (currently 178/446; the gate is ≈223 classes), plus stable migrated
+  tools. Phases 1–3 cleared ≈ +106 classes; remaining estimates: P4 ≈ +15, P5 ≈ +20,
+  P6 ≈ +30, P7 ≈ +25, P8 ≈ +8 — roughly 240–250 cumulative, clearing the gate.
 - **1.0.0:** not planned while pycatia itself is pre-1.0 and this project intentionally
   wraps only what the application needs.
 

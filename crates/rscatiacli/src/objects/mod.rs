@@ -89,6 +89,20 @@ macro_rules! prop_pair {
                 .put($member, $crate::dispatch::Arg::Obj(value.com().clone()))
         }
     };
+    // 具名类型化对象属性（如 Point2D / Line2D / Limit；类型须从 objects 导出）。
+    ($get:ident, $set:ident, $member:literal, $ty:ident) => {
+        /// 属性读（类型化对象）。
+        pub fn $get(&self) -> $crate::error::ComResult<$crate::objects::$ty> {
+            Ok($crate::objects::$ty::new(
+                self.com().get($member)?.as_obj()?,
+            ))
+        }
+        /// 属性写（类型化对象）。
+        pub fn $set(&self, value: &$crate::objects::$ty) -> $crate::error::ComResult<()> {
+            self.com()
+                .put($member, $crate::dispatch::Arg::Obj(value.com().clone()))
+        }
+    };
 }
 
 /// 生成只读属性方法。
@@ -202,9 +216,10 @@ pub use reference::Reference;
 pub use selection::{Selection, SelectionItem, VisProperties};
 pub use shape_factory::ShapeFactory;
 pub use sketch::{
-    Constraint, Constraints, Factory2D, Line2D, Point2D, Sketch, Sketches, CAT_CST_TYPE_DISTANCE,
-    CAT_CST_TYPE_HORONTALITY, CAT_CST_TYPE_LENGTH, CAT_CST_TYPE_PARALLELISM,
-    CAT_CST_TYPE_VERTICALITY,
+    Axis2D, Circle2D, Constraint, Constraints, ControlPoint2D, Curve2D, Ellipse2D, Factory2D,
+    GeometricElement, Geometry2D, Hyperbola2D, Line2D, Parabola2D, Point2D, Sketch, Sketches,
+    Spline2D, CAT_CST_TYPE_DISTANCE, CAT_CST_TYPE_HORONTALITY, CAT_CST_TYPE_LENGTH,
+    CAT_CST_TYPE_PARALLELISM, CAT_CST_TYPE_VERTICALITY,
 };
 pub use spa_workbench::{Measurable, SPAWorkbench};
 pub use system_service::SystemService;

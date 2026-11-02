@@ -182,9 +182,17 @@
             形状集合补 <code>GetBoundary</code>。拓扑读数待真机零件验证。</div>
       </li>
       <li>
-        <b class="t">阶段 3 —— sketcher_interfaces 补全</b>
-        <div class="d"><code>Circle2D/Ellipse2D/Spline2D/Curve2D/Geometry2D/Axis2D/ControlPoint2D</code> 等，
-            支撑文字转草图与蜂窝肋等 Factory2D 批量场景。</div>
+        <b class="t">阶段 3 —— sketcher_interfaces 补全（✅ 已完成，2026-11-03）</b>
+        <div class="d">该族 14/14：<code>Geometry2D/Curve2D</code> 基类（参数区间/端点/
+            包围盒/曲率/切向/按参数取点，出参走 VBA 中转）、
+            <code>Circle2D/Ellipse2D/Hyperbola2D/Parabola2D/Spline2D/ControlPoint2D/Axis2D</code>、
+            <code>GeometricElement</code>；<code>Factory2D</code> 补全
+            <code>CreateClosedCircle/Ellipse/Hyperbola/Parabola/ControlPoint/
+            LineFromVector/Intersection(s)/Projection(s)</code>（圆/椭圆等返回类型化曲线），
+            <code>Sketch</code> 补 <code>AbsoluteAxis/CenterLine/Factory2D 属性/
+            Evaluate/InverseOrientation/Get·SetAbsoluteAxisData</code>。
+            <code>create_spline</code> 返回值 Entity→Spline2D（调用点仅丢弃返回值，无影响）。
+            曲线读取待真机草图验证。</div>
       </li>
       <li>
         <b class="t">阶段 4 —— in_interfaces 文件 / 相机 / 窗口</b>
@@ -216,8 +224,8 @@
       </li>
     </ol>
     <div class="goal"><b>0.1.0 门槛：</b>规划范围功能类覆盖 ≥ <b>50%</b>（约 <span id="goal-need">–</span> 类）
-      且迁移工具稳定。阶段 1–2 已完成（168/446 ≈ 37.7%）；剩余各阶段新增覆盖预估：
-      P3 ≈ +10，P4 ≈ +15，P5 ≈ +20，P6 ≈ +30，P7 ≈ +25，P8 ≈ +8。</div>
+      且迁移工具稳定。阶段 1–3 已完成（178/446 ≈ 39.9%）；剩余各阶段新增覆盖预估：
+      P4 ≈ +15，P5 ≈ +20，P6 ≈ +30，P7 ≈ +25，P8 ≈ +8。</div>
   </div>
 </section>
 
@@ -272,8 +280,8 @@ window.__PARITY_DATA__ = {
     "pycatia_families": 84,
     "scope_raw_classes": 495,
     "scope_functional_classes": 446,
-    "covered": 168,
-    "percent": 37.7,
+    "covered": 178,
+    "percent": 39.9,
     "enum_pool": 339,
     "rust_constants": 14
   },
@@ -433,23 +441,22 @@ window.__PARITY_DATA__ = {
       "raw_total": 14,
       "functional_total": 14,
       "covered": [
-        "Factory2D",
-        "Line2D",
-        "Point2D",
-        "Sketch"
-      ],
-      "missing_in_scope": [
         "Axis2D",
         "Circle2D",
         "ControlPoint2D",
         "Curve2D",
         "Ellipse2D",
+        "Factory2D",
         "GeometricElement",
         "Geometry2D",
         "Hyperbola2D",
+        "Line2D",
         "Parabola2D",
+        "Point2D",
+        "Sketch",
         "Spline2D"
       ],
+      "missing_in_scope": [],
       "excluded": []
     },
     {
@@ -1235,7 +1242,7 @@ window.__PARITY_DATA__ = {
     product_structure_interfaces: { tag: "阶段 1 ✅", cls: "p-done" },
     part_interfaces:              { tag: "阶段 1 ✅", cls: "p-done" },
     mec_mod_interfaces:           { tag: "阶段 2 ✅", cls: "p-done" },
-    sketcher_interfaces:          { tag: "阶段 3", cls: "p-n" },
+    sketcher_interfaces:          { tag: "阶段 3 ✅", cls: "p-done" },
     in_interfaces:                { tag: "阶段 4", cls: "p-n" },
     system_interfaces:            { tag: "已就绪", cls: "p-done" },
     knowledge_interfaces:         { tag: "阶段 5", cls: "p-n" },

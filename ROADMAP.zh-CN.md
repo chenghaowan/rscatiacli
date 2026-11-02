@@ -92,11 +92,25 @@
   （part_interfaces 与 mec_mod 共用）。
 - 拓扑读数待真机零件文档验证。
 
-### 阶段 3 —— sketcher_interfaces 补全
+### ✅ 阶段 3 —— sketcher_interfaces 补全（已完成，2026-11-03）
 
-`Circle2D`、`Ellipse2D`、`Spline2D`、`Curve2D`、`Geometry2D`、`Axis2D`、
-`ControlPoint2D`、`Hyperbola2D`、`Parabola2D` —— 支撑文字转草图与蜂窝肋的
-Factory2D 批量场景。
+该族 14/14（此前已有 `Sketch` / `Factory2D` / `Point2D` / `Line2D`，新增十类）：
+
+- `GeometricElement` / `Geometry2D` 基类（`GeometricType`、`Construction`、
+  `ReportName`）、`Axis2D`、`Curve2D`（参数区间/端点/包围盒/曲率/导数/切向/
+  按参数取点，出参走 VBA 中转；`GetLengthAtParam` / `GetParamAtLength` /
+  `IsPeriodic`）、`Point2D.GetCoordinates` / `SetData`、`ControlPoint2D`
+  （曲率/切向/unset）、`Circle2D`、`Ellipse2D`、`Hyperbola2D`、`Parabola2D`、
+  `Spline2D`（控制点/插点）。
+- `Factory2D` 补 `CreateClosedCircle` / `CreateCircle` / `CreateClosedEllipse` /
+  `CreateEllipse` / `CreateHyperbola` / `CreateParabola` / `CreateControlPoint` /
+  `CreateLineFromVector` / `CreateIntersection(s)` / `CreateProjection(s)`，
+  返回类型化曲线；`create_spline` 返回值 Entity→Spline2D（唯一调用点本就丢弃返回值）。
+- `Sketch` 补 `AbsoluteAxis` / `CenterLine`(读+写) / `Factory2D` 属性 /
+  `Evaluate` / `InverseOrientation` / `Get·SetAbsoluteAxisData`。
+- `SystemService` 增加通用出参中转（`numeric_out_param` / `object_out_param` /
+  `objects_out_param`），与 `direction_out_param` 并列。
+- 曲线读取待真机草图验证。
 
 ### 阶段 4 —— in_interfaces 文件 / 相机 / 窗口
 
@@ -142,9 +156,9 @@ GSD 的 111 类是分母大头。优先补工具链已用到的构造器族（�
 ## 版本策略
 
 - **0.0.x（当前）：** 绑定和工具仍在演进，允许破坏性变更。
-- **0.1.0：** 需要规划范围功能类覆盖至少 **50%**（当前 168/446；门槛约 223 类），
-  且已迁移工具稳定。阶段 1–2 已过 ≈ +96 类；剩余预估：P3 ≈ +10，P4 ≈ +15，
-  P5 ≈ +20，P6 ≈ +30，P7 ≈ +25，P8 ≈ +8 —— 累计约 240–250 类，可过门槛。
+- **0.1.0：** 需要规划范围功能类覆盖至少 **50%**（当前 178/446；门槛约 223 类），
+  且已迁移工具稳定。阶段 1–3 已过 ≈ +106 类；剩余预估：P4 ≈ +15，P5 ≈ +20，
+  P6 ≈ +30，P7 ≈ +25，P8 ≈ +8 —— 累计约 240–250 类，可过门槛。
 - **1.0.0：** pycatia 自己都还没到 1.0，本项目又只按需封装，暂不考虑。
 
 ## ⛔ 非目标
