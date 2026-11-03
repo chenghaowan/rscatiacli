@@ -7,6 +7,19 @@
 use crate::dispatch::{Arg, ComObject};
 use crate::error::ComResult;
 
+use super::hybrid_shape_interfaces::{
+    HybridShapeAxisLine, HybridShapeBlend, HybridShapeBump, HybridShapeCurveSmooth,
+    HybridShapeDevelop, HybridShapeDirection, HybridShapeExtractMulti, HybridShapeExtremumPolar,
+    HybridShapeFill, HybridShapeHealing, HybridShapeIntegratedLaw, HybridShapeIntersection,
+    HybridShapeInverse, HybridShapeLawDistProj, HybridShapeLoft, HybridShapeNear,
+    HybridShapePlane1Curve, HybridShapePlane1Line1Pt, HybridShapePlane3Points,
+    HybridShapePlaneMean, HybridShapePlaneTangent, HybridShapePointCenter, HybridShapePointCoord,
+    HybridShapePointOnPlane, HybridShapePointTangent, HybridShapePolyline,
+    HybridShapePositionTransfo, HybridShapeRotate, HybridShapeSection, HybridShapeSpine,
+    HybridShapeSpline, HybridShapeSweepCircle, HybridShapeSweepConic, HybridShapeSweepLine,
+    HybridShapeSymmetry, HybridShapeTransfer, HybridShapeUnfold, HybridShapeWrapCurve,
+    HybridShapeWrapSurface,
+};
 use super::hybrid_shapes::{HybridShapeJoin, HybridShapeOffset};
 use super::part::Entity;
 use super::reference::Reference;
@@ -414,5 +427,475 @@ impl HybridShapeFactory {
                 .call(method, &[Arg::Obj(reference.com().clone())])?
                 .as_obj()?,
         ))
+    }
+}
+
+// ── 阶段 6 补全的 AddNew* 创建方法（返回类型化 GSD 特征） ───────────
+
+impl HybridShapeFactory {
+    /// 点（坐标）：`AddNewPointCoord(x, y, z)`。
+    pub fn add_new_point_coord2(&self, x: f64, y: f64, z: f64) -> ComResult<HybridShapePointCoord> {
+        Ok(HybridShapePointCoord::new(
+            self.com()
+                .call("AddNewPointCoord", &[Arg::F64(x), Arg::F64(y), Arg::F64(z)])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 点（平面内偏移）：`AddNewPointOnPlane(平面, x, y)`。
+    pub fn add_new_point_on_plane(
+        &self,
+        plane: &Reference,
+        x: f64,
+        y: f64,
+    ) -> ComResult<HybridShapePointOnPlane> {
+        Ok(HybridShapePointOnPlane::new(
+            self.com()
+                .call(
+                    "AddNewPointOnPlane",
+                    &[Arg::Obj(plane.com().clone()), Arg::F64(x), Arg::F64(y)],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 点（曲线切点）：`AddNewPointTangent(曲线, 方向)`。
+    pub fn add_new_point_tangent(
+        &self,
+        curve: &Reference,
+        direction: &HybridShapeDirection,
+    ) -> ComResult<HybridShapePointTangent> {
+        Ok(HybridShapePointTangent::new(
+            self.com()
+                .call(
+                    "AddNewPointTangent",
+                    &[
+                        Arg::Obj(curve.com().clone()),
+                        Arg::Obj(direction.com().clone()),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 点（圆心）：`AddNewPointCenter(曲线)`。
+    pub fn add_new_point_center(&self, curve: &Reference) -> ComResult<HybridShapePointCenter> {
+        Ok(HybridShapePointCenter::new(
+            self.com()
+                .call("AddNewPointCenter", &[Arg::Obj(curve.com().clone())])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 方向（按元素）：`AddNewDirection(元素)`。
+    pub fn add_new_direction(&self, element: &Reference) -> ComResult<HybridShapeDirection> {
+        Ok(HybridShapeDirection::new(
+            self.com()
+                .call("AddNewDirection", &[Arg::Obj(element.com().clone())])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 直线（轴线）：`AddNewAxisLine(元素)`。
+    pub fn add_new_axis_line(&self, element: &Reference) -> ComResult<HybridShapeAxisLine> {
+        Ok(HybridShapeAxisLine::new(
+            self.com()
+                .call("AddNewAxisLine", &[Arg::Obj(element.com().clone())])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 平面（过曲线）：`AddNewPlane1Curve(曲线)`。
+    pub fn add_new_plane1_curve(&self, curve: &Reference) -> ComResult<HybridShapePlane1Curve> {
+        Ok(HybridShapePlane1Curve::new(
+            self.com()
+                .call("AddNewPlane1Curve", &[Arg::Obj(curve.com().clone())])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 平面（线+点）：`AddNewPlane1Line1Pt(线, 点)`。
+    pub fn add_new_plane1_line1_pt(
+        &self,
+        line: &Reference,
+        point: &Reference,
+    ) -> ComResult<HybridShapePlane1Line1Pt> {
+        Ok(HybridShapePlane1Line1Pt::new(
+            self.com()
+                .call(
+                    "AddNewPlane1Line1Pt",
+                    &[Arg::Obj(line.com().clone()), Arg::Obj(point.com().clone())],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 平面（三点）：`AddNewPlane3Points(p1, p2, p3)`。
+    pub fn add_new_plane3_points(
+        &self,
+        pt1: &Reference,
+        pt2: &Reference,
+        pt3: &Reference,
+    ) -> ComResult<HybridShapePlane3Points> {
+        Ok(HybridShapePlane3Points::new(
+            self.com()
+                .call(
+                    "AddNewPlane3Points",
+                    &[
+                        Arg::Obj(pt1.com().clone()),
+                        Arg::Obj(pt2.com().clone()),
+                        Arg::Obj(pt3.com().clone()),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 平面（平均面）：`AddNewPlaneMean(点数组, 点数)`。
+    pub fn add_new_plane_mean(
+        &self,
+        points: &[Reference],
+        nb_point: i32,
+    ) -> ComResult<HybridShapePlaneMean> {
+        let args = Arg::SafeArray(points.iter().map(|p| Arg::Obj(p.com().clone())).collect());
+        Ok(HybridShapePlaneMean::new(
+            self.com()
+                .call("AddNewPlaneMean", &[args, Arg::I32(nb_point)])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 平面（切面）：`AddNewPlaneTangent(曲面, 点)`。
+    pub fn add_new_plane_tangent(
+        &self,
+        surface: &Reference,
+        point: &Reference,
+    ) -> ComResult<HybridShapePlaneTangent> {
+        Ok(HybridShapePlaneTangent::new(
+            self.com()
+                .call(
+                    "AddNewPlaneTangent",
+                    &[
+                        Arg::Obj(surface.com().clone()),
+                        Arg::Obj(point.com().clone()),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 相交：`AddNewIntersection(对象1, 对象2)`。
+    pub fn add_new_intersection(
+        &self,
+        object1: &Reference,
+        object2: &Reference,
+    ) -> ComResult<HybridShapeIntersection> {
+        Ok(HybridShapeIntersection::new(
+            self.com()
+                .call(
+                    "AddNewIntersection",
+                    &[
+                        Arg::Obj(object1.com().clone()),
+                        Arg::Obj(object2.com().clone()),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 最近点：`AddNewNear(多重元素, 参考元素)`。
+    pub fn add_new_near(
+        &self,
+        multi_element: &Reference,
+        reference_element: &Reference,
+    ) -> ComResult<HybridShapeNear> {
+        Ok(HybridShapeNear::new(
+            self.com()
+                .call(
+                    "AddNewNear",
+                    &[
+                        Arg::Obj(multi_element.com().clone()),
+                        Arg::Obj(reference_element.com().clone()),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 反转方向：`AddNewInverse(元素, 方向模式)`。
+    pub fn add_new_inverse(
+        &self,
+        element: &Reference,
+        orientation: i32,
+    ) -> ComResult<HybridShapeInverse> {
+        Ok(HybridShapeInverse::new(
+            self.com()
+                .call(
+                    "AddNewInverse",
+                    &[Arg::Obj(element.com().clone()), Arg::I32(orientation)],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 极值：`AddNewExtremumPolar(类型, 轮廓)`。
+    pub fn add_new_extremum_polar(
+        &self,
+        extremum_type: i32,
+        contour: &Reference,
+    ) -> ComResult<HybridShapeExtremumPolar> {
+        Ok(HybridShapeExtremumPolar::new(
+            self.com()
+                .call(
+                    "AddNewExtremumPolar",
+                    &[Arg::I32(extremum_type), Arg::Obj(contour.com().clone())],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 多重提取：`AddNewExtractMulti(元素)`。
+    pub fn add_new_extract_multi(&self, element: &Reference) -> ComResult<HybridShapeExtractMulti> {
+        Ok(HybridShapeExtractMulti::new(
+            self.com()
+                .call("AddNewExtractMulti", &[Arg::Obj(element.com().clone())])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 样条：`AddNewSpline()`。
+    pub fn add_new_spline(&self) -> ComResult<HybridShapeSpline> {
+        Ok(HybridShapeSpline::new(
+            self.com().call("AddNewSpline", &[])?.as_obj()?,
+        ))
+    }
+
+    /// 多段线：`AddNewPolyline()`。
+    pub fn add_new_polyline(&self) -> ComResult<HybridShapePolyline> {
+        Ok(HybridShapePolyline::new(
+            self.com().call("AddNewPolyline", &[])?.as_obj()?,
+        ))
+    }
+
+    /// 填充：`AddNewFill()`。
+    pub fn add_new_fill(&self) -> ComResult<HybridShapeFill> {
+        Ok(HybridShapeFill::new(
+            self.com().call("AddNewFill", &[])?.as_obj()?,
+        ))
+    }
+
+    /// 放样：`AddNewLoft()`。
+    pub fn add_new_loft(&self) -> ComResult<HybridShapeLoft> {
+        Ok(HybridShapeLoft::new(
+            self.com().call("AddNewLoft", &[])?.as_obj()?,
+        ))
+    }
+
+    /// 桥接：`AddNewBlend()`。
+    pub fn add_new_blend(&self) -> ComResult<HybridShapeBlend> {
+        Ok(HybridShapeBlend::new(
+            self.com().call("AddNewBlend", &[])?.as_obj()?,
+        ))
+    }
+
+    /// 圆弧扫掠：`AddNewSweepCircle(引导线)`。
+    pub fn add_new_sweep_circle(&self, guide: &Reference) -> ComResult<HybridShapeSweepCircle> {
+        Ok(HybridShapeSweepCircle::new(
+            self.com()
+                .call("AddNewSweepCircle", &[Arg::Obj(guide.com().clone())])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 直线扫掠：`AddNewSweepLine(引导线)`。
+    pub fn add_new_sweep_line(&self, guide: &Reference) -> ComResult<HybridShapeSweepLine> {
+        Ok(HybridShapeSweepLine::new(
+            self.com()
+                .call("AddNewSweepLine", &[Arg::Obj(guide.com().clone())])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 二次曲线扫掠：`AddNewSweepConic(引导线)`。
+    pub fn add_new_sweep_conic(&self, guide: &Reference) -> ComResult<HybridShapeSweepConic> {
+        Ok(HybridShapeSweepConic::new(
+            self.com()
+                .call("AddNewSweepConic", &[Arg::Obj(guide.com().clone())])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 曲面光顺：`AddNewCurveSmooth(曲线)`。
+    pub fn add_new_curve_smooth(&self, curve: &Reference) -> ComResult<HybridShapeCurveSmooth> {
+        Ok(HybridShapeCurveSmooth::new(
+            self.com()
+                .call("AddNewCurveSmooth", &[Arg::Obj(curve.com().clone())])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 修复：`AddNewHealing(体)`。
+    pub fn add_new_healing(&self, body: &Reference) -> ComResult<HybridShapeHealing> {
+        Ok(HybridShapeHealing::new(
+            self.com()
+                .call("AddNewHealing", &[Arg::Obj(body.com().clone())])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 凸起：`AddNewBump(体)`。
+    pub fn add_new_bump(&self, body: &Reference) -> ComResult<HybridShapeBump> {
+        Ok(HybridShapeBump::new(
+            self.com()
+                .call("AddNewBump", &[Arg::Obj(body.com().clone())])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 开发（曲面展开）：`AddNewDevelop(模式, 线, 支撑面)`。
+    pub fn add_new_develop(
+        &self,
+        mode: i32,
+        to_develop: &Reference,
+        support: &Reference,
+    ) -> ComResult<HybridShapeDevelop> {
+        Ok(HybridShapeDevelop::new(
+            self.com()
+                .call(
+                    "AddNewDevelop",
+                    &[
+                        Arg::I32(mode),
+                        Arg::Obj(to_develop.com().clone()),
+                        Arg::Obj(support.com().clone()),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 展平：`AddNewUnfold()`。
+    pub fn add_new_unfold(&self) -> ComResult<HybridShapeUnfold> {
+        Ok(HybridShapeUnfold::new(
+            self.com().call("AddNewUnfold", &[])?.as_obj()?,
+        ))
+    }
+
+    /// 展开转移：`AddNewTransfer(元素, 转移类型)`。
+    pub fn add_new_transfer(
+        &self,
+        element: &Reference,
+        type_of_transfer: i32,
+    ) -> ComResult<HybridShapeTransfer> {
+        Ok(HybridShapeTransfer::new(
+            self.com()
+                .call(
+                    "AddNewTransfer",
+                    &[Arg::Obj(element.com().clone()), Arg::I32(type_of_transfer)],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 包裹曲线：`AddNewWrapCurve()`。
+    pub fn add_new_wrap_curve(&self) -> ComResult<HybridShapeWrapCurve> {
+        Ok(HybridShapeWrapCurve::new(
+            self.com().call("AddNewWrapCurve", &[])?.as_obj()?,
+        ))
+    }
+
+    /// 包裹曲面：`AddNewWrapSurface(体)`。
+    pub fn add_new_wrap_surface(&self, body: &Reference) -> ComResult<HybridShapeWrapSurface> {
+        Ok(HybridShapeWrapSurface::new(
+            self.com()
+                .call("AddNewWrapSurface", &[Arg::Obj(body.com().clone())])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 积分法则：`AddNewIntegratedLaw(类型)`。
+    pub fn add_new_integrated_law(&self, law_type: i32) -> ComResult<HybridShapeIntegratedLaw> {
+        Ok(HybridShapeIntegratedLaw::new(
+            self.com()
+                .call("AddNewIntegratedLaw", &[Arg::I32(law_type)])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 投影距离法则：`AddNewLawDistProj(参考, 定义)`。
+    pub fn add_new_law_dist_proj(
+        &self,
+        reference: &Reference,
+        definition: &Reference,
+    ) -> ComResult<HybridShapeLawDistProj> {
+        Ok(HybridShapeLawDistProj::new(
+            self.com()
+                .call(
+                    "AddNewLawDistProj",
+                    &[
+                        Arg::Obj(reference.com().clone()),
+                        Arg::Obj(definition.com().clone()),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 定位变换：`AddNewPositionTransfo(模式)`。
+    pub fn add_new_position_transfo(&self, mode: i32) -> ComResult<HybridShapePositionTransfo> {
+        Ok(HybridShapePositionTransfo::new(
+            self.com()
+                .call("AddNewPositionTransfo", &[Arg::I32(mode)])?
+                .as_obj()?,
+        ))
+    }
+
+    /// 截面：`AddNewSection()`。
+    pub fn add_new_section(&self) -> ComResult<HybridShapeSection> {
+        Ok(HybridShapeSection::new(
+            self.com().call("AddNewSection", &[])?.as_obj()?,
+        ))
+    }
+
+    /// 脊线：`AddNewSpine()`。
+    pub fn add_new_spine(&self) -> ComResult<HybridShapeSpine> {
+        Ok(HybridShapeSpine::new(
+            self.com().call("AddNewSpine", &[])?.as_obj()?,
+        ))
+    }
+
+    /// 对称：`AddNewSymmetry(对象, 参考)`。
+    pub fn add_new_symmetry(
+        &self,
+        object: &Reference,
+        reference: &Reference,
+    ) -> ComResult<HybridShapeSymmetry> {
+        Ok(HybridShapeSymmetry::new(
+            self.com()
+                .call(
+                    "AddNewSymmetry",
+                    &[
+                        Arg::Obj(object.com().clone()),
+                        Arg::Obj(reference.com().clone()),
+                    ],
+                )?
+                .as_obj()?,
+        ))
+    }
+
+    /// 空旋转：`AddNewEmptyRotate()`。
+    pub fn add_new_empty_rotate(&self) -> ComResult<HybridShapeRotate> {
+        Ok(HybridShapeRotate::new(
+            self.com().call("AddNewEmptyRotate", &[])?.as_obj()?,
+        ))
+    }
+
+    /// 重命名特征引用（`ChangeFeatureName`）。
+    pub fn change_feature_name(&self, element: &Reference, name: &str) -> ComResult<()> {
+        self.com()
+            .call(
+                "ChangeFeatureName",
+                &[Arg::Obj(element.com().clone()), Arg::Str(name.to_string())],
+            )
+            .map(|_| ())
     }
 }

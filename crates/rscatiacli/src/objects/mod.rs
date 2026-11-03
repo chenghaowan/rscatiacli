@@ -153,6 +153,7 @@ pub mod documents;
 pub mod drafting;
 pub mod groups;
 pub mod hybrid_shape_factory;
+pub mod hybrid_shape_interfaces;
 pub mod hybrid_shapes;
 pub mod in_interfaces;
 pub mod inertia;
@@ -189,6 +190,37 @@ pub use drafting::{
 };
 pub use groups::{Group, Groups};
 pub use hybrid_shape_factory::HybridShapeFactory;
+pub use hybrid_shape_interfaces::{
+    HybridShape3DCurveOffset, HybridShapeAssemble, HybridShapeAxisLine, HybridShapeAxisToAxis,
+    HybridShapeBlend, HybridShapeBoundary, HybridShapeBump, HybridShapeCircle,
+    HybridShapeCircle2PointsRad, HybridShapeCircle3Points, HybridShapeCircleBitangentPoint,
+    HybridShapeCircleBitangentRadius, HybridShapeCircleCenterAxis, HybridShapeCircleCenterTangent,
+    HybridShapeCircleCtrPt, HybridShapeCircleCtrRad, HybridShapeCircleExplicit,
+    HybridShapeCircleTritangent, HybridShapeCombine, HybridShapeConic, HybridShapeConnect,
+    HybridShapeCorner, HybridShapeCurveExplicit, HybridShapeCurvePar, HybridShapeCurveSmooth,
+    HybridShapeCylinder, HybridShapeDevelop, HybridShapeDirection, HybridShapeExtractMulti,
+    HybridShapeExtrapol, HybridShapeExtremum, HybridShapeExtremumPolar, HybridShapeExtrude,
+    HybridShapeFill, HybridShapeFilletBiTangent, HybridShapeFilletTriTangent, HybridShapeHealing,
+    HybridShapeHelix, HybridShapeIntegratedLaw, HybridShapeIntersection, HybridShapeInverse,
+    HybridShapeLawDistProj, HybridShapeLineAngle, HybridShapeLineBiTangent,
+    HybridShapeLineBisecting, HybridShapeLineExplicit, HybridShapeLineNormal, HybridShapeLinePtDir,
+    HybridShapeLineTangency, HybridShapeLoft, HybridShapeMidSurface, HybridShapeNear,
+    HybridShapePlane1Curve, HybridShapePlane1Line1Pt, HybridShapePlane2Lines,
+    HybridShapePlane3Points, HybridShapePlaneAngle, HybridShapePlaneBetween,
+    HybridShapePlaneEquation, HybridShapePlaneExplicit, HybridShapePlaneMean,
+    HybridShapePlaneNormal, HybridShapePlaneOffset, HybridShapePlaneOffsetPt,
+    HybridShapePlaneTangent, HybridShapePointBetween, HybridShapePointCenter,
+    HybridShapePointCoord, HybridShapePointExplicit, HybridShapePointOnCurve,
+    HybridShapePointOnPlane, HybridShapePointOnSurface, HybridShapePointTangent,
+    HybridShapePolyline, HybridShapePositionTransfo, HybridShapeProject, HybridShapeReflectLine,
+    HybridShapeRevol, HybridShapeRollingOffset, HybridShapeRotate, HybridShapeScaling,
+    HybridShapeSection, HybridShapeSphere, HybridShapeSpine, HybridShapeSpiral, HybridShapeSpline,
+    HybridShapeSplit, HybridShapeSurfaceExplicit, HybridShapeSweep, HybridShapeSweepCircle,
+    HybridShapeSweepConic, HybridShapeSweepExplicit, HybridShapeSweepLine, HybridShapeSymmetry,
+    HybridShapeThickness, HybridShapeTransfer, HybridShapeTrim, HybridShapeUnfold,
+    HybridShapeVolumeExplicit, HybridShapeWrapCurve, HybridShapeWrapSurface, Line, Point,
+    ShapeDesignWorkbench,
+};
 pub use hybrid_shapes::{
     Extract, HybridShapeAffinity, HybridShapeJoin, HybridShapeLinePtPt, HybridShapeOffset,
     HybridShapeTranslate,

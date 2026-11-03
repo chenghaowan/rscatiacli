@@ -229,10 +229,20 @@
             <code>ValueAsString</code> 返回"找不到成员"，改用专用访问器。</div>
       </li>
       <li>
-        <b class="t">阶段 6 —— hybrid_shape_interfaces 按需扩展</b>
-        <div class="d">GSD 111 类是分母大头。优先补工具链已用到的构造器族
-            （点/线/平面构造、<code>Project/Intersection/Extremum</code>、
-            <code>Sweep/Loft/Blend/Rotate/Scaling/Symmetry</code>），其余按应用需要生长。</div>
+        <b class="t">阶段 6 —— hybrid_shape_interfaces（✅ 已完成，2026-11-03）—— 111/111</b>
+        <div class="d">GSD 分母大头全清：点（坐标/平面/曲线/曲面/中点/圆心/切点 8 类）、
+            线（点方向/角度/法线/双切/切线/平分/轴线 8 类）、平面（12 类构造器）、
+            方向、圆族（圆心半径/三点/双切/三切/中心轴 10 类）、曲线曲面生成
+            （样条/多段线/拉伸/旋转/圆柱/球/螺旋/平面螺旋/脊线/填充/截面/放样）、
+            操作（投影/相交/极值/最近/反转/结合/桥接/圆角/光顺/外插/多重提取/分割/
+            修剪/接合/边界/凸起/中面）、变换（旋转/缩放/对称/轴到轴/3D 曲线偏置）、
+            展开/包裹/积分法则/反射线/滚动偏置、四类扫掠、显式 datum 与
+            <code>Point/Line/HybridShapeCircle/HybridShapeSweep</code> 基类。
+            <code>HybridShapeFactory</code> 新增约 35 个 <code>add_new_*</code>（全部返回
+            类型化特征）；既有 6 类（Join/Offset/Extract/LinePtPt/Translate/Affinity）
+            与 <code>Plane</code> 基类补齐读写面。
+            大类按序号出参网格（SweepExplicit 位置数组等）走 <code>com()</code> 逃生舱；
+            方向 VBA 中转读数待 CATIA 会话复核（通道与阶段 2/4/5 相同）。</div>
       </li>
       <li>
         <b class="t">阶段 7 —— drafting_interfaces 剩余</b>
@@ -245,9 +255,8 @@
       </li>
     </ol>
     <div class="goal"><b>0.1.0 门槛：</b>规划范围功能类覆盖 ≥ <b>50%</b>（约 <span id="goal-need">–</span> 类）
-      <b>阶段 1–5 已完成，覆盖率 241/446 ≈ 54.0% —— ≥50% 门槛已达标</b>
-      （配合已稳定的迁移工具，0.1.0 发布条件就绪）；剩余预估：
-      P6 ≈ +30，P7 ≈ +25，P8 ≈ +8。</div>
+      <b>阶段 1–6 已完成，覆盖率 345/446 ≈ 77.4%</b>（0.1.0 门槛 50% 早已达标）；
+      剩余：P7 drafting ≈ +25，P8 space/navigator ≈ +8。</div>
   </div>
 </section>
 
@@ -302,8 +311,8 @@ window.__PARITY_DATA__ = {
     "pycatia_families": 84,
     "scope_raw_classes": 495,
     "scope_functional_classes": 446,
-    "covered": 241,
-    "percent": 54.0,
+    "covered": 345,
+    "percent": 77.4,
     "enum_pool": 339,
     "rust_constants": 14
   },
@@ -836,15 +845,8 @@ window.__PARITY_DATA__ = {
       "functional_total": 111,
       "covered": [
         "Extract",
-        "HybridShapeAffinity",
-        "HybridShapeFactory",
-        "HybridShapeLinePtPt",
-        "HybridShapeOffset",
-        "HybridShapeTranslate",
-        "Plane"
-      ],
-      "missing_in_scope": [
         "HybridShape3DCurveOffset",
+        "HybridShapeAffinity",
         "HybridShapeAssemble",
         "HybridShapeAxisLine",
         "HybridShapeAxisToAxis",
@@ -872,12 +874,12 @@ window.__PARITY_DATA__ = {
         "HybridShapeCylinder",
         "HybridShapeDevelop",
         "HybridShapeDirection",
-        "HybridShapeExtract",
         "HybridShapeExtractMulti",
         "HybridShapeExtrapol",
         "HybridShapeExtremum",
         "HybridShapeExtremumPolar",
         "HybridShapeExtrude",
+        "HybridShapeFactory",
         "HybridShapeFill",
         "HybridShapeFilletBiTangent",
         "HybridShapeFilletTriTangent",
@@ -893,10 +895,12 @@ window.__PARITY_DATA__ = {
         "HybridShapeLineExplicit",
         "HybridShapeLineNormal",
         "HybridShapeLinePtDir",
+        "HybridShapeLinePtPt",
         "HybridShapeLineTangency",
         "HybridShapeLoft",
         "HybridShapeMidSurface",
         "HybridShapeNear",
+        "HybridShapeOffset",
         "HybridShapePlane1Curve",
         "HybridShapePlane1Line1Pt",
         "HybridShapePlane2Lines",
@@ -941,14 +945,19 @@ window.__PARITY_DATA__ = {
         "HybridShapeSymmetry",
         "HybridShapeThickness",
         "HybridShapeTransfer",
+        "HybridShapeTranslate",
         "HybridShapeTrim",
         "HybridShapeUnfold",
         "HybridShapeVolumeExplicit",
         "HybridShapeWrapCurve",
         "HybridShapeWrapSurface",
         "Line",
+        "Plane",
         "Point",
         "ShapeDesignWorkbench"
+      ],
+      "missing_in_scope": [
+        "HybridShapeExtract"
       ],
       "excluded": []
     }
@@ -1267,7 +1276,7 @@ window.__PARITY_DATA__ = {
     in_interfaces:                { tag: "阶段 4 ✅", cls: "p-done" },
     system_interfaces:            { tag: "已就绪", cls: "p-done" },
     knowledge_interfaces:         { tag: "阶段 5 ✅", cls: "p-done" },
-    hybrid_shape_interfaces:      { tag: "阶段 6", cls: "p-n" },
+    hybrid_shape_interfaces:      { tag: "阶段 6 ✅", cls: "p-done" },
     drafting_interfaces:          { tag: "阶段 7", cls: "p-n" },
     space_analyses_interfaces:    { tag: "阶段 8", cls: "p-n" },
     navigator_interfaces:         { tag: "阶段 8", cls: "p-n" },

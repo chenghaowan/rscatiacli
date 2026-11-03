@@ -146,3 +146,139 @@ impl HybridShapeAffinity {
         self.com().put("VolumeResult", Arg::Bool(value))
     }
 }
+
+impl Extract {
+    /// 被提取元素（`Elem`）。
+    pub fn elem(&self) -> ComResult<Reference> {
+        Ok(Reference::new(self.com().get("Elem")?.as_obj()?))
+    }
+
+    /// 设置被提取元素（`Elem`）。
+    pub fn set_elem(&self, element: &Reference) -> ComResult<()> {
+        self.com().put("Elem", Arg::Obj(element.com().clone()))
+    }
+
+    /// 支撑面（`Support`）。
+    pub fn support(&self) -> ComResult<Reference> {
+        Ok(Reference::new(self.com().get("Support")?.as_obj()?))
+    }
+
+    /// 设置支撑面（`Support`）。
+    pub fn set_support(&self, support: &Reference) -> ComResult<()> {
+        self.com().put("Support", Arg::Obj(support.com().clone()))
+    }
+
+    /// 角度阈值（`AngularThreshold`）。
+    pub fn angular_threshold(&self) -> ComResult<f64> {
+        self.com().get("AngularThreshold")?.as_f64()
+    }
+
+    /// 设置角度阈值（`AngularThreshold`）。
+    pub fn set_angular_threshold(&self, value: f64) -> ComResult<()> {
+        self.com().put("AngularThreshold", Arg::F64(value))
+    }
+
+    /// 距离阈值（`DistanceThreshold`）。
+    pub fn distance_threshold(&self) -> ComResult<f64> {
+        self.com().get("DistanceThreshold")?.as_f64()
+    }
+
+    /// 设置距离阈值（`DistanceThreshold`）。
+    pub fn set_distance_threshold(&self, value: f64) -> ComResult<()> {
+        self.com().put("DistanceThreshold", Arg::F64(value))
+    }
+}
+
+impl HybridShapeOffset {
+    /// 被偏置对象（`OffsetedObject`）。
+    pub fn offseted_object(&self) -> ComResult<Reference> {
+        Ok(Reference::new(self.com().get("OffsetedObject")?.as_obj()?))
+    }
+
+    /// 设置被偏置对象（`OffsetedObject`）。
+    pub fn set_offseted_object(&self, object: &Reference) -> ComResult<()> {
+        self.com()
+            .put("OffsetedObject", Arg::Obj(object.com().clone()))
+    }
+
+    /// 偏置值（`OffsetValue`）。
+    pub fn set_offset_value(&self, value: f64) -> ComResult<()> {
+        self.com().put("OffsetValue", Arg::F64(value))
+    }
+
+    /// 反曲面处理（`SuppressMode`）。
+    pub fn set_suppress_mode(&self, value: bool) -> ComResult<()> {
+        self.com().put("SuppressMode", Arg::Bool(value))
+    }
+
+    /// 追加棘手面（`AddTrickyFace`）。
+    pub fn add_tricky_face(&self, face: &Reference) -> ComResult<()> {
+        self.com()
+            .call("AddTrickyFace", &[Arg::Obj(face.com().clone())])
+            .map(|_| ())
+    }
+}
+
+impl HybridShapeTranslate {
+    /// 被平移对象（`ElemToTranslate`）。
+    pub fn elem_to_translate(&self) -> ComResult<Reference> {
+        Ok(Reference::new(self.com().get("ElemToTranslate")?.as_obj()?))
+    }
+
+    /// 平移距离（`DistanceValue`）。
+    pub fn distance_value(&self) -> ComResult<f64> {
+        self.com().get("DistanceValue")?.as_f64()
+    }
+
+    /// 起点（`FirstPoint`）。
+    pub fn first_point(&self) -> ComResult<Reference> {
+        Ok(Reference::new(self.com().get("FirstPoint")?.as_obj()?))
+    }
+
+    /// 终点（`SecondPoint`）。
+    pub fn second_point(&self) -> ComResult<Reference> {
+        Ok(Reference::new(self.com().get("SecondPoint")?.as_obj()?))
+    }
+
+    /// 设置起点（`FirstPoint`）。
+    pub fn set_first_point(&self, point: &Reference) -> ComResult<()> {
+        self.com().put("FirstPoint", Arg::Obj(point.com().clone()))
+    }
+
+    /// 设置终点（`SecondPoint`）。
+    pub fn set_second_point(&self, point: &Reference) -> ComResult<()> {
+        self.com().put("SecondPoint", Arg::Obj(point.com().clone()))
+    }
+}
+
+impl HybridShapeLinePtPt {
+    /// 起点（`PtOrigin`）。
+    pub fn pt_origin(&self) -> ComResult<Reference> {
+        Ok(Reference::new(self.com().get("PtOrigin")?.as_obj()?))
+    }
+
+    /// 终点（`PtExtremity`）。
+    pub fn pt_extremity(&self) -> ComResult<Reference> {
+        Ok(Reference::new(self.com().get("PtExtremity")?.as_obj()?))
+    }
+
+    /// 设置起点（`PtOrigin`）。
+    pub fn set_pt_origin(&self, point: &Reference) -> ComResult<()> {
+        self.com().put("PtOrigin", Arg::Obj(point.com().clone()))
+    }
+
+    /// 设置终点（`PtExtremity`）。
+    pub fn set_pt_extremity(&self, point: &Reference) -> ComResult<()> {
+        self.com().put("PtExtremity", Arg::Obj(point.com().clone()))
+    }
+
+    /// 支撑面（`Support`）。
+    pub fn support(&self) -> ComResult<Reference> {
+        Ok(Reference::new(self.com().get("Support")?.as_obj()?))
+    }
+
+    /// 设置支撑面（`Support`）。
+    pub fn set_support(&self, support: &Reference) -> ComResult<()> {
+        self.com().put("Support", Arg::Obj(support.com().clone()))
+    }
+}

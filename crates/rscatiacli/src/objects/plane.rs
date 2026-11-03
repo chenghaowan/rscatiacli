@@ -51,3 +51,59 @@ impl Plane {
         Ok([values[0], values[1], values[2]])
     }
 }
+
+impl Plane {
+    /// 是否参考平面（`IsARefPlane`）。
+    pub fn is_a_ref_plane(&self) -> ComResult<bool> {
+        self.com().call("IsARefPlane", &[])?.as_bool()
+    }
+
+    /// 位置六分量（`GetPosition`，VBA 中转：原点 xy? z + 轴分量，按 CAA 顺序）。
+    pub fn get_position(&self, ss: &SystemService) -> ComResult<Vec<f64>> {
+        ss.numeric_out_param(self.com(), "GetPosition")
+    }
+
+    /// 设置位置（`SetPosition(x, y, z)`）。
+    pub fn set_position(&self, x: f64, y: f64, z: f64) -> ComResult<()> {
+        self.com()
+            .call("SetPosition", &[Arg::F64(x), Arg::F64(y), Arg::F64(z)])
+            .map(|_| ())
+    }
+
+    /// 写原点（`PutOrigin`；3 分量）。
+    pub fn put_origin(&self, origin: [f64; 3]) -> ComResult<()> {
+        self.com()
+            .call(
+                "PutOrigin",
+                &[Arg::SafeArray(
+                    origin.iter().map(|v| Arg::F64(*v)).collect(),
+                )],
+            )
+            .map(|_| ())
+    }
+
+    /// 写第一轴（`PutFirstAxis`；3 分量）。
+    pub fn put_first_axis(&self, axis: [f64; 3]) -> ComResult<()> {
+        self.com()
+            .call(
+                "PutFirstAxis",
+                &[Arg::SafeArray(axis.iter().map(|v| Arg::F64(*v)).collect())],
+            )
+            .map(|_| ())
+    }
+
+    /// 写第二轴（`PutSecondAxis`；3 分量）。
+    pub fn put_second_axis(&self, axis: [f64; 3]) -> ComResult<()> {
+        self.com()
+            .call(
+                "PutSecondAxis",
+                &[Arg::SafeArray(axis.iter().map(|v| Arg::F64(*v)).collect())],
+            )
+            .map(|_| ())
+    }
+
+    /// 移除位置（`RemovePosition`）。
+    pub fn remove_position(&self) -> ComResult<()> {
+        self.com().call("RemovePosition", &[]).map(|_| ())
+    }
+}

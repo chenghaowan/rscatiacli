@@ -160,12 +160,33 @@ Live read-only verification passed (product-level `Parameters` /
 on product identity parameters (`Product1\Part Number`) — use the dedicated
 accessors instead.
 
-### Phase 6 — hybrid_shape_interfaces, on demand
+### ✅ Phase 6 — hybrid_shape_interfaces (done 2026-11-03)
 
-GSD's 111 classes are the largest chunk of the denominator. Prioritize the
-constructor families the toolchain already exercises (point/line/plane constructors,
-`Project` / `Intersection` / `Extremum`, `Sweep` / `Loft` / `Blend` / `Rotate` /
-`Scaling` / `Symmetry`); the rest grows with the application.
+111/111 — the largest chunk of the denominator, fully typed:
+
+- Bases `Point` / `Line` / `HybridShapeCircle` / `HybridShapeSweep`; direction
+  (element/axis-system refs + per-component reads via the VBA relay).
+- Point constructors (coord / on-plane / on-curve / on-surface / between / center /
+  tangent / explicit, 8), line constructors (pt-dir / angle / normal / bi-tangent /
+  tangency / bisecting / axis, 8), plane constructors (12), circles (ctr-rad /
+  ctr-pt / 3-pt / 2-pt-rad / bitangent-radius / bitangent-point / tritangent /
+  center-axis / center-tangent, 10).
+- Curve/surface generation: spline / polyline / extrude / revol / cylinder / sphere /
+  helix / spiral / spine / fill / section / loft.
+- Operations: project / intersection / extremum (+polar) / near / inverse / combine /
+  connect / corner / curve-smooth / extrapol / extract-multi / split / trim / assemble /
+  boundary / bump / mid-surface.
+- Transformations: rotate / scaling / symmetry / axis-to-axis / 3D-curve-offset;
+  unfold / transfer / develop / wrap-curve / wrap-surface / integrated-law /
+  law-dist-proj / position-transfo / reflect-line / rolling-offset / thickness /
+  curve-par; the four sweep variants (circle / line / conic / explicit) and conic,
+  bi/tri-tangent fillets, healing; explicit datum holders.
+- `HybridShapeFactory` gained ~35 `add_new_*` methods returning the typed features;
+  the existing six wrappers (Join / Offset / Extract / LinePtPt / Translate /
+  Affinity) and the `Plane` base gained their full read/write surfaces.
+- Numbered out-param grids on the very large classes (e.g. SweepExplicit position
+  arrays) stay on the `com()` escape hatch. Direction VBA-relay reads pending a live
+  CATIA re-check (same relay channel as phases 2/4/5).
 
 ### Phase 7 — drafting_interfaces remainder
 
@@ -196,8 +217,8 @@ Semantic GDT in `cat_tps_interfaces` follows on demand.
 - **0.0.x (current):** bindings and tools are still moving; breaking changes are allowed.
 - **0.1.0:** requires at least **50% of the in-scope functional class surface** covered
   by typed bindings, plus stable migrated tools. **Both conditions are now met**
-  (241/446 ≈ 54.0% after phases 1–5; the 28 JSON tools + colorize have been stable).
-  Remaining phases P6–P8 continue to grow coverage but are not gate-blocking.
+  (345/446 ≈ 77.4% after phases 1–6; the 28 JSON tools + colorize have been stable).
+  Remaining phases P7–P8 continue to grow coverage but are not gate-blocking.
   Cut the release when the maintainer decides.
 - **1.0.0:** not planned while pycatia itself is pre-1.0 and this project intentionally
   wraps only what the application needs.
