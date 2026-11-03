@@ -141,8 +141,14 @@
       <li><b>进度口径：</b>以"类"为粒度统计。分母 = 14 个规划内模块族的<b>功能类</b>
           （剔除 <code>*SettingAtt</code> 设置面板类与 COM 基础设施类；
           <code>enumeration</code> 的 339 个枚举常量单列、按需引入）。</li>
-      <li><b>版本策略：</b>0.0.x 允许破坏性变更；<b>0.1.0 需要规划范围内功能类覆盖 ≥ 50%</b>
-          且迁移工具稳定；1.0.0 在 pycatia 自身 1.0 前不计划。</li>
+      <li><b>版本策略：</b>0.0.x 允许破坏性变更；0.1.0 要求覆盖 ≥ 50% 且工具稳定——
+          <b>两项均已达标</b>（阶段 1–6 完成后 77.4%），切版时机由维护者决定；
+          1.0.0 在 pycatia 自身 1.0 前不计划。</li>
+      <li><b>真机验证实践：</b>每个阶段配只读探针（<code>examples/phase*_probe.rs</code>，
+          阶段 4/5 已实跑通过）；探针还修正了多处与 pycatia 标注不同的 COM 实际行为
+          （如 <code>TemporaryDirectory</code> 返回 Folder 对象、
+          <code>Release/Version</code> 返回整数、产品身份参数上
+          <code>ValueAsString</code> 成员缺失）。</li>
       <li>rscatiacli 侧另有少量 pycatia 没有同名类的扩展封装
           （<span id="extras-inline">–</span>），不计入分母。</li>
     </ul>
@@ -275,6 +281,34 @@
 </section>
 
 <section>
+  <h2>开发辅助资源 <span class="en">codegen skill &amp; probes</span></h2>
+  <div class="card note">
+    <ul class="plain">
+      <li><b>代码生成 skill：</b><code>rscatiacli-codegen</code>（ZCode skill，
+          全局安装于 <code>~/.agents/skills/rscatiacli-codegen/</code>）——
+          生成/移植 rscatiacli Rust 代码时自动带上类型名一致性、会话纪律、
+          真机实测坑十条与下述分模块参考。</li>
+      <li><b>分模块参考文档</b>（skill <code>references/</code>，六篇）：
+          <table class="oos" style="margin-top:8px">
+            <tr><td><code>part-design.md</code></td><td>Part Design 特征/ShapeFactory 创建流/布尔/阵列</td></tr>
+            <tr><td><code>gsd.md</code></td><td>GSD 构造器选择树/操作/扫掠/展开包裹</td></tr>
+            <tr><td><code>sketcher.md</code></td><td>画图链/Factory2D/几何 2D 读数/约束常量</td></tr>
+            <tr><td><code>product-knowledge.md</code></td><td>产品结构/Analyze/BOM/参数/关系</td></tr>
+            <tr><td><code>mecmod-files.md</code></td><td>拓扑读取/文件系统/窗口相机/实测类型修正</td></tr>
+            <tr><td><code>spa-and-legacy.md</code></td><td>SPA 量测/Inertia/材料/标注/图纸/会话纪律</td></tr>
+          </table></li>
+      <li><b>真机只读探针：</b><code>examples/phase1_probe.rs</code>（Analyze/BOM）、
+          <code>phase4_probe.rs</code>（文件系统/系统配置/窗口相机，✅ 实跑）、
+          <code>phase5_probe.rs</code>（产品级参数/关系，✅ 实跑）、
+          <code>phase6_probe.rs</code>（GSD 方向中转，待会话复核）。
+          特征创建/拓扑/曲线写入类验证需要测试零件文档，探针模式可复制。</li>
+      <li><b>进度审计脚本：</b><code>scripts/parity_audit.py</code>——本页数据的
+          再生入口（<code>--write docs/index.html</code>）。</li>
+    </ul>
+  </div>
+</section>
+
+<section>
   <h2>范围外模块族 <span class="en">out of scope</span></h2>
   <div class="card note">
     <p>以下模块族面向 CAM / DNC / 加工 / 装配仿真 / 系统集成等桌面工作台，ltl-manage 不使用，
@@ -294,7 +328,9 @@
     相关文档：<a href="../ROADMAP.zh-CN.md">ROADMAP.zh-CN.md</a> ·
     <a href="../ROADMAP.md">ROADMAP.md</a> ·
     <a href="../README.zh-CN.md">README.zh-CN.md</a> ·
-    <a href="https://github.com/evereux/pycatia">pycatia 上游</a>
+    <a href="../scripts/parity_audit.py">parity_audit.py</a> ·
+    <a href="https://github.com/evereux/pycatia">pycatia 上游</a> ·
+    <span title="ZCode 全局 skill">skill：<code>rscatiacli-codegen</code>（六篇分模块参考在 references/）</span>
   </div>
 </footer>
 
