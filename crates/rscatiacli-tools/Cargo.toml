@@ -8,7 +8,7 @@ repository.workspace = true
 homepage.workspace = true
 
 [dependencies]
-rscatiacli = { version = "0.0.1", path = "../rscatiacli" }
+rscatiacli = { version = "0.1.0", path = "../rscatiacli" }
 serde_json.workspace = true
 rust_xlsxwriter.workspace = true
 image.workspace = true

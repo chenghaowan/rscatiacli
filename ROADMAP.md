@@ -261,11 +261,12 @@ families listed on the progress page.
 
 ## Versioning
 
-- **0.0.x (current):** bindings and tools are still moving; breaking changes are allowed.
-- **0.1.0:** requires at least **50% of the in-scope functional class surface** covered
-  by typed bindings, plus stable migrated tools. **Both conditions are now met**
-  (395/446 ≈ 88.6% after phases 1–8, planned scope complete; the 28 JSON tools + colorize have been stable).
-  Cut the release when the maintainer decides.
+- **0.1.0 (current):** phases 1–8 complete, 395/446 ≈ 88.6% of the in-scope
+  functional class surface covered by typed bindings (11/14 families at 100%),
+  and the 28 JSON tools + colorize stable. The gate (≥50% + stable tools) is met.
+- **0.1.x:** on-demand additions (cat_tps semantic GDT, cat_mat stragglers) and
+  live-verification fixes; breaking changes still allowed within 0.1.x per semver
+  pre-1.0 convention.
 - **1.0.0:** not planned while pycatia itself is pre-1.0 and this project intentionally
   wraps only what the application needs.
 
