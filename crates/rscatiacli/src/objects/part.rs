@@ -134,7 +134,10 @@ impl Part {
         child(self.com(), "OriginElements")
     }
 
-    /// 产品级质量属性（`Analyze`；零件文档沿 Product.Analyze 同口径）。
+    /// 产品级质量属性（`Analyze`；CAA 口径）。
+    /// 真机实测：全新 Part 文档上该成员可能报"找不到成员"——零件级质量属性
+    /// 优先走 `PartDocument::product()` + `GetTechnologicalObject("Inertia")`
+    /// （见 `Inertia`），或已加载产品上的 `Product::analyze()`。
     pub fn analyze(&self) -> ComResult<Analyze> {
         Ok(Analyze::new(self.com().get("Analyze")?.as_obj()?))
     }

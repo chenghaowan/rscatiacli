@@ -9,7 +9,7 @@
 use std::time::Duration;
 
 use rscatiacli::{
-    objects::{Pad, Parameter, RealParam, Sketch},
+    objects::{Inertia, Pad, Parameter, RealParam, Sketch},
     with_application, ComObject, FromComObj,
 };
 
@@ -60,12 +60,18 @@ fn main() {
             assert!((v2 - 20.0).abs() < 1e-9, "公式后参数 {v2} != 20.0");
             log(&format!("参数+公式生效（值 {v2}）"));
 
-            // ── 5. 阶段 2 读回：Part.Analyze + 密度 ──
-            let analyze = part.analyze()?;
-            let mass = analyze.mass();
+            // ── 5. 阶段 2 读回：Inertia 质量属性 + 密度 ──
+            // 真机实测：全新 Part 文档上 Part.Analyze 成员缺失，走
+            // GetTechnologicalObject("Inertia")（wcc/find_near_parts 同通道）。
             let density = part.density()?;
+            let product = doc.product_document().product()?;
+            let raw = product.get_technological_object("Inertia")?;
+            let inertia = Inertia::from_com(raw.com().clone());
+            let ss = app.system_service()?;
+            let mass = inertia.mass()?;
+            let cog = inertia.get_cog_position(&ss)?;
             log(&format!(
-                "Part.Analyze.mass = {mass:?}, density = {density:?}"
+                "Inertia.mass = {mass:?} kg, cog = {cog:?}, density = {density:?}"
             ));
 
             // ── 6. 关闭不保存（不留痕） ──
