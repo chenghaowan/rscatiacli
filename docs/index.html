@@ -251,8 +251,20 @@
             方向 VBA 中转读数待 CATIA 会话复核（通道与阶段 2/4/5 相同）。</div>
       </li>
       <li>
-        <b class="t">阶段 7 —— drafting_interfaces 剩余</b>
-        <div class="d">尺寸标注、表格、引出线、GDT、图片、图框组件等 30 类。</div>
+        <b class="t">阶段 7 —— drafting_interfaces（✅ 已完成，2026-11-03）—— 37/37</b>
+        <div class="d">29 类全部有类型化包装：<code>DrawingRoot</code>（活动图纸/重排）、
+            尺寸标注族（<code>Dimensions::add(类型, 几何元素, 选点, 表示)</code> +
+            <code>Dimension/DimLine/DimExtLine/DimValue</code> 四件套）、
+            文字属性族（<code>TextProperties</code> 16 属性 + <code>TextRange</code> 富文本）、
+            引出线/箭头（<code>Leaders/Arrows::add</code>）、表格（<code>Tables::add</code> +
+            单元格读写/加行列）、图片（<code>Pictures::add</code> + 裁边）、GDT（符号读写）、
+            焊接（符号/侧/尾）、螺纹（<code>thread_type</code> 保留字改名）、组件
+            （flip/scale）、坐标尺寸、<code>PrintArea</code>。
+            <code>DrawingSheet</code> 补 <code>pictures/tables/print_area</code>、
+            <code>DrawingView</code> 补 <code>dimensions/arrows/coord_dims/threads/
+            generative_links</code>、<code>DrawingText</code> 补 <code>leaders/
+            text_properties</code>。图纸写入链待真机复核（drawlink/grid/expose2d
+            既有链路已验证）。</div>
       </li>
       <li>
         <b class="t">阶段 8 —— space_analyses / navigator 收尾</b>
@@ -261,8 +273,8 @@
       </li>
     </ol>
     <div class="goal"><b>0.1.0 门槛：</b>规划范围功能类覆盖 ≥ <b>50%</b>（约 <span id="goal-need">–</span> 类）
-      <b>阶段 1–6 已完成，覆盖率 345/446 ≈ 77.4%</b>（0.1.0 门槛 50% 早已达标）；
-      剩余：P7 drafting ≈ +25，P8 space/navigator ≈ +8。</div>
+      <b>阶段 1–7 已完成，覆盖率 374/446 ≈ 83.9%</b>（0.1.0 门槛 50% 早已达标）；
+      仅剩 P8：space_analyses ≈ +9，navigator ≈ +12。</div>
   </div>
 </section>
 
@@ -347,8 +359,8 @@ window.__PARITY_DATA__ = {
     "pycatia_families": 84,
     "scope_raw_classes": 495,
     "scope_functional_classes": 446,
-    "covered": 345,
-    "percent": 77.4,
+    "covered": 374,
+    "percent": 83.9,
     "enum_pool": 339,
     "rust_constants": 14
   },
@@ -713,16 +725,6 @@ window.__PARITY_DATA__ = {
       "raw_total": 38,
       "functional_total": 37,
       "covered": [
-        "DrawingDocument",
-        "DrawingSheet",
-        "DrawingSheets",
-        "DrawingText",
-        "DrawingTexts",
-        "DrawingView",
-        "DrawingViewGenerativeBehavior",
-        "DrawingViews"
-      ],
-      "missing_in_scope": [
         "DrawingArrow",
         "DrawingArrows",
         "DrawingComponent",
@@ -734,6 +736,7 @@ window.__PARITY_DATA__ = {
         "DrawingDimValue",
         "DrawingDimension",
         "DrawingDimensions",
+        "DrawingDocument",
         "DrawingGDT",
         "DrawingGDTs",
         "DrawingLeader",
@@ -742,17 +745,25 @@ window.__PARITY_DATA__ = {
         "DrawingPicture",
         "DrawingPictures",
         "DrawingRoot",
+        "DrawingSheet",
+        "DrawingSheets",
         "DrawingTable",
         "DrawingTables",
+        "DrawingText",
         "DrawingTextProperties",
         "DrawingTextRange",
+        "DrawingTexts",
         "DrawingThread",
         "DrawingThreads",
+        "DrawingView",
+        "DrawingViewGenerativeBehavior",
         "DrawingViewGenerativeLinks",
+        "DrawingViews",
         "DrawingWelding",
         "DrawingWeldings",
         "PrintArea"
       ],
+      "missing_in_scope": [],
       "excluded": [
         "DraftingSettingAtt"
       ]
@@ -1313,7 +1324,7 @@ window.__PARITY_DATA__ = {
     system_interfaces:            { tag: "已就绪", cls: "p-done" },
     knowledge_interfaces:         { tag: "阶段 5 ✅", cls: "p-done" },
     hybrid_shape_interfaces:      { tag: "阶段 6 ✅", cls: "p-done" },
-    drafting_interfaces:          { tag: "阶段 7", cls: "p-n" },
+    drafting_interfaces:          { tag: "阶段 7 ✅", cls: "p-done" },
     space_analyses_interfaces:    { tag: "阶段 8", cls: "p-n" },
     navigator_interfaces:         { tag: "阶段 8", cls: "p-n" },
     cat_mat_interfaces:           { tag: "基本完成", cls: "p-done" },

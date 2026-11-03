@@ -185,8 +185,14 @@ pub use assembly_convertor::AssemblyConvertor;
 pub use distances::{Distance, Distances, CAT_DISTANCE_BETWEEN_TWO, CAT_DISTANCE_MEASURE_MINIMUM};
 pub use documents::{Document, Documents, PartDocument, ProductDocument};
 pub use drafting::{
-    DrawingDocument, DrawingSheet, DrawingSheets, DrawingText, DrawingTexts, DrawingView,
-    DrawingViewGenerativeBehavior, DrawingViews, PAPER_A0, PAPER_A1, PAPER_A2, PAPER_A3, PAPER_A4,
+    DrawingArrow, DrawingArrows, DrawingComponent, DrawingComponents, DrawingCoordDim,
+    DrawingCoordDims, DrawingDimExtLine, DrawingDimLine, DrawingDimValue, DrawingDimension,
+    DrawingDimensions, DrawingDocument, DrawingGDT, DrawingGDTs, DrawingLeader, DrawingLeaders,
+    DrawingPageSetup, DrawingPicture, DrawingPictures, DrawingRoot, DrawingSheet, DrawingSheets,
+    DrawingTable, DrawingTables, DrawingText, DrawingTextProperties, DrawingTextRange,
+    DrawingTexts, DrawingThread, DrawingThreads, DrawingView, DrawingViewGenerativeBehavior,
+    DrawingViewGenerativeLinks, DrawingViews, DrawingWelding, DrawingWeldings, PrintArea, PAPER_A0,
+    PAPER_A1, PAPER_A2, PAPER_A3, PAPER_A4,
 };
 pub use groups::{Group, Groups};
 pub use hybrid_shape_factory::HybridShapeFactory;

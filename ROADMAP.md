@@ -188,9 +188,32 @@ accessors instead.
   arrays) stay on the `com()` escape hatch. Direction VBA-relay reads pending a live
   CATIA re-check (same relay channel as phases 2/4/5).
 
-### Phase 7 — drafting_interfaces remainder
+### ✅ Phase 7 — drafting_interfaces remainder (done 2026-11-03)
 
-Dimensions, tables, leaders, GDT, pictures, view frames (~30 classes).
+37/37 — 29 classes added to the existing drawing chain:
+
+- `DrawingRoot` (active sheet get/put, `ReorderSheets`), `DrawingPageSetup`
+  (distinct from in_interfaces' `DraftingPageSetup`, same surface).
+- Dimensions: `DrawingDimensions::add(type, geom refs, pick coords, line rep)` +
+  the four-piece set `DrawingDimension` (dual value / frame / orientation /
+  `MoveValue` / `RestoreValuePosition`) / `DrawingDimLine` (graph rep, direction
+  read via VBA relay) / `DrawingDimExtLine` / `DrawingDimValue` (read-only value,
+  prefix/suffix, fake-dim text).
+- Text: `DrawingTextProperties` (16 properties incl. font/bold/frame via
+  `ActivateFrame`) and `DrawingTextRange` (rich text insert, sub-ranges).
+- Callouts: `DrawingLeaders::add` / `DrawingArrows::add(head, tail)`.
+- Tables: `DrawingTables::add(x, y, rows, cols, row_h, col_w)` with per-cell
+  get/set string, row/column insertion, column size.
+- Pictures: `DrawingPictures::add(path, x, y)` + crop/size/ratio-lock.
+- GDT (tolerance symbol get/set), weldings (symbol/side/tail), threads
+  (`thread_type` — Rust reserved-word rename), components (flip/scale/comp-ref),
+  coordinate dimensions, `PrintArea`.
+- Collection accessors wired: `DrawingSheet::{pictures, tables, print_area}`,
+  `DrawingView::{dimensions, arrows, coord_dims, threads, generative_links}`,
+  `DrawingText::{leaders, text_properties}`.
+- Getter out-param grids (`GetBoundaryBox` / `GetTolerances` / `GetCoordValues`)
+  stay on the `com()` escape hatch. Drawing write paths pending a live
+  re-check (the drawlink/grid/expose2d chain is already live-verified).
 
 ### Phase 8 — space_analyses / navigator wrap-up
 
@@ -217,8 +240,8 @@ Semantic GDT in `cat_tps_interfaces` follows on demand.
 - **0.0.x (current):** bindings and tools are still moving; breaking changes are allowed.
 - **0.1.0:** requires at least **50% of the in-scope functional class surface** covered
   by typed bindings, plus stable migrated tools. **Both conditions are now met**
-  (345/446 ≈ 77.4% after phases 1–6; the 28 JSON tools + colorize have been stable).
-  Remaining phases P7–P8 continue to grow coverage but are not gate-blocking.
+  (374/446 ≈ 83.9% after phases 1–7; the 28 JSON tools + colorize have been stable).
+  Only P8 (space/navigator, ≈+21) remains and is not gate-blocking.
   Cut the release when the maintainer decides.
 - **1.0.0:** not planned while pycatia itself is pre-1.0 and this project intentionally
   wraps only what the application needs.
