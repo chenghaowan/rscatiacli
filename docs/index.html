@@ -267,14 +267,24 @@
             既有链路已验证）。</div>
       </li>
       <li>
-        <b class="t">阶段 8 —— space_analyses / navigator 收尾</b>
-        <div class="d"><code>Clashes/Sections/Inertias</code> 与导航器
-            <code>Marker2D/3D/Hyperlink</code>；3D 标注（<code>cat_tps_interfaces</code>）语义 GDT 部分按需跟进。</div>
+        <b class="t">阶段 8 —— space_analyses / navigator（✅ 已完成，2026-11-03）—— 14/14 + 14/14，规划范围收官</b>
+        <div class="d">空间分析 9 类：<code>Clashes/Clash</code>（分组/compute/冲突导出）、
+            <code>ClashResults</code>（XML 导入）、<code>Conflict(s)</code>（类型/状态/干涉点
+            坐标 VBA 中转）、<code>Inertias</code>（元素复用既有 <code>Inertia</code>）、
+            <code>Sections/Section</code>（类型/切模式/12 分量定位）；<code>SPAWorkbench</code>
+            补 <code>clashes()/sections()</code>。导航器 12 类：
+            <code>NavigatorWorkbench</code>（批注视图/组/超链接/3D 标记入口 + 显示顺序）、
+            <code>DMUReview(s)</code>（current/add/导入）、<code>DMUDataFlow</code>
+            （缓存导出/导入/CGR 替换）、<code>AnnotatedView(s)</code>（视线三分量中转）、
+            <code>Marker2D(s)</code>（箭头/圆/手绘/线/图片/矩形/文字七种创建）、
+            <code>Marker3D(s)</code>（对象锚点+文字锚点双通道）、<code>Hyperlink(s)</code>。
+            干涉/标记链路待真机复核（<code>Group(s)</code>/Distances 既有链路已验证）。</div>
       </li>
     </ol>
     <div class="goal"><b>0.1.0 门槛：</b>规划范围功能类覆盖 ≥ <b>50%</b>（约 <span id="goal-need">–</span> 类）
-      <b>阶段 1–7 已完成，覆盖率 374/446 ≈ 83.9%</b>（0.1.0 门槛 50% 早已达标）；
-      仅剩 P8：space_analyses ≈ +9，navigator ≈ +12。</div>
+      <b>阶段 1–8 全部完成，覆盖率 395/446 ≈ 88.6% —— 规划范围收官</b>
+      （11/14 族 100%；0.1.0 门槛 50% 早已达标）。未覆盖的剩余：
+      cat_tps 语义 GDT（按需）、cat_mat 2 类、范围外桌面工作台族。</div>
   </div>
 </section>
 
@@ -359,8 +369,8 @@ window.__PARITY_DATA__ = {
     "pycatia_families": 84,
     "scope_raw_classes": 495,
     "scope_functional_classes": 446,
-    "covered": 374,
-    "percent": 83.9,
+    "covered": 395,
+    "percent": 88.6,
     "enum_pool": 339,
     "rust_constants": 14
   },
@@ -646,23 +656,22 @@ window.__PARITY_DATA__ = {
       "raw_total": 16,
       "functional_total": 14,
       "covered": [
-        "Distance",
-        "Distances",
-        "Inertia",
-        "Measurable",
-        "SPAWorkbench"
-      ],
-      "missing_in_scope": [
         "Clash",
         "ClashResult",
         "ClashResults",
         "Clashes",
         "Conflict",
         "Conflicts",
+        "Distance",
+        "Distances",
+        "Inertia",
         "Inertias",
+        "Measurable",
+        "SPAWorkbench",
         "Section",
         "Sections"
       ],
+      "missing_in_scope": [],
       "excluded": [
         "MeasureSettingAtt",
         "SectioningSettingAtt"
@@ -863,15 +872,13 @@ window.__PARITY_DATA__ = {
       "raw_total": 16,
       "functional_total": 14,
       "covered": [
-        "Group",
-        "Groups"
-      ],
-      "missing_in_scope": [
         "AnnotatedView",
         "AnnotatedViews",
         "DMUDataFlow",
         "DMUReview",
         "DMUReviews",
+        "Group",
+        "Groups",
         "Hyperlink",
         "Hyperlinks",
         "Marker2D",
@@ -880,6 +887,7 @@ window.__PARITY_DATA__ = {
         "Marker3Ds",
         "NavigatorWorkbench"
       ],
+      "missing_in_scope": [],
       "excluded": [
         "MarkerSettingAtt",
         "N4DNavigatorSettingAtt"
@@ -1325,8 +1333,8 @@ window.__PARITY_DATA__ = {
     knowledge_interfaces:         { tag: "阶段 5 ✅", cls: "p-done" },
     hybrid_shape_interfaces:      { tag: "阶段 6 ✅", cls: "p-done" },
     drafting_interfaces:          { tag: "阶段 7 ✅", cls: "p-done" },
-    space_analyses_interfaces:    { tag: "阶段 8", cls: "p-n" },
-    navigator_interfaces:         { tag: "阶段 8", cls: "p-n" },
+    space_analyses_interfaces:    { tag: "阶段 8 ✅", cls: "p-done" },
+    navigator_interfaces:         { tag: "阶段 8 ✅", cls: "p-done" },
     cat_mat_interfaces:           { tag: "基本完成", cls: "p-done" },
     cat_tps_interfaces:           { tag: "按需跟进", cls: "p-later" },
   };

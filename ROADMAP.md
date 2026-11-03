@@ -215,10 +215,34 @@ accessors instead.
   stay on the `com()` escape hatch. Drawing write paths pending a live
   re-check (the drawlink/grid/expose2d chain is already live-verified).
 
-### Phase 8 — space_analyses / navigator wrap-up
+### ✅ Phase 8 — space_analyses / navigator wrap-up (done 2026-11-03 — planned scope complete)
 
-`Clashes` / `Sections` / `Inertias`; navigator `Marker2D/3D`, `Hyperlink`.
-Semantic GDT in `cat_tps_interfaces` follows on demand.
+Both families at 14/14:
+
+- space_analyses (9 classes): `Clashes`/`Clash` (groups, `Compute`, conflict list,
+  `Export`), `ClashResults` (+XML import), `Conflict(s)` (type/status/comment,
+  interference point coordinates via the VBA relay), `Inertias` (reuses the
+  existing `Inertia` items), `Sections`/`Section` (type/cut-mode/12-component
+  position get/put, `IsEmpty`, export). `SPAWorkbench` gained
+  `clashes()` / `sections()`.
+- navigator (12 classes): `NavigatorWorkbench` (annotated views / groups /
+  hyperlinks / marker3Ds entry points, `AdvancedView`, display `Get/SetOrder`,
+  `View`), `DMUReview(s)` (`Current` / `Add` / `ImportFrom`), `DMUDataFlow`
+  (cache export/import, CGR replacement, save-as-frozen), `AnnotatedView(s)`
+  (origin/sight/up reads via the VBA relay, `AddFromViewpoint`), `Marker2D(s)`
+  (seven creation kinds: arrow / circle / free-hand / line / picture / rectangle /
+  text), `Marker3D(s)` (object anchor + text anchor dual channels with the
+  indexed relay), `Hyperlink(s)` (URL list per object).
+- Reserved-word renames per convention: `Conflict::conflict_type`,
+  `Section::section_type`, `Marker2D/3D::marker_type`.
+- Out-param grids and settings panels (`*SettingAtt`) stay on the `com()` escape
+  hatch. Clash/marker chains pending a live re-check (`Group(s)` and `Distances`
+  chains are already live-verified).
+
+**Planned-scope wrap-up**: phases 1–8 complete, 395/446 ≈ 88.6%,
+11/14 families at 100%. What remains is deliberately uncovered: cat_tps semantic
+GDT (on demand), 2 cat_mat classes, and the out-of-scope desktop workbench
+families listed on the progress page.
 
 ## 💭 Consolidation — flip the default
 
@@ -240,8 +264,7 @@ Semantic GDT in `cat_tps_interfaces` follows on demand.
 - **0.0.x (current):** bindings and tools are still moving; breaking changes are allowed.
 - **0.1.0:** requires at least **50% of the in-scope functional class surface** covered
   by typed bindings, plus stable migrated tools. **Both conditions are now met**
-  (374/446 ≈ 83.9% after phases 1–7; the 28 JSON tools + colorize have been stable).
-  Only P8 (space/navigator, ≈+21) remains and is not gate-blocking.
+  (395/446 ≈ 88.6% after phases 1–8, planned scope complete; the 28 JSON tools + colorize have been stable).
   Cut the release when the maintainer decides.
 - **1.0.0:** not planned while pycatia itself is pre-1.0 and this project intentionally
   wraps only what the application needs.

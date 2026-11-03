@@ -161,6 +161,7 @@ pub mod instance_factory;
 pub mod knowledge;
 pub mod material;
 pub mod mec_mod;
+pub mod navigator;
 pub mod parameter;
 pub mod part;
 pub mod part_interfaces;
@@ -172,6 +173,7 @@ pub mod selection;
 pub mod shape_factory;
 pub mod sketch;
 pub mod spa_workbench;
+pub mod space_analyses;
 pub mod system_service;
 pub mod viewer;
 
@@ -257,6 +259,10 @@ pub use mec_mod::{
     Shape, ShapeInstance, Solid, TriDimFeatEdge, TriDimFeatVertexOrBiDimFeatVertex, Vertex,
     ZeroDimFeatVertexOrWireBoundaryMonoDimFeatVertex,
 };
+pub use navigator::{
+    AnnotatedView, AnnotatedViews, DMUDataFlow, DMUReview, DMUReviews, Hyperlink, Hyperlinks,
+    Marker2D, Marker2Ds, Marker3D, Marker3Ds, NavigatorWorkbench,
+};
 pub use parameter::{Parameter, Parameters};
 pub use part::{
     AxisSystem, AxisSystems, Bodies, Body, Entities, Entity, HybridBodies, HybridBody,
@@ -286,5 +292,8 @@ pub use sketch::{
     CAT_CST_TYPE_PARALLELISM, CAT_CST_TYPE_VERTICALITY,
 };
 pub use spa_workbench::{Measurable, SPAWorkbench};
+pub use space_analyses::{
+    Clash, ClashResult, ClashResults, Clashes, Conflict, Conflicts, Inertias, Section, Sections,
+};
 pub use system_service::SystemService;
 pub use viewer::{Viewer3D, Viewpoint3D, Window};

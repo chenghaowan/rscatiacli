@@ -15,6 +15,20 @@ com_wrapper!(Measurable);
 
 impl SPAWorkbench {
     /// 为 `Reference` 创建测量对象。
+    /// 干涉检查集合（`Clashes`）。
+    pub fn clashes(&self) -> ComResult<crate::objects::space_analyses::Clashes> {
+        Ok(crate::objects::space_analyses::Clashes::new(
+            self.com().get("Clashes")?.as_obj()?,
+        ))
+    }
+
+    /// 断面集合（`Sections`）。
+    pub fn sections(&self) -> ComResult<crate::objects::space_analyses::Sections> {
+        Ok(crate::objects::space_analyses::Sections::new(
+            self.com().get("Sections")?.as_obj()?,
+        ))
+    }
+
     pub fn get_measurable(&self, reference: &Reference) -> ComResult<Measurable> {
         Ok(Measurable::new(
             self.com()

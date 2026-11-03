@@ -178,10 +178,29 @@ CAA/COM 原拼写）；类型化参数 `RealParam` / `IntParam` / `StrParam` / `
 
 尺寸标注、表格、引出线、GDT、图片、图框组件（约 30 类）。
 
-### 阶段 8 —— space_analyses / navigator 收尾
+### ✅ 阶段 8 —— space_analyses / navigator 收尾（已完成，2026-11-03——规划范围收官）
 
-`Clashes` / `Sections` / `Inertias`；导航器 `Marker2D/3D`、`Hyperlink`。
-`cat_tps_interfaces` 的语义 GDT 按需跟进。
+两族均 14/14：
+
+- 空间分析（9 类）：`Clashes`/`Clash`（分组/`Compute`/冲突列表/`Export`）、
+  `ClashResults`（+XML 导入）、`Conflict(s)`（类型/状态/备注，干涉点坐标走
+  VBA 中转）、`Inertias`（元素复用既有 `Inertia`）、`Sections`/`Section`
+  （类型/切模式/12 分量定位读写、`IsEmpty`、导出）。`SPAWorkbench` 补
+  `clashes()` / `sections()`。
+- 导航器（12 类）：`NavigatorWorkbench`（批注视图/组/超链接/3D 标记入口、
+  `AdvancedView`、显示顺序 `Get/SetOrder`、`View`）、`DMUReview(s)`
+  （`Current`/`Add`/`ImportFrom`）、`DMUDataFlow`（缓存导出/导入、CGR 替换、
+  冻结另存）、`AnnotatedView(s)`（原点/视线/上方向中转、`AddFromViewpoint`）、
+  `Marker2D(s)`（七种创建：箭头/圆/手绘/线/图片/矩形/文字）、`Marker3D(s)`
+  （对象锚点 + 文字锚点双通道，带序号中转）、`Hyperlink(s)`（对象级 URL 列表）。
+- 保留字改名按惯例：`Conflict::conflict_type`、`Section::section_type`、
+  `Marker2D/3D::marker_type`。
+- 出参网格与设置面板类（`*SettingAtt`）走 `com()` 逃生舱。干涉/标记链路待
+  真机复核（`Group(s)` 与 `Distances` 链路已验证）。
+
+**规划范围收官**：阶段 1–8 全部完成，395/446 ≈ 88.6%，11/14 族 100%。
+刻意未覆盖：cat_tps 语义 GDT（按需）、cat_mat 2 类、进度页列出的范围外
+桌面工作台族。
 
 ## 💭 收尾 —— Rust 路径转默认
 
@@ -201,8 +220,8 @@ CAA/COM 原拼写）；类型化参数 `RealParam` / `IntParam` / `StrParam` / `
 
 - **0.0.x（当前）：** 绑定和工具仍在演进，允许破坏性变更。
 - **0.1.0：** 需要规划范围功能类覆盖至少 **50%**，且已迁移工具稳定。
-  **两个条件均已满足**（阶段 1–7 后 374/446 ≈ 83.9%；28 个 JSON 工具 + colorize
-  已稳定）。仅剩 P8（space/navigator ≈ +21）且不阻塞发版，由维护者决定切版时机。
+  **两个条件均已满足**（阶段 1–8 后 395/446 ≈ 88.6%，规划范围收官；28 个 JSON 工具 + colorize
+  已稳定）。由维护者决定切版时机。
 - **1.0.0：** pycatia 自己都还没到 1.0，本项目又只按需封装，暂不考虑。
 
 ## ⛔ 非目标
